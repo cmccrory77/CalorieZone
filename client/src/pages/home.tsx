@@ -49,206 +49,112 @@ export default function Home() {
   
   const progressPercentage = 35; // mock progress
 
-  // Add cuisine property to recipes for filtering
-  const allRecipes = [
-    // Breakfast
-    {
-      id: 2,
-      title: "Berry & Nut Power Oatmeal",
-      type: "breakfast",
-      cuisine: "american",
-      calories: 380,
-      protein: "15g",
-      carbs: "52g",
-      fat: "12g",
-      time: "10 min",
-      image: recipe2,
-      match: "94% Match"
-    },
-    {
-      id: 6,
-      title: "Avocado Toast with Poached Egg",
-      type: "breakfast",
-      cuisine: "american",
-      calories: 420,
-      protein: "18g",
-      carbs: "35g",
-      fat: "22g",
-      time: "12 min",
-      image: recipe6,
-      match: "96% Match"
-    },
-    {
-      id: 7,
-      title: "Greek Yogurt Parfait",
-      type: "breakfast",
-      cuisine: "mediterranean",
-      calories: 310,
-      protein: "22g",
-      carbs: "38g",
-      fat: "8g",
-      time: "5 min",
-      image: recipe7,
-      match: "98% Match"
-    },
-    // Lunch
-    {
-      id: 1,
-      title: "Grilled Lemon Herb Chicken Bowl",
-      type: "lunch",
-      cuisine: "mediterranean",
-      calories: 450,
-      protein: "42g",
-      carbs: "35g",
-      fat: "14g",
-      time: "25 min",
-      image: recipe1,
-      match: "98% Match"
-    },
-    {
-      id: 8,
-      title: "Mediterranean Quinoa Salad",
-      type: "lunch",
-      cuisine: "mediterranean",
-      calories: 410,
-      protein: "16g",
-      carbs: "48g",
-      fat: "18g",
-      time: "15 min",
-      image: recipe8,
-      match: "95% Match"
-    },
-    {
-      id: 9,
-      title: "Turkey & Spinach Wrap",
-      type: "lunch",
-      cuisine: "american",
-      calories: 390,
-      protein: "32g",
-      carbs: "36g",
-      fat: "14g",
-      time: "10 min",
-      image: recipe9,
-      match: "92% Match"
-    },
-    // Dinner
-    {
-      id: 3,
-      title: "Roasted Salmon with Sweet Potato",
-      type: "dinner",
-      cuisine: "american",
-      calories: 520,
-      protein: "38g",
-      carbs: "40g",
-      fat: "22g",
-      time: "35 min",
-      image: recipe3,
-      match: "89% Match"
-    },
-    {
-      id: 5,
-      title: "Lean Steak and Asparagus",
-      type: "dinner",
-      cuisine: "american",
-      calories: 490,
-      protein: "45g",
-      carbs: "12g",
-      fat: "28g",
-      time: "20 min",
-      image: recipe5,
-      match: "92% Match"
-    },
-    {
-      id: 10,
-      title: "Baked Cod with Quinoa",
-      type: "dinner",
-      cuisine: "mediterranean",
-      calories: 440,
-      protein: "36g",
-      carbs: "42g",
-      fat: "12g",
-      time: "25 min",
-      image: recipe10,
-      match: "97% Match"
-    },
-    // Snacks
-    {
-      id: 4,
-      title: "Hummus and Carrot Sticks",
-      type: "snack",
-      cuisine: "mediterranean",
-      calories: 210,
-      protein: "8g",
-      carbs: "22g",
-      fat: "10g",
-      time: "5 min",
-      image: recipe4,
-      match: "99% Match"
-    },
-    {
-      id: 11,
-      title: "Apple Slices with Peanut Butter",
-      type: "snack",
-      cuisine: "american",
-      calories: 240,
-      protein: "7g",
-      carbs: "28g",
-      fat: "14g",
-      time: "5 min",
-      image: recipe11,
-      match: "94% Match"
-    },
-    {
-      id: 12,
-      title: "Mixed Nuts Bowl",
-      type: "snack",
-      cuisine: "vegetarian",
-      calories: 280,
-      protein: "9g",
-      carbs: "12g",
-      fat: "24g",
-      time: "2 min",
-      image: recipe12,
-      match: "91% Match"
-    }
-  ];
+  const getDailyRecipes = () => {
+    const dayOfWeek = new Date().getDay(); // 0 to 6
+    const cuisines = ["all", "vegetarian", "italian", "mediterranean", "asian", "mexican", "american"];
+    const categories = ["breakfast", "lunch", "dinner", "snack"];
+    const images = [recipe1, recipe2, recipe3, recipe4, recipe5, recipe6, recipe7, recipe8, recipe9, recipe10, recipe11, recipe12];
+    
+    const cuisineKeywords: Record<string, string[]> = {
+      italian: ["Tuscan", "Garlic", "Basil", "Tomato", "Parmesan", "Herb", "Roasted", "Rustic"],
+      asian: ["Ginger", "Soy", "Teriyaki", "Sesame", "Spicy", "Miso", "Sriracha", "Glazed"],
+      mexican: ["Spicy", "Avocado", "Cilantro", "Jalapeno", "Salsa", "Chipotle", "Lime", "Baja"],
+      vegetarian: ["Plant-based", "Green", "Roasted", "Fresh", "Harvest", "Wholesome", "Garden", "Nutrient"],
+      mediterranean: ["Olive", "Feta", "Lemon", "Herb", "Greek", "Zesty", "Sun-dried", "Aegean"],
+      american: ["Classic", "BBQ", "Grilled", "Homestyle", "Smoked", "Maple", "Hearty", "Savory"],
+      all: ["Healthy", "Fresh", "Balanced", "Nourishing", "Lean", "Power", "Protein", "Vitality"]
+    };
+
+    const mealNouns: Record<string, string[]> = {
+      breakfast: ["Oatmeal", "Scramble", "Toast", "Bowl", "Pancakes", "Parfait", "Smoothie", "Muffins"],
+      lunch: ["Wrap", "Salad", "Bowl", "Sandwich", "Bento", "Plate", "Pita", "Melt"],
+      dinner: ["Skillet", "Roast", "Bake", "Stir-fry", "Grill", "Stew", "Casserole", "Platter"],
+      snack: ["Bites", "Sticks", "Mix", "Dip", "Chips", "Crunch", "Bite", "Energy"]
+    };
+
+    const proteins = ["Chicken", "Tofu", "Salmon", "Turkey", "Beef", "Chickpeas", "Egg", "Tempeh", "Black Beans", "Lentils"];
+    
+    const generatedRecipes = [];
+    let idCounter = 1;
+
+    cuisines.forEach((c) => {
+      const keywords = cuisineKeywords[c] || cuisineKeywords.all;
+      categories.forEach((cat) => {
+        const nouns = mealNouns[cat];
+        
+        for (let i = 0; i < 3; i++) {
+          // Create a deterministic seed based on day, cuisine, category, and index
+          // We mix the string hash of cuisine + category so the sequences don't just shift
+          let strHash = 0;
+          const comboStr = c + cat;
+          for(let k=0; k<comboStr.length; k++) {
+            strHash = ((strHash << 5) - strHash) + comboStr.charCodeAt(k);
+            strHash |= 0;
+          }
+          
+          const seed = Math.abs(dayOfWeek * 10000 + strHash * 10 + i);
+          
+          const keyword = keywords[seed % keywords.length];
+          const protein = proteins[(seed * 3) % proteins.length];
+          const noun = nouns[(seed * 5) % nouns.length];
+          
+          let title = `${keyword} ${protein} ${noun}`;
+          if (cat === 'snack') {
+            title = seed % 2 === 0 ? `${keyword} Energy ${noun}` : `${keyword} Hummus & ${noun}`;
+          } else if (cat === 'breakfast') {
+            title = seed % 2 === 0 ? `${keyword} ${noun} with Berries` : `${protein} & ${keyword} ${noun}`;
+          }
+
+          // Distribute images nicely
+          let imgOffset = 0;
+          if (cat === 'breakfast') imgOffset = 1; // starts at recipe2
+          if (cat === 'dinner') imgOffset = 4;
+          if (cat === 'snack') imgOffset = 10;
+          
+          const imgIdx = (imgOffset + (seed % 5)) % images.length;
+          
+          generatedRecipes.push({
+            id: idCounter++,
+            title,
+            type: cat,
+            cuisine: c,
+            calories: 200 + ((seed * 7) % 300) + (cat === 'snack' ? -100 : 100),
+            protein: `${10 + ((seed * 11) % 35)}g`,
+            carbs: `${20 + ((seed * 13) % 40)}g`,
+            fat: `${5 + ((seed * 17) % 20)}g`,
+            time: `${5 + ((seed * 19) % 6) * 5} min`,
+            image: images[imgIdx],
+            match: `${85 + ((seed * 23) % 15)}% Match`
+          });
+        }
+      });
+    });
+
+    return generatedRecipes;
+  };
+
+  const allRecipes = getDailyRecipes();
 
   const handleSearch = (cuisineType = selectedCuisine, query = searchQuery) => {
     let filtered = [...allRecipes];
     
-    // Shuffle array for visual variety when showing "all"
-    if (cuisineType === "all" && !query) {
-      filtered = filtered.sort(() => 0.5 - Math.random());
+    // Handle "all" cuisine logic
+    if (cuisineType === "all" || cuisineType === "placeholder") {
+      filtered = filtered.filter(r => r.cuisine === "all");
     } else {
-      if (cuisineType !== "all") {
-        filtered = filtered.filter(r => r.cuisine === cuisineType || cuisineType === "placeholder");
-      }
-      
-      if (query.trim()) {
-        const lowerQuery = query.toLowerCase();
-        filtered = filtered.filter(r => 
-          r.title.toLowerCase().includes(lowerQuery) || 
-          r.cuisine.toLowerCase().includes(lowerQuery)
-        );
-      }
+      filtered = filtered.filter(r => r.cuisine === cuisineType);
     }
     
-    // If not enough results for a specific cuisine, duplicate them to show a full grid of 6
-    if (filtered.length > 0 && filtered.length < 6) {
-      const originalFiltered = [...filtered];
-      while (filtered.length < 6) {
-        // Add variations to make them look distinct
-        const sourceItem = originalFiltered[filtered.length % originalFiltered.length];
-        filtered.push({
-          ...sourceItem,
-          id: sourceItem.id + 100 + filtered.length, // Ensure unique ID
-        });
-      }
-    } else if (filtered.length === 0) {
-      // Fallback if no results match
-      filtered = allRecipes.slice(0, 6);
+    // Text search logic
+    if (query.trim()) {
+      const lowerQuery = query.toLowerCase();
+      filtered = filtered.filter(r => 
+        r.title.toLowerCase().includes(lowerQuery) || 
+        r.cuisine.toLowerCase().includes(lowerQuery)
+      );
     }
     
+    // Make sure we limit to 6 distinct recipes for the search tab
     setSearchResults(filtered.slice(0, 6));
     setHasSearched(true);
   };
@@ -268,7 +174,8 @@ export default function Home() {
     }
   };
 
-  const recipes = mealType === "all" ? allRecipes : allRecipes.filter(r => r.type === mealType);
+  const dailyPlanRecipes = allRecipes.filter(r => r.cuisine === 'all');
+  const recipes = mealType === "all" ? dailyPlanRecipes : dailyPlanRecipes.filter(r => r.type === mealType);
 
   return (
     <div className="min-h-screen bg-background">
