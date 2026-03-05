@@ -255,6 +255,101 @@ export default function Home() {
     };
 
     const proteins = ["Chicken", "Tofu", "Salmon", "Turkey", "Beef", "Chickpeas", "Egg", "Tempeh", "Black Beans", "Lentils"];
+
+    const stepTemplates: Record<string, Record<string, string[][]>> = {
+      breakfast: {
+        Oatmeal: [
+          ["Bring 1 cup of water or milk to a boil in a small saucepan."],
+          ["Stir in ½ cup rolled oats and reduce heat to medium-low."],
+          ["Cook for 4-5 minutes, stirring occasionally, until creamy."],
+          ["Top with fresh berries, a drizzle of honey, and a sprinkle of nuts."],
+          ["Serve warm and enjoy."]
+        ],
+        Scramble: [
+          ["Crack 2-3 eggs into a bowl, add a splash of milk, and whisk until smooth."],
+          ["Heat a non-stick pan over medium heat and add a pat of butter or oil."],
+          ["Pour in the egg mixture and gently stir with a spatula as it sets."],
+          ["Season with salt, pepper, and fresh herbs when nearly done."],
+          ["Plate alongside whole-grain toast and serve immediately."]
+        ],
+        Pancakes: [
+          ["Mix 1 cup flour, 1 tbsp sugar, 1 tsp baking powder, and a pinch of salt in a bowl."],
+          ["In a separate bowl, whisk together 1 egg, ¾ cup milk, and 2 tbsp melted butter."],
+          ["Combine wet and dry ingredients and stir until just combined (a few lumps are fine)."],
+          ["Pour ¼ cup batter per pancake onto a heated, greased griddle or skillet."],
+          ["Flip when bubbles form on the surface, cook until golden, and serve with fresh fruit."]
+        ]
+      },
+      lunch: {
+        Wrap: [
+          ["Warm a large tortilla or flatbread in a dry skillet for 30 seconds per side."],
+          ["Spread a thin layer of your preferred sauce or hummus across the center."],
+          ["Layer sliced protein, crisp lettuce, tomato, and any desired toppings."],
+          ["Fold in the sides and roll tightly from the bottom up."],
+          ["Slice in half diagonally and serve with a side salad."]
+        ],
+        Salad: [
+          ["Wash and chop a generous portion of mixed greens and place in a large bowl."],
+          ["Prepare and slice your protein, grains, and any fresh vegetables."],
+          ["Arrange the toppings over the greens in sections for a composed look."],
+          ["Whisk together olive oil, lemon juice, salt, and pepper for a simple dressing."],
+          ["Drizzle the dressing over the salad, toss gently, and serve."]
+        ],
+        Bowl: [
+          ["Cook your base grain (quinoa, rice, or farro) according to package directions."],
+          ["Season and cook your protein in a skillet over medium-high heat until done."],
+          ["Roast or sauté a mix of seasonal vegetables with olive oil and seasoning."],
+          ["Assemble the bowl: grain base, protein, veggies, and any pickled or fresh toppings."],
+          ["Finish with a drizzle of tahini or your favorite sauce and serve."]
+        ]
+      },
+      dinner: {
+        Skillet: [
+          ["Season your protein generously with salt, pepper, and your chosen spices."],
+          ["Heat oil in a large skillet over medium-high heat until shimmering."],
+          ["Sear the protein for 3-4 minutes per side until golden, then set aside to rest."],
+          ["In the same skillet, sauté diced vegetables until tender, about 5-6 minutes."],
+          ["Return the protein to the skillet, add any sauce, and simmer for 2-3 minutes to combine."]
+        ],
+        Roast: [
+          ["Preheat your oven to 400°F (200°C) and line a baking sheet with parchment paper."],
+          ["Season the protein with herbs, garlic, olive oil, salt, and pepper."],
+          ["Arrange the protein in the center and surround with chopped vegetables."],
+          ["Roast for 25-35 minutes until the protein is cooked through and veggies are caramelized."],
+          ["Let rest for 5 minutes, then plate and serve with your choice of side."]
+        ],
+        "Stir-fry": [
+          ["Prep all ingredients: slice protein thinly and chop vegetables into bite-sized pieces."],
+          ["Heat a wok or large skillet over high heat and add a tablespoon of oil."],
+          ["Cook the protein first for 2-3 minutes until just done, then remove and set aside."],
+          ["Stir-fry the vegetables in batches, starting with the firmest ones, for 3-4 minutes total."],
+          ["Return the protein, pour in your sauce, toss everything together, and serve over rice or noodles."]
+        ]
+      },
+      snack: {
+        Bites: [
+          ["Combine oats, nut butter, honey, and mix-ins (seeds, chocolate chips) in a bowl."],
+          ["Stir until the mixture holds together when pressed."],
+          ["Roll into 1-inch balls using slightly damp hands."],
+          ["Place on a parchment-lined tray and refrigerate for at least 30 minutes."],
+          ["Store in an airtight container in the fridge for up to a week."]
+        ],
+        Dip: [
+          ["Drain and rinse your base ingredient (chickpeas, beans, or vegetables)."],
+          ["Add to a food processor along with tahini, lemon juice, garlic, and olive oil."],
+          ["Blend until smooth, scraping down the sides as needed, and season to taste."],
+          ["Transfer to a serving bowl and drizzle with olive oil and a sprinkle of paprika."],
+          ["Serve with fresh-cut veggies, pita chips, or crackers."]
+        ],
+        Mix: [
+          ["Select your base of nuts and seeds (almonds, cashews, pumpkin seeds)."],
+          ["Add dried fruits like cranberries, apricots, or raisins for sweetness."],
+          ["Toss in a handful of dark chocolate chips or coconut flakes if desired."],
+          ["Mix everything together in a bowl and season lightly with sea salt."],
+          ["Portion into small bags or containers for easy grab-and-go snacking."]
+        ]
+      }
+    };
     
     const generatedRecipes: any[] = [];
     let idCounter = 1;
@@ -286,6 +381,8 @@ export default function Home() {
             title = i === 0 ? `${keyword} ${noun} with Berries` : i === 1 ? `${protein} & ${keyword} ${noun}` : `${keyword} ${protein} ${noun}`;
           }
 
+          const steps = (stepTemplates[cat]?.[noun] || []).map(s => s[0]);
+
           generatedRecipes.push({
             id: idCounter++,
             title,
@@ -297,7 +394,8 @@ export default function Home() {
             fat: `${5 + ((seed * 17) % 20)}g`,
             time: `${5 + ((seed * 19) % 6) * 5} min`,
             image: catImages[i],
-            match: `${85 + ((seed * 23) % 15)}% Match`
+            match: `${85 + ((seed * 23) % 15)}% Match`,
+            steps
           });
         }
       });
@@ -778,7 +876,7 @@ export default function Home() {
 
       <Dialog open={!!selectedRecipe} onOpenChange={(open) => !open && setSelectedRecipe(null)}>
         {selectedRecipe && (
-          <DialogContent className="max-w-md p-0 overflow-hidden">
+          <DialogContent className="max-w-md p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="relative h-56 overflow-hidden">
               <img 
                 src={selectedRecipe.image} 
@@ -818,6 +916,25 @@ export default function Home() {
                 <Clock className="h-4 w-4" />
                 <span>Prep time: {selectedRecipe.time}</span>
               </div>
+
+              {selectedRecipe.steps && selectedRecipe.steps.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-display font-semibold text-sm flex items-center gap-2">
+                    <Utensils className="h-4 w-4 text-secondary" />
+                    Preparation Steps
+                  </h4>
+                  <ol className="space-y-2.5">
+                    {selectedRecipe.steps.map((step: string, idx: number) => (
+                      <li key={idx} className="flex gap-3 text-sm">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center mt-0.5">
+                          {idx + 1}
+                        </span>
+                        <span className="text-slate-600 leading-relaxed">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <Button 
