@@ -279,8 +279,8 @@ export default function Home() {
                     </div>
                     <input 
                       type="range" 
-                      min="4" 
-                      max="24" 
+                      min="1" 
+                      max="52" 
                       value={timeframe} 
                       onChange={(e) => setTimeframe(Number(e.target.value))}
                       className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-secondary"
