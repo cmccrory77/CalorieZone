@@ -8,7 +8,9 @@ import {
   Calendar,
   ChefHat,
   Wand2,
-  CalendarDays
+  CalendarDays,
+  Plus,
+  X
 } from "lucide-react";
 import { format, addWeeks } from "date-fns";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +44,41 @@ export default function Home() {
   const [targetDate, setTargetDate] = useState<Date>(addWeeks(new Date(), 12));
   const [mealType, setMealType] = useState("all");
   
+  // Calorie Tracker State
+  const [trackedFoods, setTrackedFoods] = useState<{id: number, name: string, calories: number}[]>([]);
+  const [newFoodName, setNewFoodName] = useState("");
+  const [newFoodCalories, setNewFoodCalories] = useState("");
+  
+  const handleAddFood = () => {
+    if (newFoodName && newFoodCalories) {
+      setTrackedFoods([
+        ...trackedFoods, 
+        { 
+          id: Date.now(), 
+          name: newFoodName, 
+          calories: parseInt(newFoodCalories) 
+        }
+      ]);
+      setNewFoodName("");
+      setNewFoodCalories("");
+    }
+  };
+
+  const handleRemoveFood = (id: number) => {
+    setTrackedFoods(trackedFoods.filter(food => food.id !== id));
+  };
+  
+  const addRecipeToTracker = (recipe: any) => {
+    setTrackedFoods([
+      ...trackedFoods,
+      {
+        id: Date.now(),
+        name: recipe.title,
+        calories: recipe.calories
+      }
+    ]);
+  };
+
   // Handle timeframe change (updates date)
   const handleTimeframeChange = (weeks: number) => {
     setTimeframe(weeks);
@@ -364,6 +401,96 @@ export default function Home() {
               </CardContent>
             </Card>
 
+            {/* Calories Tracker Card */}
+            <Card className="border-none shadow-sm bg-white overflow-hidden relative">
+              <div className="h-2 bg-secondary w-full"></div>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-foreground flex items-center gap-2 text-lg">
+                  <UtensilsCrossed className="h-5 w-5 text-secondary" />
+                  Calorie Tracker
+                </CardTitle>
+                <CardDescription>Log your meals to hit your daily goal.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                
+                <div className="flex justify-between items-end mb-2">
+                  <div>
+                    <div className="text-3xl font-display font-bold text-foreground tracking-tight">
+                      {trackedFoods.reduce((acc, food) => acc + food.calories, 0)}
+                    </div>
+                    <div className="text-muted-foreground text-xs uppercase tracking-wide font-medium mt-1">Consumed</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xl font-display font-bold text-slate-500 tracking-tight">
+                      {targetCalories}
+                    </div>
+                    <div className="text-muted-foreground text-xs uppercase tracking-wide font-medium mt-1">Target</div>
+                  </div>
+                </div>
+
+                <Progress 
+                  value={Math.min(100, (trackedFoods.reduce((acc, food) => acc + food.calories, 0) / targetCalories) * 100)} 
+                  className="h-3 bg-slate-100" 
+                  indicatorClassName={trackedFoods.reduce((acc, food) => acc + food.calories, 0) > targetCalories ? "bg-red-500" : "bg-secondary"}
+                />
+
+                <div className="text-center text-sm font-medium pt-2 pb-4 border-b border-slate-100">
+                  {targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0) > 0 ? (
+                    <span className="text-primary">{targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0)} calories remaining</span>
+                  ) : (
+                    <span className="text-red-500">Over goal by {Math.abs(targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0))} calories</span>
+                  )}
+                </div>
+
+                {/* Add Custom Food */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-slate-700">Quick Add</h4>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="Food name" 
+                      value={newFoodName}
+                      onChange={(e) => setNewFoodName(e.target.value)}
+                      className="flex-1 bg-slate-50 text-sm h-9"
+                    />
+                    <Input 
+                      type="number"
+                      placeholder="Kcal" 
+                      value={newFoodCalories}
+                      onChange={(e) => setNewFoodCalories(e.target.value)}
+                      className="w-20 bg-slate-50 text-sm h-9"
+                    />
+                    <Button size="icon" onClick={handleAddFood} className="h-9 w-9 bg-secondary hover:bg-secondary/90 shrink-0">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Logged Foods List */}
+                {trackedFoods.length > 0 && (
+                  <div className="space-y-3 pt-4 border-t border-slate-100">
+                    <h4 className="text-sm font-semibold text-slate-700">Today's Log</h4>
+                    <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                      {trackedFoods.map(food => (
+                        <div key={food.id} className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 group transition-colors">
+                          <span className="text-sm font-medium truncate pr-2">{food.name}</span>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-sm text-muted-foreground font-semibold">{food.calories} kcal</span>
+                            <button 
+                              onClick={() => handleRemoveFood(food.id)}
+                              className="text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+              </CardContent>
+            </Card>
+
           </div>
 
           {/* Right Column - Recipes & Meals */}
@@ -447,9 +574,15 @@ export default function Home() {
                           </div>
                         </div>
                       </CardContent>
-                      <CardFooter className="p-5 pt-0">
-                        <Button className="w-full bg-slate-50 hover:bg-slate-100 text-foreground border border-slate-200" variant="outline">
+                      <CardFooter className="p-5 pt-0 flex gap-2">
+                        <Button className="flex-1 bg-slate-50 hover:bg-slate-100 text-foreground border border-slate-200" variant="outline">
                           View Recipe
+                        </Button>
+                        <Button 
+                          className="bg-secondary hover:bg-secondary/90 text-white shrink-0" 
+                          onClick={() => addRecipeToTracker(recipe)}
+                        >
+                          <Plus className="h-4 w-4 mr-1.5" /> Log
                         </Button>
                       </CardFooter>
                     </Card>
