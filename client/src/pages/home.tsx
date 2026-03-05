@@ -256,6 +256,119 @@ export default function Home() {
 
     const proteins = ["Chicken", "Tofu", "Salmon", "Turkey", "Beef", "Chickpeas", "Egg", "Tempeh", "Black Beans", "Lentils"];
 
+    const ingredientTemplates: Record<string, Record<string, { item: string; amount: string; cal: number }[]>> = {
+      breakfast: {
+        Oatmeal: [
+          { item: "Rolled oats", amount: "½ cup (40g)", cal: 150 },
+          { item: "Milk or water", amount: "1 cup", cal: 50 },
+          { item: "Fresh mixed berries", amount: "½ cup (75g)", cal: 35 },
+          { item: "Honey", amount: "1 tsp", cal: 20 },
+          { item: "Chopped almonds", amount: "1 tbsp (10g)", cal: 55 },
+          { item: "Pinch of cinnamon", amount: "⅛ tsp", cal: 0 }
+        ],
+        Scramble: [
+          { item: "Large eggs", amount: "3", cal: 210 },
+          { item: "Milk", amount: "1 tbsp", cal: 10 },
+          { item: "Butter or olive oil", amount: "1 tsp", cal: 35 },
+          { item: "Fresh herbs (chives, parsley)", amount: "1 tbsp", cal: 2 },
+          { item: "Whole-grain toast", amount: "1 slice", cal: 80 },
+          { item: "Salt and pepper", amount: "To taste", cal: 0 }
+        ],
+        Pancakes: [
+          { item: "All-purpose flour", amount: "½ cup (60g)", cal: 220 },
+          { item: "Egg", amount: "1", cal: 70 },
+          { item: "Milk", amount: "⅓ cup", cal: 35 },
+          { item: "Melted butter", amount: "1 tbsp", cal: 100 },
+          { item: "Baking powder", amount: "½ tsp", cal: 0 },
+          { item: "Fresh fruit topping", amount: "¼ cup", cal: 25 },
+          { item: "Maple syrup", amount: "1 tbsp", cal: 50 }
+        ]
+      },
+      lunch: {
+        Wrap: [
+          { item: "Large flour tortilla", amount: "1 (10-inch)", cal: 180 },
+          { item: "Sliced protein", amount: "3 oz (85g)", cal: 120 },
+          { item: "Romaine lettuce", amount: "1 cup, shredded", cal: 8 },
+          { item: "Tomato", amount: "¼ cup, diced", cal: 8 },
+          { item: "Hummus or spread", amount: "2 tbsp", cal: 50 },
+          { item: "Red onion", amount: "2 tbsp, sliced", cal: 5 },
+          { item: "Olive oil drizzle", amount: "1 tsp", cal: 40 }
+        ],
+        Salad: [
+          { item: "Mixed greens", amount: "3 cups", cal: 20 },
+          { item: "Grilled protein", amount: "4 oz (115g)", cal: 150 },
+          { item: "Cherry tomatoes", amount: "½ cup, halved", cal: 15 },
+          { item: "Cucumber", amount: "½ cup, sliced", cal: 8 },
+          { item: "Avocado", amount: "¼ medium", cal: 60 },
+          { item: "Quinoa or grains", amount: "¼ cup, cooked", cal: 55 },
+          { item: "Olive oil & lemon dressing", amount: "1 tbsp", cal: 70 }
+        ],
+        Bowl: [
+          { item: "Cooked quinoa or rice", amount: "½ cup (95g)", cal: 110 },
+          { item: "Seasoned protein", amount: "4 oz (115g)", cal: 150 },
+          { item: "Roasted vegetables", amount: "1 cup", cal: 60 },
+          { item: "Pickled onion or radish", amount: "2 tbsp", cal: 5 },
+          { item: "Tahini or sauce", amount: "1 tbsp", cal: 45 },
+          { item: "Olive oil", amount: "1 tsp", cal: 40 },
+          { item: "Sesame seeds", amount: "1 tsp", cal: 15 }
+        ]
+      },
+      dinner: {
+        Skillet: [
+          { item: "Protein of choice", amount: "5 oz (140g)", cal: 200 },
+          { item: "Mixed bell peppers", amount: "1 cup, diced", cal: 30 },
+          { item: "Onion", amount: "½ medium, diced", cal: 22 },
+          { item: "Garlic", amount: "2 cloves, minced", cal: 8 },
+          { item: "Olive oil", amount: "1 tbsp", cal: 120 },
+          { item: "Seasoning & spices", amount: "1 tsp blend", cal: 5 },
+          { item: "Fresh herbs for garnish", amount: "1 tbsp", cal: 2 }
+        ],
+        Roast: [
+          { item: "Protein of choice", amount: "5 oz (140g)", cal: 200 },
+          { item: "Baby potatoes or sweet potato", amount: "½ cup (75g)", cal: 65 },
+          { item: "Broccoli or asparagus", amount: "1 cup", cal: 30 },
+          { item: "Olive oil", amount: "1 tbsp", cal: 120 },
+          { item: "Garlic", amount: "2 cloves", cal: 8 },
+          { item: "Fresh rosemary & thyme", amount: "1 sprig each", cal: 2 },
+          { item: "Salt and pepper", amount: "To taste", cal: 0 }
+        ],
+        "Stir-fry": [
+          { item: "Protein of choice, sliced thin", amount: "4 oz (115g)", cal: 160 },
+          { item: "Broccoli florets", amount: "½ cup", cal: 15 },
+          { item: "Bell pepper", amount: "½ cup, sliced", cal: 15 },
+          { item: "Snap peas or green beans", amount: "½ cup", cal: 20 },
+          { item: "Soy sauce", amount: "1 tbsp", cal: 10 },
+          { item: "Sesame oil", amount: "1 tsp", cal: 40 },
+          { item: "Cooked rice or noodles", amount: "½ cup", cal: 100 },
+          { item: "Ginger & garlic", amount: "1 tsp each, minced", cal: 10 }
+        ]
+      },
+      snack: {
+        Bites: [
+          { item: "Rolled oats", amount: "¼ cup (20g)", cal: 75 },
+          { item: "Peanut or almond butter", amount: "1 tbsp", cal: 95 },
+          { item: "Honey", amount: "1 tsp", cal: 20 },
+          { item: "Mini chocolate chips", amount: "1 tsp", cal: 25 },
+          { item: "Chia or flax seeds", amount: "1 tsp", cal: 15 }
+        ],
+        Dip: [
+          { item: "Chickpeas (canned, drained)", amount: "½ cup (120g)", cal: 110 },
+          { item: "Tahini", amount: "1 tbsp", cal: 45 },
+          { item: "Lemon juice", amount: "1 tbsp", cal: 4 },
+          { item: "Garlic", amount: "1 clove", cal: 4 },
+          { item: "Olive oil", amount: "1 tsp", cal: 40 },
+          { item: "Carrot & celery sticks", amount: "1 cup", cal: 35 }
+        ],
+        Mix: [
+          { item: "Raw almonds", amount: "2 tbsp (15g)", cal: 85 },
+          { item: "Cashews", amount: "1 tbsp (10g)", cal: 55 },
+          { item: "Dried cranberries", amount: "1 tbsp", cal: 30 },
+          { item: "Pumpkin seeds", amount: "1 tbsp", cal: 45 },
+          { item: "Dark chocolate chips", amount: "1 tsp", cal: 25 }
+        ]
+      }
+    };
+
     const stepTemplates: Record<string, Record<string, string[][]>> = {
       breakfast: {
         Oatmeal: [
@@ -382,6 +495,15 @@ export default function Home() {
           }
 
           const steps = (stepTemplates[cat]?.[noun] || []).map(s => s[0]);
+          const baseIngredients = ingredientTemplates[cat]?.[noun] || [];
+          const recipeCals = 200 + ((seed * 7) % 300) + (cat === 'snack' ? -100 : 100);
+          const baseCals = baseIngredients.reduce((sum, ing) => sum + ing.cal, 0);
+          const scale = baseCals > 0 ? recipeCals / baseCals : 1;
+          const ingredients = baseIngredients.map(ing => ({
+            item: ing.item,
+            amount: ing.amount,
+            cal: Math.round(ing.cal * scale)
+          }));
 
           generatedRecipes.push({
             id: idCounter++,
@@ -395,6 +517,7 @@ export default function Home() {
             time: `${5 + ((seed * 19) % 6) * 5} min`,
             image: catImages[i],
             match: `${85 + ((seed * 23) % 15)}% Match`,
+            ingredients,
             steps
           });
         }
@@ -916,6 +1039,30 @@ export default function Home() {
                 <Clock className="h-4 w-4" />
                 <span>Prep time: {selectedRecipe.time}</span>
               </div>
+
+              {selectedRecipe.ingredients && selectedRecipe.ingredients.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-display font-semibold text-sm flex items-center gap-2">
+                    <ChefHat className="h-4 w-4 text-primary" />
+                    Ingredients
+                    <span className="text-xs font-normal text-muted-foreground ml-auto">1 serving</span>
+                  </h4>
+                  <ul className="space-y-1.5">
+                    {selectedRecipe.ingredients.map((ing: { item: string; amount: string; cal: number }, idx: number) => (
+                      <li key={idx} className="flex items-center justify-between text-sm py-1 border-b border-slate-50 last:border-0">
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/40 flex-shrink-0"></span>
+                          <span className="text-slate-700">{ing.item}</span>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <span className="text-slate-400 text-xs">{ing.amount}</span>
+                          {ing.cal > 0 && <span className="text-slate-400 text-xs w-12 text-right">{ing.cal} cal</span>}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {selectedRecipe.steps && selectedRecipe.steps.length > 0 && (
                 <div className="space-y-3">
