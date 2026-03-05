@@ -97,13 +97,20 @@ export default function Home() {
 
   // Mock calculations
   const maintenanceCalories = 2450;
-  const weeklyLossGoal = (currentWeight - targetWeight) / timeframe;
-  const dailyDeficit = weeklyLossGoal * 500; // rough estimate 500 cal deficit = 1 lb/week
-  const targetCalories = Math.round(maintenanceCalories - dailyDeficit);
+  const isGainingWeight = targetWeight > startingWeight;
+  const weeklyLossGoal = Math.abs(currentWeight - targetWeight) / timeframe;
+  const dailyDifference = weeklyLossGoal * 500; // rough estimate 500 cal difference = 1 lb/week
   
-  const totalWeightToLose = startingWeight - targetWeight;
-  const weightLostSoFar = startingWeight - currentWeight;
-  const progressPercentage = totalWeightToLose > 0 ? Math.max(0, Math.min(100, (weightLostSoFar / totalWeightToLose) * 100)) : 0;
+  // If gaining weight, add the surplus. If losing, subtract the deficit.
+  const targetCalories = isGainingWeight 
+    ? Math.round(maintenanceCalories + dailyDifference)
+    : Math.round(maintenanceCalories - dailyDifference);
+  
+  const totalWeightDifference = Math.abs(startingWeight - targetWeight);
+  const weightChangedSoFar = Math.abs(startingWeight - currentWeight);
+  const progressPercentage = totalWeightDifference > 0 
+    ? Math.max(0, Math.min(100, (weightChangedSoFar / totalWeightDifference) * 100)) 
+    : 0;
 
   const getDailyRecipes = () => {
     const dayOfWeek = new Date().getDay(); // 0 to 6
@@ -361,11 +368,13 @@ export default function Home() {
                 <div className="pt-4 border-t border-slate-100">
                   <div className="flex justify-between text-sm mb-2">
                     <span className="font-medium">Progress</span>
-                    <span className="font-bold text-primary">{Math.abs(startingWeight - currentWeight)} lbs lost</span>
+                    <span className="font-bold text-primary">
+                      {weightChangedSoFar} lbs {isGainingWeight ? 'gained' : 'lost'}
+                    </span>
                   </div>
                   <Progress value={progressPercentage} className="h-2 bg-slate-100" />
                   <p className="text-xs text-muted-foreground mt-2 text-center">
-                    {Math.abs(currentWeight - targetWeight)} lbs remaining to reach your goal
+                    {Math.abs(currentWeight - targetWeight)} lbs {isGainingWeight ? 'more to gain' : 'remaining to reach your goal'}
                   </p>
                 </div>
               </CardContent>
@@ -466,8 +475,12 @@ export default function Home() {
                     <div className="font-semibold text-slate-200">{maintenanceCalories} kcal</div>
                   </div>
                   <div>
-                    <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Daily Deficit</div>
-                    <div className="font-semibold text-accent">-{Math.round(dailyDeficit)} kcal</div>
+                    <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">
+                      {isGainingWeight ? 'Daily Surplus' : 'Daily Deficit'}
+                    </div>
+                    <div className="font-semibold text-accent">
+                      {isGainingWeight ? '+' : '-'}{Math.round(dailyDifference)} kcal
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -504,7 +517,7 @@ export default function Home() {
                       Curated for your {targetCalories} kcal goal
                     </h2>
                     <p className="text-muted-foreground text-sm mt-1">
-                      These meals are perfectly portioned to help you maintain your {Math.round(dailyDeficit)} kcal deficit.
+                      These meals are perfectly portioned to help you maintain your {Math.round(dailyDifference)} kcal {isGainingWeight ? 'surplus' : 'deficit'}.
                     </p>
                   </div>
                   <Select value={mealType} onValueChange={setMealType}>
