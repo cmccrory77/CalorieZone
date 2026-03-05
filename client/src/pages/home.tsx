@@ -35,6 +35,7 @@ import recipe11 from "@/assets/images/recipe-11.jpg";
 import recipe12 from "@/assets/images/recipe-12.jpg";
 
 export default function Home() {
+  const [startingWeight, setStartingWeight] = useState(185);
   const [currentWeight, setCurrentWeight] = useState(185);
   const [targetWeight, setTargetWeight] = useState(165);
   const [timeframe, setTimeframe] = useState(12); // weeks
@@ -63,7 +64,9 @@ export default function Home() {
   const dailyDeficit = weeklyLossGoal * 500; // rough estimate 500 cal deficit = 1 lb/week
   const targetCalories = Math.round(maintenanceCalories - dailyDeficit);
   
-  const progressPercentage = 35; // mock progress
+  const totalWeightToLose = startingWeight - targetWeight;
+  const weightLostSoFar = startingWeight - currentWeight;
+  const progressPercentage = totalWeightToLose > 0 ? Math.max(0, Math.min(100, (weightLostSoFar / totalWeightToLose) * 100)) : 0;
 
   const getDailyRecipes = () => {
     const dayOfWeek = new Date().getDay(); // 0 to 6
@@ -244,14 +247,14 @@ export default function Home() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="current-weight" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Current (lbs)</Label>
+                      <Label htmlFor="starting-weight" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Starting (lbs)</Label>
                       <Input 
-                        id="current-weight" 
+                        id="starting-weight" 
                         type="number" 
-                        value={currentWeight} 
-                        onChange={(e) => setCurrentWeight(Number(e.target.value))}
+                        value={startingWeight} 
+                        onChange={(e) => setStartingWeight(Number(e.target.value))}
                         className="font-display font-semibold text-lg bg-slate-50 border-slate-200"
-                        data-testid="input-current-weight"
+                        data-testid="input-starting-weight"
                       />
                     </div>
                     <div className="space-y-2">
@@ -265,6 +268,18 @@ export default function Home() {
                         data-testid="input-target-weight"
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="current-weight" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Current (lbs)</Label>
+                    <Input 
+                      id="current-weight" 
+                      type="number" 
+                      value={currentWeight} 
+                      onChange={(e) => setCurrentWeight(Number(e.target.value))}
+                      className="font-display font-semibold text-lg bg-slate-50 border-slate-200"
+                      data-testid="input-current-weight"
+                    />
                   </div>
                   
                   <div className="space-y-2 pt-2">
@@ -309,7 +324,7 @@ export default function Home() {
                 <div className="pt-4 border-t border-slate-100">
                   <div className="flex justify-between text-sm mb-2">
                     <span className="font-medium">Progress</span>
-                    <span className="font-bold text-primary">{Math.abs(currentWeight - 200)} lbs lost</span>
+                    <span className="font-bold text-primary">{Math.abs(startingWeight - currentWeight)} lbs lost</span>
                   </div>
                   <Progress value={progressPercentage} className="h-2 bg-slate-100" />
                   <p className="text-xs text-muted-foreground mt-2 text-center">
