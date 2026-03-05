@@ -11,7 +11,9 @@ import {
   CalendarDays,
   Plus,
   X,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  Clock,
+  Utensils
 } from "lucide-react";
 import { format, addWeeks } from "date-fns";
 import type { UserProfile, FoodEntry } from "@shared/schema";
@@ -23,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
@@ -63,6 +66,7 @@ export default function Home() {
   const [timeframe, setTimeframe] = useState(12);
   const [targetDate, setTargetDate] = useState<Date>(addWeeks(new Date(), 12));
   const [mealType, setMealType] = useState("all");
+  const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
   const [newFoodName, setNewFoodName] = useState("");
   const [newFoodCalories, setNewFoodCalories] = useState("");
   const [newFoodProtein, setNewFoodProtein] = useState("");
@@ -715,7 +719,12 @@ export default function Home() {
                         </div>
                       </CardContent>
                       <CardFooter className="p-5 pt-0 flex gap-2">
-                        <Button className="flex-1 bg-slate-50 hover:bg-slate-100 text-foreground border border-slate-200" variant="outline">
+                        <Button 
+                          className="flex-1 bg-slate-50 hover:bg-slate-100 text-foreground border border-slate-200" 
+                          variant="outline"
+                          onClick={() => setSelectedRecipe(recipe)}
+                          data-testid={`button-view-recipe-${recipe.id}`}
+                        >
                           View Recipe
                         </Button>
                         <Button 
@@ -766,6 +775,66 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      <Dialog open={!!selectedRecipe} onOpenChange={(open) => !open && setSelectedRecipe(null)}>
+        {selectedRecipe && (
+          <DialogContent className="max-w-md p-0 overflow-hidden">
+            <div className="relative h-56 overflow-hidden">
+              <img 
+                src={selectedRecipe.image} 
+                alt={selectedRecipe.title} 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-primary shadow-sm">
+                {selectedRecipe.match}
+              </div>
+            </div>
+            <div className="p-6 space-y-5">
+              <DialogHeader>
+                <DialogTitle className="font-display text-xl">{selectedRecipe.title}</DialogTitle>
+                <DialogDescription className="capitalize">{selectedRecipe.type} · {selectedRecipe.cuisine === 'all' ? 'Balanced' : selectedRecipe.cuisine}</DialogDescription>
+              </DialogHeader>
+
+              <div className="grid grid-cols-4 gap-3">
+                <div className="bg-slate-50 rounded-xl p-3 text-center">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Calories</div>
+                  <div className="font-bold text-lg text-foreground">{selectedRecipe.calories}</div>
+                </div>
+                <div className="bg-blue-50 rounded-xl p-3 text-center">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Protein</div>
+                  <div className="font-bold text-lg text-blue-600">{selectedRecipe.protein}</div>
+                </div>
+                <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Carbs</div>
+                  <div className="font-bold text-lg text-emerald-600">{selectedRecipe.carbs}</div>
+                </div>
+                <div className="bg-amber-50 rounded-xl p-3 text-center">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Fat</div>
+                  <div className="font-bold text-lg text-amber-600">{selectedRecipe.fat}</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>Prep time: {selectedRecipe.time}</span>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  className="flex-1 bg-secondary hover:bg-secondary/90 text-white"
+                  onClick={() => {
+                    addRecipeToTracker(selectedRecipe);
+                    setSelectedRecipe(null);
+                  }}
+                  data-testid="button-log-from-dialog"
+                >
+                  <Plus className="h-4 w-4 mr-1.5" /> Log This Meal
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }
