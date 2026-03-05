@@ -436,8 +436,8 @@ export default function Home() {
               <TabsContent value="search" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <Card className="border-none shadow-sm bg-white">
                   <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row gap-4 mb-8">
-                      <div className="relative flex-1 flex gap-2">
+                    <div className="flex flex-col md:flex-row gap-4 mb-8 items-center">
+                      <div className="relative flex-1 flex gap-2 w-full">
                         <div className="relative flex-1">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                           <Input 
@@ -447,12 +447,18 @@ export default function Home() {
                         </div>
                         <Button className="h-12 px-6 bg-primary hover:bg-primary/90" onClick={() => setHasSearched(true)}>Go</Button>
                       </div>
+                      
+                      <div className="text-muted-foreground font-medium text-sm px-2">or</div>
+                      
                       <div className="flex gap-2 w-full md:w-auto">
-                        <Select defaultValue="all">
-                          <SelectTrigger className="w-full md:w-[180px] h-12 bg-slate-50 border-slate-200">
-                            <SelectValue placeholder="Cuisine Type" />
+                        <Select onValueChange={(val) => {
+                          if (val !== "placeholder") setHasSearched(true);
+                        }}>
+                          <SelectTrigger className="w-full md:w-[220px] h-12 bg-slate-50 border-slate-200">
+                            <SelectValue placeholder="Select Cuisine Type" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="placeholder" disabled className="text-muted-foreground hidden">Select Cuisine Type</SelectItem>
                             <SelectItem value="all">All Cuisines</SelectItem>
                             <SelectItem value="vegetarian">Vegetarian</SelectItem>
                             <SelectItem value="italian">Italian</SelectItem>
@@ -462,7 +468,6 @@ export default function Home() {
                             <SelectItem value="american">American</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Button className="h-12 px-6 bg-primary hover:bg-primary/90" onClick={() => setHasSearched(true)}>Go</Button>
                       </div>
                     </div>
 
