@@ -308,6 +308,8 @@ export default function Home() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Cuisines</SelectItem>
+                          <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                          <SelectItem value="italian">Italian</SelectItem>
                           <SelectItem value="mediterranean">Mediterranean</SelectItem>
                           <SelectItem value="asian">Asian</SelectItem>
                           <SelectItem value="mexican">Mexican</SelectItem>
