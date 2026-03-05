@@ -7,7 +7,6 @@ import {
   TrendingDown,
   Calendar,
   ChefHat,
-  Search,
   Wand2
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,10 +35,6 @@ export default function Home() {
   const [targetWeight, setTargetWeight] = useState(165);
   const [timeframe, setTimeframe] = useState(12); // weeks
   const [mealType, setMealType] = useState("all");
-  const [hasSearched, setHasSearched] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCuisine, setSelectedCuisine] = useState("all");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   
   // Mock calculations
   const maintenanceCalories = 2450;
@@ -326,12 +321,9 @@ export default function Home() {
                   <TabsTrigger value="recommended" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                     Recommended
                   </TabsTrigger>
-                  <TabsTrigger value="search" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                    Search Recipes
-                  </TabsTrigger>
                   <TabsTrigger value="ai" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white transition-all">
                     <Wand2 className="h-3.5 w-3.5 mr-2" />
-                    AI Generator
+                    Recipe Generator
                   </TabsTrigger>
                 </TabsList>
                 
@@ -411,79 +403,6 @@ export default function Home() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="search" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Card className="border-none shadow-sm bg-white">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row gap-4 mb-8 items-center">
-                      <div className="relative flex-1 flex gap-2 w-full">
-                        <div className="relative flex-1">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                          <Input 
-                            placeholder="Search for ingredients, cuisines..." 
-                            className="pl-10 h-12 bg-slate-50 border-slate-200 text-base"
-                            value={searchQuery}
-                            onChange={handleSearchQueryChange}
-                            onKeyDown={(e) => e.key === 'Enter' && executeTextSearch()}
-                          />
-                        </div>
-                        <Button className="h-12 px-6 bg-primary hover:bg-primary/90" onClick={executeTextSearch}>Go</Button>
-                      </div>
-                      
-                      <div className="text-muted-foreground font-medium text-sm px-2">or</div>
-                      
-                      <div className="flex gap-2 w-full md:w-auto">
-                        <Select value={selectedCuisine} onValueChange={handleCuisineSelect}>
-                          <SelectTrigger className="w-full md:w-[220px] h-12 bg-slate-50 border-slate-200">
-                            <SelectValue placeholder="Select Cuisine Type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="placeholder" disabled className="text-muted-foreground hidden">Select Cuisine Type</SelectItem>
-                            <SelectItem value="all">All Cuisines</SelectItem>
-                            <SelectItem value="vegetarian">Vegetarian</SelectItem>
-                            <SelectItem value="italian">Italian</SelectItem>
-                            <SelectItem value="mediterranean">Mediterranean</SelectItem>
-                            <SelectItem value="asian">Asian</SelectItem>
-                            <SelectItem value="mexican">Mexican</SelectItem>
-                            <SelectItem value="american">American</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {!hasSearched ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-                        <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                          <UtensilsCrossed className="h-8 w-8 text-slate-300" />
-                        </div>
-                        <p className="text-lg font-medium text-slate-600">Search for healthy recipes</p>
-                        <p className="text-sm max-w-sm mt-2">Find meals that fit your {targetCalories} kcal daily goal. All recipes can be adjusted for your specific portion sizes.</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {searchResults.map((recipe) => (
-                          <Card key={`search-${recipe.id}`} className="border-none shadow-sm bg-slate-50 overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-                            <div className="relative h-40 overflow-hidden">
-                              <img 
-                                src={recipe.image} 
-                                alt={recipe.title} 
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                            </div>
-                            <CardContent className="p-4">
-                              <h3 className="font-display font-semibold text-base leading-tight mb-3 line-clamp-1">{recipe.title}</h3>
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="font-bold text-foreground">{recipe.calories} kcal</span>
-                                <span className="text-muted-foreground">{recipe.time}</span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
               <TabsContent value="ai" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <Card className="border-none shadow-sm bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 overflow-hidden relative">
                   <div className="absolute -right-10 -top-10 text-blue-200 opacity-50">
@@ -494,7 +413,7 @@ export default function Home() {
                       <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-xl mb-4">
                         <Wand2 className="h-6 w-6 text-accent" />
                       </div>
-                      <h2 className="text-2xl font-display font-bold text-slate-800 mb-2">AI Recipe Generator</h2>
+                      <h2 className="text-2xl font-display font-bold text-slate-800 mb-2">Recipe Generator</h2>
                       <p className="text-slate-600 mb-6">
                         Tell us what ingredients you have in your fridge, and we'll generate a custom recipe tailored to exactly {Math.round(targetCalories / 3)} calories (your target per meal).
                       </p>
