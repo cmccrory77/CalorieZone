@@ -137,7 +137,7 @@ export default function Home() {
 
     const proteins = ["Chicken", "Tofu", "Salmon", "Turkey", "Beef", "Chickpeas", "Egg", "Tempeh", "Black Beans", "Lentils"];
     
-    const generatedRecipes = [];
+    const generatedRecipes: any[] = [];
     let idCounter = 1;
 
     cuisines.forEach((c) => {
@@ -197,45 +197,6 @@ export default function Home() {
   };
 
   const allRecipes = getDailyRecipes();
-
-  const handleSearch = (cuisineType = selectedCuisine, query = searchQuery) => {
-    let filtered = [...allRecipes];
-    
-    // Handle "all" cuisine logic
-    if (cuisineType === "all" || cuisineType === "placeholder") {
-      filtered = filtered.filter(r => r.cuisine === "all");
-    } else {
-      filtered = filtered.filter(r => r.cuisine === cuisineType);
-    }
-    
-    // Text search logic
-    if (query.trim()) {
-      const lowerQuery = query.toLowerCase();
-      filtered = filtered.filter(r => 
-        r.title.toLowerCase().includes(lowerQuery) || 
-        r.cuisine.toLowerCase().includes(lowerQuery)
-      );
-    }
-    
-    // Make sure we limit to 6 distinct recipes for the search tab
-    setSearchResults(filtered.slice(0, 6));
-    setHasSearched(true);
-  };
-
-  const handleSearchQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const executeTextSearch = () => {
-    handleSearch(selectedCuisine, searchQuery);
-  };
-
-  const handleCuisineSelect = (val: string) => {
-    if (val !== "placeholder") {
-      setSelectedCuisine(val);
-      handleSearch(val, searchQuery);
-    }
-  };
 
   const dailyPlanRecipes = allRecipes.filter(r => r.cuisine === 'all');
   const recipes = mealType === "all" ? dailyPlanRecipes : dailyPlanRecipes.filter(r => r.type === mealType);
@@ -379,6 +340,7 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
+          </div>
 
           <div className="lg:col-span-8 space-y-8">
             {/* Calories Tracker Card */}
