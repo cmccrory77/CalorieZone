@@ -197,7 +197,7 @@ export default function Home() {
   const recipes = mealType === "all" ? dailyPlanRecipes : dailyPlanRecipes.filter(r => r.type === mealType);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-green-50/40">
       {/* Navigation */}
       <nav className="bg-white border-b border-border sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
