@@ -273,7 +273,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Column - Metrics & Calculator */}
+          {/* Top Row - Cards (Left & Right) */}
           <div className="lg:col-span-4 space-y-8">
             
             {/* Weight Goal Card */}
@@ -380,6 +380,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
+          <div className="lg:col-span-8 space-y-8">
             {/* Calories Tracker Card */}
             <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden relative">
               <div className="absolute top-0 right-0 p-6 opacity-10">
@@ -485,11 +486,10 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
-
           </div>
 
           {/* Right Column - Recipes & Meals */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-12 space-y-6">
             
             <Tabs defaultValue="recommended" className="w-full">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
