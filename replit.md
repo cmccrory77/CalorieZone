@@ -16,6 +16,8 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - `server/routes.ts` - REST API routes prefixed with `/api`
 - `client/src/pages/home.tsx` - Main app UI (single page)
 - `client/src/components/ui/progress.tsx` - Extended with `indicatorClassName` prop
+- `client/src/components/BarcodeScanner.tsx` - Barcode scanning component
+- `client/src/components/MealScanner.tsx` - AI meal photo analysis component
 
 ## API Endpoints
 - `GET /api/profile` - Get or create default user profile
@@ -23,6 +25,7 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - `GET /api/food-entries/:profileId/:date` - Get food entries for a date
 - `POST /api/food-entries` - Add a food entry
 - `DELETE /api/food-entries/:id` - Remove a food entry
+- `POST /api/analyze-meal` - AI vision analysis of meal photo (base64 image → food items with calories)
 
 ## Design System
 - Fonts: Poppins (display/headings) + Inter (body)
@@ -34,6 +37,7 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - **Weight Goal Tracker**: Set starting/current/target weights, timeframe, auto-calculates daily caloric target
 - **Daily Calorie Tracking**: Quick-add foods manually, view daily log, track remaining calories
 - **Barcode Scanner**: Camera-based barcode scanning using `html5-qrcode`, product lookup via Open Food Facts API (free, no key), optional logging to diary
+- **AI Meal Scanner**: Take a photo of a meal, GPT-4o vision analyzes food items with calories/macros, log individually or all at once (uses Replit AI Integrations / OpenAI)
 - **Recipe Recommendations**: Procedurally generated per-category recipes with ingredients, steps, nutrition info
 - **Recipe Generator**: User inputs ingredients, generates custom recipe matched to calorie target
 - **Macro Tracking**: Pie chart breakdown of protein/carbs/fat

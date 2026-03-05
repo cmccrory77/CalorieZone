@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import BarcodeScanner from "@/components/BarcodeScanner";
+import MealScanner from "@/components/MealScanner";
 
 import breakfast1 from "@/assets/images/breakfast_meals_1.png";
 import breakfast2 from "@/assets/images/breakfast_meals_2.png";
@@ -846,9 +847,14 @@ export default function Home() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold text-slate-700">Quick Add</h4>
-                    <BarcodeScanner onLog={(food) => {
-                      addFoodMutation.mutate(food);
-                    }} />
+                    <div className="flex gap-1.5">
+                      <BarcodeScanner onLog={(food) => {
+                        addFoodMutation.mutate(food);
+                      }} />
+                      <MealScanner onLog={(food) => {
+                        addFoodMutation.mutate(food);
+                      }} />
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Input 

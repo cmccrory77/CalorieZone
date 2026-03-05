@@ -1,7 +1,9 @@
 import type { Express } from "express";
+import express from "express";
 import { type Server } from "http";
 import { storage } from "./storage";
 import { insertFoodEntrySchema, updateUserProfileSchema } from "@shared/schema";
+import OpenAI from "openai";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -51,6 +53,78 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to remove food entry" });
+    }
+  });
+
+  const openai = new OpenAI({
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  });
+
+  app.post("/api/analyze-meal", express.json({ limit: "10mb" }), async (req, res) => {
+    try {
+      const { image } = req.body;
+      if (!image) {
+        return res.status(400).json({ message: "Image data is required" });
+      }
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are a nutrition analysis expert. Analyze the food in the image and identify each distinct food item with its estimated portion size and calorie count. Return ONLY valid JSON in this exact format:
+{
+  "items": [
+    { "name": "Food item name", "portion": "estimated portion size", "calories": 250, "protein": 20, "carbs": 30, "fat": 8 }
+  ],
+  "totalCalories": 500,
+  "confidence": "high"
+}
+The confidence field should be "high", "medium", or "low" based on how clearly the food items are visible. Be realistic with calorie estimates based on typical serving sizes visible in the photo.`
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Analyze this meal photo. Identify each food item, estimate portion sizes, and calculate calories and macros for each item." },
+              { type: "image_url", image_url: { url: image } }
+            ]
+          }
+        ],
+        max_tokens: 1000,
+        response_format: { type: "json_object" },
+      });
+
+      const content = response.choices[0]?.message?.content || "";
+      let analysis: any;
+      try {
+        analysis = JSON.parse(content);
+      } catch {
+        return res.status(422).json({ message: "Could not analyze the image. Please try a clearer photo." });
+      }
+
+      if (!analysis.items || !Array.isArray(analysis.items) || analysis.items.length === 0) {
+        return res.status(422).json({ message: "No food items detected. Please try a clearer photo of your meal." });
+      }
+
+      analysis.items = analysis.items.map((item: any) => ({
+        name: String(item.name || "Unknown item"),
+        portion: String(item.portion || "1 serving"),
+        calories: Math.max(0, Math.round(Number(item.calories) || 0)),
+        protein: Math.max(0, Math.round(Number(item.protein) || 0)),
+        carbs: Math.max(0, Math.round(Number(item.carbs) || 0)),
+        fat: Math.max(0, Math.round(Number(item.fat) || 0)),
+      }));
+      analysis.totalCalories = analysis.items.reduce((sum: number, i: any) => sum + i.calories, 0);
+      analysis.confidence = ["high", "medium", "low"].includes(analysis.confidence) ? analysis.confidence : "medium";
+
+      res.json(analysis);
+    } catch (error: any) {
+      console.error("Meal analysis error:", error);
+      if (error?.message?.includes("FREE_CLOUD_BUDGET_EXCEEDED")) {
+        return res.status(402).json({ message: "AI usage limit reached. Please try again later." });
+      }
+      res.status(500).json({ message: "Failed to analyze meal image" });
     }
   });
 
