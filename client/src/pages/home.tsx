@@ -10,7 +10,8 @@ import {
   Wand2,
   CalendarDays,
   Plus,
-  X
+  X,
+  PieChart as PieChartIcon
 } from "lucide-react";
 import { format, addWeeks } from "date-fns";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
 import recipe1 from "@/assets/images/recipe-1.jpg";
 import recipe2 from "@/assets/images/recipe-2.jpg";
@@ -45,22 +47,37 @@ export default function Home() {
   const [mealType, setMealType] = useState("all");
   
   // Calorie Tracker State
-  const [trackedFoods, setTrackedFoods] = useState<{id: number, name: string, calories: number}[]>([]);
+  const [trackedFoods, setTrackedFoods] = useState<{id: number, name: string, calories: number, protein: number, carbs: number, fat: number}[]>([]);
   const [newFoodName, setNewFoodName] = useState("");
   const [newFoodCalories, setNewFoodCalories] = useState("");
+  const [newFoodProtein, setNewFoodProtein] = useState("");
+  const [newFoodCarbs, setNewFoodCarbs] = useState("");
+  const [newFoodFat, setNewFoodFat] = useState("");
   
   const handleAddFood = () => {
     if (newFoodName && newFoodCalories) {
+      const cals = parseInt(newFoodCalories);
+      // Generate some dummy macros if they aren't provided
+      const prot = newFoodProtein ? parseInt(newFoodProtein) : Math.round(cals * 0.3 / 4);
+      const carb = newFoodCarbs ? parseInt(newFoodCarbs) : Math.round(cals * 0.4 / 4);
+      const fat = newFoodFat ? parseInt(newFoodFat) : Math.round(cals * 0.3 / 9);
+
       setTrackedFoods([
         ...trackedFoods, 
         { 
           id: Date.now(), 
           name: newFoodName, 
-          calories: parseInt(newFoodCalories) 
+          calories: cals,
+          protein: prot,
+          carbs: carb,
+          fat: fat
         }
       ]);
       setNewFoodName("");
       setNewFoodCalories("");
+      setNewFoodProtein("");
+      setNewFoodCarbs("");
+      setNewFoodFat("");
     }
   };
 
@@ -74,7 +91,10 @@ export default function Home() {
       {
         id: Date.now(),
         name: recipe.title,
-        calories: recipe.calories
+        calories: recipe.calories,
+        protein: parseInt(recipe.protein),
+        carbs: parseInt(recipe.carbs),
+        fat: parseInt(recipe.fat)
       }
     ]);
   };
@@ -111,6 +131,24 @@ export default function Home() {
   const progressPercentage = totalWeightDifference > 0 
     ? Math.max(0, Math.min(100, (weightChangedSoFar / totalWeightDifference) * 100)) 
     : 0;
+
+  // Macro Calculations
+  const totalProtein = trackedFoods.reduce((acc, food) => acc + (food.protein || 0), 0);
+  const totalCarbs = trackedFoods.reduce((acc, food) => acc + (food.carbs || 0), 0);
+  const totalFat = trackedFoods.reduce((acc, food) => acc + (food.fat || 0), 0);
+  
+  const hasMacros = totalProtein > 0 || totalCarbs > 0 || totalFat > 0;
+  const macroData = hasMacros ? [
+    { name: 'Protein', value: totalProtein, color: '#3b82f6' }, // blue-500
+    { name: 'Carbs', value: totalCarbs, color: '#10b981' },   // emerald-500
+    { name: 'Fat', value: totalFat, color: '#f59e0b' }        // amber-500
+  ] : [
+    { name: 'No Data', value: 1, color: '#f1f5f9' }           // slate-100
+  ];
+
+  const targetProtein = Math.round((targetCalories * 0.3) / 4);
+  const targetCarbs = Math.round((targetCalories * 0.4) / 4);
+  const targetFat = Math.round((targetCalories * 0.3) / 9);
 
   const getDailyRecipes = () => {
     const dayOfWeek = new Date().getDay(); // 0 to 6
@@ -235,8 +273,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Top Row - Cards (Left & Right) */}
-          <div className="lg:col-span-4 space-y-8">
-            
+          <div className="lg:col-span-3 space-y-8">
             {/* Weight Goal Card */}
             <Card className="border-none shadow-sm bg-white overflow-hidden">
               <div className="h-2 bg-primary w-full"></div>
@@ -342,7 +379,7 @@ export default function Home() {
             </Card>
           </div>
 
-          <div className="lg:col-span-8 space-y-8">
+          <div className="lg:col-span-6 space-y-8">
             {/* Calories Tracker Card */}
             <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden relative">
               <div className="absolute top-0 right-0 p-6 opacity-10">
@@ -444,6 +481,77 @@ export default function Home() {
                     <div className="font-semibold text-accent">
                       {isGainingWeight ? '+' : '-'}{Math.round(dailyDifference)} kcal
                     </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="lg:col-span-3 space-y-8">
+            <Card className="border-none shadow-sm bg-white overflow-hidden h-full flex flex-col">
+              <div className="h-2 bg-accent w-full"></div>
+              <CardHeader className="pb-0">
+                <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+                  <PieChartIcon className="h-5 w-5 text-accent" />
+                  Macros
+                </CardTitle>
+                <CardDescription>Daily macronutrient breakdown</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col justify-between pt-4">
+                <div className="h-[180px] w-full relative">
+                  {!hasMacros && (
+                    <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400 z-10 pointer-events-none">
+                      No macros logged yet
+                    </div>
+                  )}
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={macroData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={70}
+                        paddingAngle={2}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {macroData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => [`${value}g`, '']}
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2 text-center pt-4 border-t border-slate-100 mt-4">
+                  <div>
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Protein</div>
+                    </div>
+                    <div className="font-semibold text-sm">{totalProtein}g</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{targetProtein}g max</div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Carbs</div>
+                    </div>
+                    <div className="font-semibold text-sm">{totalCarbs}g</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{targetCarbs}g max</div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Fat</div>
+                    </div>
+                    <div className="font-semibold text-sm">{totalFat}g</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{targetFat}g max</div>
                   </div>
                 </div>
               </CardContent>
