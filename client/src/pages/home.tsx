@@ -21,6 +21,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import recipe1 from "@/assets/images/recipe-1.jpg";
 import recipe2 from "@/assets/images/recipe-2.jpg";
 import recipe3 from "@/assets/images/recipe-3.jpg";
+import recipe4 from "@/assets/images/recipe-4.jpg";
+import recipe5 from "@/assets/images/recipe-5.jpg";
+import recipe6 from "@/assets/images/recipe-6.jpg";
+import recipe7 from "@/assets/images/recipe-7.jpg";
+import recipe8 from "@/assets/images/recipe-8.jpg";
+import recipe9 from "@/assets/images/recipe-9.jpg";
+import recipe10 from "@/assets/images/recipe-10.jpg";
+import recipe11 from "@/assets/images/recipe-11.jpg";
+import recipe12 from "@/assets/images/recipe-12.jpg";
 
 export default function Home() {
   const [currentWeight, setCurrentWeight] = useState(185);
@@ -37,18 +46,7 @@ export default function Home() {
   const progressPercentage = 35; // mock progress
 
   const allRecipes = [
-    {
-      id: 1,
-      title: "Grilled Lemon Herb Chicken Bowl",
-      type: "lunch",
-      calories: 450,
-      protein: "42g",
-      carbs: "35g",
-      fat: "14g",
-      time: "25 min",
-      image: recipe1,
-      match: "98% Match"
-    },
+    // Breakfast
     {
       id: 2,
       title: "Berry & Nut Power Oatmeal",
@@ -62,6 +60,68 @@ export default function Home() {
       match: "94% Match"
     },
     {
+      id: 6,
+      title: "Avocado Toast with Poached Egg",
+      type: "breakfast",
+      calories: 420,
+      protein: "18g",
+      carbs: "35g",
+      fat: "22g",
+      time: "12 min",
+      image: recipe6,
+      match: "96% Match"
+    },
+    {
+      id: 7,
+      title: "Greek Yogurt Parfait",
+      type: "breakfast",
+      calories: 310,
+      protein: "22g",
+      carbs: "38g",
+      fat: "8g",
+      time: "5 min",
+      image: recipe7,
+      match: "98% Match"
+    },
+    // Lunch
+    {
+      id: 1,
+      title: "Grilled Lemon Herb Chicken Bowl",
+      type: "lunch",
+      calories: 450,
+      protein: "42g",
+      carbs: "35g",
+      fat: "14g",
+      time: "25 min",
+      image: recipe1,
+      match: "98% Match"
+    },
+    {
+      id: 8,
+      title: "Mediterranean Quinoa Salad",
+      type: "lunch",
+      calories: 410,
+      protein: "16g",
+      carbs: "48g",
+      fat: "18g",
+      time: "15 min",
+      image: recipe8,
+      match: "95% Match"
+    },
+    {
+      id: 9,
+      title: "Turkey & Spinach Wrap",
+      type: "lunch",
+      calories: 390,
+      protein: "32g",
+      carbs: "36g",
+      fat: "14g",
+      time: "10 min",
+      image: recipe9,
+      match: "92% Match"
+    },
+    // Dinner
+    {
       id: 3,
       title: "Roasted Salmon with Sweet Potato",
       type: "dinner",
@@ -74,18 +134,6 @@ export default function Home() {
       match: "89% Match"
     },
     {
-      id: 4,
-      title: "Hummus and Carrot Sticks",
-      type: "snack",
-      calories: 210,
-      protein: "8g",
-      carbs: "22g",
-      fat: "10g",
-      time: "5 min",
-      image: "/src/assets/images/recipe-4.jpg",
-      match: "99% Match"
-    },
-    {
       id: 5,
       title: "Lean Steak and Asparagus",
       type: "dinner",
@@ -94,8 +142,57 @@ export default function Home() {
       carbs: "12g",
       fat: "28g",
       time: "20 min",
-      image: "/src/assets/images/recipe-5.jpg",
+      image: recipe5,
       match: "92% Match"
+    },
+    {
+      id: 10,
+      title: "Baked Cod with Quinoa",
+      type: "dinner",
+      calories: 440,
+      protein: "36g",
+      carbs: "42g",
+      fat: "12g",
+      time: "25 min",
+      image: recipe10,
+      match: "97% Match"
+    },
+    // Snacks
+    {
+      id: 4,
+      title: "Hummus and Carrot Sticks",
+      type: "snack",
+      calories: 210,
+      protein: "8g",
+      carbs: "22g",
+      fat: "10g",
+      time: "5 min",
+      image: recipe4,
+      match: "99% Match"
+    },
+    {
+      id: 11,
+      title: "Apple Slices with Peanut Butter",
+      type: "snack",
+      calories: 240,
+      protein: "7g",
+      carbs: "28g",
+      fat: "14g",
+      time: "5 min",
+      image: recipe11,
+      match: "94% Match"
+    },
+    {
+      id: 12,
+      title: "Mixed Nuts Bowl",
+      type: "snack",
+      calories: 280,
+      protein: "9g",
+      carbs: "12g",
+      fat: "24g",
+      time: "2 min",
+      image: recipe12,
+      match: "91% Match"
     }
   ];
 
