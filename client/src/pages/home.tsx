@@ -10,8 +10,7 @@ import {
   Wand2,
   CalendarDays,
   Plus,
-  X,
-  PieChart
+  X
 } from "lucide-react";
 import { format, addWeeks } from "date-fns";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +22,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
 import recipe1 from "@/assets/images/recipe-1.jpg";
 import recipe2 from "@/assets/images/recipe-2.jpg";
@@ -47,12 +45,9 @@ export default function Home() {
   const [mealType, setMealType] = useState("all");
   
   // Calorie Tracker State
-  const [trackedFoods, setTrackedFoods] = useState<{id: number, name: string, calories: number, protein: number, carbs: number, fat: number}[]>([]);
+  const [trackedFoods, setTrackedFoods] = useState<{id: number, name: string, calories: number}[]>([]);
   const [newFoodName, setNewFoodName] = useState("");
   const [newFoodCalories, setNewFoodCalories] = useState("");
-  const [newFoodProtein, setNewFoodProtein] = useState("");
-  const [newFoodCarbs, setNewFoodCarbs] = useState("");
-  const [newFoodFat, setNewFoodFat] = useState("");
   
   const handleAddFood = () => {
     if (newFoodName && newFoodCalories) {
@@ -61,17 +56,11 @@ export default function Home() {
         { 
           id: Date.now(), 
           name: newFoodName, 
-          calories: parseInt(newFoodCalories),
-          protein: parseInt(newFoodProtein) || 0,
-          carbs: parseInt(newFoodCarbs) || 0,
-          fat: parseInt(newFoodFat) || 0
+          calories: parseInt(newFoodCalories) 
         }
       ]);
       setNewFoodName("");
       setNewFoodCalories("");
-      setNewFoodProtein("");
-      setNewFoodCarbs("");
-      setNewFoodFat("");
     }
   };
 
@@ -85,10 +74,7 @@ export default function Home() {
       {
         id: Date.now(),
         name: recipe.title,
-        calories: recipe.calories,
-        protein: parseInt(recipe.protein) || 0,
-        carbs: 40, // Mock data for recipes without explicit carbs
-        fat: 15    // Mock data for recipes without explicit fat
+        calories: recipe.calories
       }
     ]);
   };
@@ -282,204 +268,6 @@ export default function Home() {
           
           {/* Left Column - Metrics & Calculator */}
           <div className="lg:col-span-4 space-y-8">
-            
-            {/* Calories Tracker Card - Moved to top */}
-            <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-6 opacity-10">
-                <Flame className="h-32 w-32" />
-              </div>
-              <CardHeader className="pb-4 relative z-10">
-                <CardTitle className="text-slate-100 flex items-center gap-2 text-lg">
-                  <Activity className="h-5 w-5 text-accent" />
-                  Daily Targets & Tracker
-                </CardTitle>
-                <CardDescription className="text-slate-400">Log your meals to hit your daily goal.</CardDescription>
-              </CardHeader>
-              <CardContent className="relative z-10 space-y-6">
-                
-                <div className="flex justify-between items-end mb-2">
-                  <div>
-                    <div className="text-4xl font-display font-bold text-white tracking-tight">
-                      {trackedFoods.reduce((acc, food) => acc + food.calories, 0)}
-                    </div>
-                    <div className="text-slate-400 text-xs uppercase tracking-wide font-medium mt-1">Consumed</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-display font-bold text-slate-500 tracking-tight">
-                      {targetCalories}
-                    </div>
-                    <div className="text-slate-500 text-xs uppercase tracking-wide font-medium mt-1">Target</div>
-                  </div>
-                </div>
-
-                <Progress 
-                  value={Math.min(100, (trackedFoods.reduce((acc, food) => acc + food.calories, 0) / targetCalories) * 100)} 
-                  className="h-3 bg-slate-800" 
-                  indicatorClassName={trackedFoods.reduce((acc, food) => acc + food.calories, 0) > targetCalories ? "bg-red-500" : "bg-accent"}
-                />
-
-                <div className="text-center text-sm font-medium pt-2 pb-4 border-b border-slate-800">
-                  {targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0) > 0 ? (
-                    <span className="text-accent">{targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0)} calories remaining</span>
-                  ) : (
-                    <span className="text-red-400">Over goal by {Math.abs(targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0))} calories</span>
-                  )}
-                </div>
-
-                {/* Add Custom Food */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-slate-300">Quick Add</h4>
-                  <div className="flex flex-col gap-2">
-                    <Input 
-                      placeholder="Food name" 
-                      value={newFoodName}
-                      onChange={(e) => setNewFoodName(e.target.value)}
-                      className="w-full bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm h-9"
-                    />
-                    <div className="flex gap-2">
-                      <Input 
-                        type="number"
-                        placeholder="Kcal" 
-                        value={newFoodCalories}
-                        onChange={(e) => setNewFoodCalories(e.target.value)}
-                        className="flex-1 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm h-9"
-                      />
-                      <Input 
-                        type="number"
-                        placeholder="Pro (g)" 
-                        value={newFoodProtein}
-                        onChange={(e) => setNewFoodProtein(e.target.value)}
-                        className="flex-1 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm h-9"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Input 
-                        type="number"
-                        placeholder="Carbs (g)" 
-                        value={newFoodCarbs}
-                        onChange={(e) => setNewFoodCarbs(e.target.value)}
-                        className="flex-1 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm h-9"
-                      />
-                      <Input 
-                        type="number"
-                        placeholder="Fat (g)" 
-                        value={newFoodFat}
-                        onChange={(e) => setNewFoodFat(e.target.value)}
-                        className="flex-1 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm h-9"
-                      />
-                      <Button size="icon" onClick={handleAddFood} className="h-9 w-9 bg-accent hover:bg-accent/90 text-white shrink-0">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Logged Foods List */}
-                {trackedFoods.length > 0 && (
-                  <div className="space-y-3 pt-4 border-t border-slate-800">
-                    <h4 className="text-sm font-semibold text-slate-300">Today's Log</h4>
-                    <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
-                      {trackedFoods.map(food => (
-                        <div key={food.id} className="flex flex-col p-2 rounded-lg hover:bg-slate-800 border border-transparent hover:border-slate-700 group transition-colors">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm font-medium text-slate-200 truncate pr-2">{food.name}</span>
-                            <div className="flex items-center gap-3 shrink-0">
-                              <span className="text-sm text-slate-400 font-semibold">{food.calories} kcal</span>
-                              <button 
-                                onClick={() => handleRemoveFood(food.id)}
-                                className="text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="flex gap-3 text-[10px] text-slate-500">
-                            <span>P: {food.protein}g</span>
-                            <span>C: {food.carbs}g</span>
-                            <span>F: {food.fat}g</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
-                  <div>
-                    <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Maintenance</div>
-                    <div className="font-semibold text-slate-200">{maintenanceCalories} kcal</div>
-                  </div>
-                  <div>
-                    <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Daily Deficit</div>
-                    <div className="font-semibold text-accent">-{Math.round(dailyDeficit)} kcal</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Macros Chart Card */}
-            <Card className="border-none shadow-sm bg-white overflow-hidden relative">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-foreground flex items-center gap-2 text-lg">
-                  <PieChart className="h-5 w-5 text-secondary" />
-                  Daily Macros
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {trackedFoods.length > 0 ? (
-                  <div className="h-48 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RechartsPieChart>
-                        <Pie
-                          data={[
-                            { name: 'Protein', value: trackedFoods.reduce((acc, food) => acc + food.protein, 0) },
-                            { name: 'Carbs', value: trackedFoods.reduce((acc, food) => acc + food.carbs, 0) },
-                            { name: 'Fat', value: trackedFoods.reduce((acc, food) => acc + food.fat, 0) }
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={70}
-                          paddingAngle={2}
-                          dataKey="value"
-                        >
-                          <Cell key="cell-protein" fill="#03A9F4" /> {/* Accent Blue */}
-                          <Cell key="cell-carbs" fill="#4CAF50" /> {/* Primary Green */}
-                          <Cell key="cell-fat" fill="#FF9800" /> {/* Secondary Orange */}
-                        </Pie>
-                        <Tooltip 
-                          formatter={(value: number) => [`${value}g`, 'Amount']}
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
-                        />
-                        <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                      </RechartsPieChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="h-48 flex items-center justify-center text-sm text-muted-foreground flex-col gap-2">
-                    <PieChart className="h-8 w-8 text-slate-200" />
-                    <span>Log food to see your macros</span>
-                  </div>
-                )}
-                
-                {trackedFoods.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 mt-4 text-center text-xs">
-                    <div className="bg-slate-50 p-2 rounded-lg">
-                      <div className="font-semibold text-[#03A9F4]">{trackedFoods.reduce((acc, food) => acc + food.protein, 0)}g</div>
-                      <div className="text-muted-foreground mt-0.5">Protein</div>
-                    </div>
-                    <div className="bg-slate-50 p-2 rounded-lg">
-                      <div className="font-semibold text-[#4CAF50]">{trackedFoods.reduce((acc, food) => acc + food.carbs, 0)}g</div>
-                      <div className="text-muted-foreground mt-0.5">Carbs</div>
-                    </div>
-                    <div className="bg-slate-50 p-2 rounded-lg">
-                      <div className="font-semibold text-[#FF9800]">{trackedFoods.reduce((acc, food) => acc + food.fat, 0)}g</div>
-                      <div className="text-muted-foreground mt-0.5">Fat</div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
             
             {/* Weight Goal Card */}
             <Card className="border-none shadow-sm bg-white overflow-hidden">
