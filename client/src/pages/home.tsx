@@ -26,18 +26,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
-import breakfast1 from "@/assets/images/breakfast_meals_1.jpg";
-import breakfast2 from "@/assets/images/breakfast_meals_2.jpg";
-import breakfast3 from "@/assets/images/breakfast_meals_3.jpg";
-import lunch1 from "@/assets/images/lunch_meals_1.jpg";
-import lunch2 from "@/assets/images/lunch_meals_2.jpg";
-import lunch3 from "@/assets/images/lunch_meals_3.jpg";
-import dinner1 from "@/assets/images/dinner_meals_1.jpg";
-import dinner2 from "@/assets/images/dinner_meals_2.jpg";
-import dinner3 from "@/assets/images/dinner_meals_3.jpg";
-import snack1 from "@/assets/images/snack_foods_1.jpg";
-import snack2 from "@/assets/images/snack_foods_2.jpg";
-import snack3 from "@/assets/images/snack_foods_3.jpg";
+import breakfast1 from "@/assets/images/breakfast_meals_1.png";
+import breakfast2 from "@/assets/images/breakfast_meals_2.png";
+import breakfast3 from "@/assets/images/breakfast_meals_3.png";
+import lunch1 from "@/assets/images/lunch_meals_1.png";
+import lunch2 from "@/assets/images/lunch_meals_2.png";
+import lunch3 from "@/assets/images/lunch_meals_3.png";
+import dinner1 from "@/assets/images/dinner_meals_1.png";
+import dinner2 from "@/assets/images/dinner_meals_2.png";
+import dinner3 from "@/assets/images/dinner_meals_3.png";
+import snack1 from "@/assets/images/snack_foods_1.png";
+import snack2 from "@/assets/images/snack_foods_2.png";
+import snack3 from "@/assets/images/snack_foods_3.png";
 
 export default function Home() {
   const queryClient = useQueryClient();
