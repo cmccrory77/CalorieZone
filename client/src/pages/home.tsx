@@ -345,7 +345,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Top Row - Cards (Left & Right) */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="lg:col-span-4 space-y-8">
             {/* Weight Goal Card */}
             <Card className="border-none shadow-sm bg-white overflow-hidden">
               <div className="h-2 bg-primary w-full"></div>
@@ -359,9 +359,9 @@ export default function Home() {
               <CardContent className="space-y-6">
                 
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="starting-weight" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Starting (lbs)</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2 min-w-0">
+                      <Label htmlFor="starting-weight" className="text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Starting (lbs)</Label>
                       <Input 
                         id="starting-weight" 
                         type="number" 
@@ -371,8 +371,8 @@ export default function Home() {
                         data-testid="input-starting-weight"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="target-weight" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Target (lbs)</Label>
+                    <div className="space-y-2 min-w-0">
+                      <Label htmlFor="target-weight" className="text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Target (lbs)</Label>
                       <Input 
                         id="target-weight" 
                         type="number" 
@@ -451,7 +451,7 @@ export default function Home() {
             </Card>
           </div>
 
-          <div className="lg:col-span-6 space-y-8">
+          <div className="lg:col-span-5 space-y-8">
             {/* Calories Tracker Card */}
             <Card className="border-none shadow-sm bg-white overflow-hidden relative h-full flex flex-col">
               <div className="h-2 bg-secondary w-full"></div>
