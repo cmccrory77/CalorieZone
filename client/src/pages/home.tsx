@@ -381,28 +381,29 @@ export default function Home() {
 
           <div className="lg:col-span-6 space-y-8">
             {/* Calories Tracker Card */}
-            <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-6 opacity-10">
-                <Flame className="h-32 w-32" />
+            <Card className="border-none shadow-sm bg-white overflow-hidden relative h-full flex flex-col">
+              <div className="h-2 bg-secondary w-full"></div>
+              <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
+                <Flame className="h-32 w-32 text-secondary" />
               </div>
               <CardHeader className="pb-4 relative z-10">
-                <CardTitle className="text-slate-100 flex items-center gap-2 text-lg">
-                  <Activity className="h-5 w-5 text-accent" />
+                <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+                  <Activity className="h-5 w-5 text-secondary" />
                   Daily Targets & Tracker
                 </CardTitle>
-                <CardDescription className="text-slate-400">Log your meals to hit your daily goal.</CardDescription>
+                <CardDescription>Log your meals to hit your daily goal.</CardDescription>
               </CardHeader>
-              <CardContent className="relative z-10 space-y-6">
+              <CardContent className="relative z-10 flex-1 flex flex-col space-y-6">
                 
                 <div className="flex justify-between items-end mb-2">
                   <div>
-                    <div className="text-4xl font-display font-bold text-white tracking-tight">
+                    <div className="text-4xl font-display font-bold text-slate-900 tracking-tight">
                       {trackedFoods.reduce((acc, food) => acc + food.calories, 0)}
                     </div>
-                    <div className="text-slate-400 text-xs uppercase tracking-wide font-medium mt-1">Consumed</div>
+                    <div className="text-slate-500 text-xs uppercase tracking-wide font-medium mt-1">Consumed</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-display font-bold text-slate-500 tracking-tight">
+                    <div className="text-2xl font-display font-bold text-slate-400 tracking-tight">
                       {targetCalories}
                     </div>
                     <div className="text-slate-500 text-xs uppercase tracking-wide font-medium mt-1">Target</div>
@@ -411,36 +412,36 @@ export default function Home() {
 
                 <Progress 
                   value={Math.min(100, (trackedFoods.reduce((acc, food) => acc + food.calories, 0) / targetCalories) * 100)} 
-                  className="h-3 bg-slate-800" 
-                  indicatorClassName={trackedFoods.reduce((acc, food) => acc + food.calories, 0) > targetCalories ? "bg-red-500" : "bg-accent"}
+                  className="h-3 bg-slate-100" 
+                  indicatorClassName={trackedFoods.reduce((acc, food) => acc + food.calories, 0) > targetCalories ? "bg-red-500" : "bg-secondary"}
                 />
 
-                <div className="text-center text-sm font-medium pt-2 pb-4 border-b border-slate-800">
+                <div className="text-center text-sm font-medium pt-2 pb-4 border-b border-slate-100">
                   {targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0) > 0 ? (
-                    <span className="text-accent">{targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0)} calories remaining</span>
+                    <span className="text-secondary">{targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0)} calories remaining</span>
                   ) : (
-                    <span className="text-red-400">Over goal by {Math.abs(targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0))} calories</span>
+                    <span className="text-red-500">Over goal by {Math.abs(targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0))} calories</span>
                   )}
                 </div>
 
                 {/* Add Custom Food */}
                 <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-slate-300">Quick Add</h4>
+                  <h4 className="text-sm font-semibold text-slate-700">Quick Add</h4>
                   <div className="flex gap-2">
                     <Input 
                       placeholder="Food name" 
                       value={newFoodName}
                       onChange={(e) => setNewFoodName(e.target.value)}
-                      className="flex-1 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm h-9"
+                      className="flex-1 bg-slate-50 border-slate-200 text-sm h-9"
                     />
                     <Input 
                       type="number"
                       placeholder="Kcal" 
                       value={newFoodCalories}
                       onChange={(e) => setNewFoodCalories(e.target.value)}
-                      className="w-20 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm h-9"
+                      className="w-20 bg-slate-50 border-slate-200 text-sm h-9"
                     />
-                    <Button size="icon" onClick={handleAddFood} className="h-9 w-9 bg-accent hover:bg-accent/90 text-white shrink-0">
+                    <Button size="icon" onClick={handleAddFood} className="h-9 w-9 bg-secondary hover:bg-secondary/90 text-white shrink-0">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -448,17 +449,17 @@ export default function Home() {
 
                 {/* Logged Foods List */}
                 {trackedFoods.length > 0 && (
-                  <div className="space-y-3 pt-4 border-t border-slate-800">
-                    <h4 className="text-sm font-semibold text-slate-300">Today's Log</h4>
+                  <div className="space-y-3 pt-4 border-t border-slate-100">
+                    <h4 className="text-sm font-semibold text-slate-700">Today's Log</h4>
                     <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
                       {trackedFoods.map(food => (
-                        <div key={food.id} className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-800 border border-transparent hover:border-slate-700 group transition-colors">
-                          <span className="text-sm font-medium text-slate-200 truncate pr-2">{food.name}</span>
+                        <div key={food.id} className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 group transition-colors">
+                          <span className="text-sm font-medium text-slate-700 truncate pr-2">{food.name}</span>
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-sm text-slate-400 font-semibold">{food.calories} kcal</span>
+                            <span className="text-sm text-slate-500 font-semibold">{food.calories} kcal</span>
                             <button 
                               onClick={() => handleRemoveFood(food.id)}
-                              className="text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                              className="text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                             >
                               <X className="h-4 w-4" />
                             </button>
@@ -469,16 +470,16 @@ export default function Home() {
                   </div>
                 )}
                 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 mt-auto">
                   <div>
-                    <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Maintenance</div>
-                    <div className="font-semibold text-slate-200">{maintenanceCalories} kcal</div>
+                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-1">Maintenance</div>
+                    <div className="font-semibold text-slate-700">{maintenanceCalories} kcal</div>
                   </div>
                   <div>
-                    <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">
+                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-1">
                       {isGainingWeight ? 'Daily Surplus' : 'Daily Deficit'}
                     </div>
-                    <div className="font-semibold text-accent">
+                    <div className="font-semibold text-secondary">
                       {isGainingWeight ? '+' : '-'}{Math.round(dailyDifference)} kcal
                     </div>
                   </div>
