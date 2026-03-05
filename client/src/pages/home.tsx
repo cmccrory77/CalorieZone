@@ -244,10 +244,10 @@ export default function Home() {
     };
 
     const mealNouns: Record<string, string[]> = {
-      breakfast: ["Oatmeal", "Scramble", "Toast", "Bowl", "Pancakes", "Parfait", "Smoothie", "Muffins"],
-      lunch: ["Wrap", "Salad", "Bowl", "Sandwich", "Bento", "Plate", "Pita", "Melt"],
-      dinner: ["Skillet", "Roast", "Bake", "Stir-fry", "Grill", "Stew", "Casserole", "Platter"],
-      snack: ["Bites", "Sticks", "Mix", "Dip", "Chips", "Crunch", "Bite", "Energy"]
+      breakfast: ["Oatmeal", "Scramble", "Pancakes"],
+      lunch: ["Wrap", "Salad", "Bowl"],
+      dinner: ["Skillet", "Roast", "Stir-fry"],
+      snack: ["Bites", "Dip", "Mix"]
     };
 
     const proteins = ["Chicken", "Tofu", "Salmon", "Turkey", "Beef", "Chickpeas", "Egg", "Tempeh", "Black Beans", "Lentils"];
@@ -259,10 +259,9 @@ export default function Home() {
       const keywords = cuisineKeywords[c] || cuisineKeywords.all;
       categories.forEach((cat) => {
         const nouns = mealNouns[cat];
+        const catImages = imagesByCategory[cat];
         
         for (let i = 0; i < 3; i++) {
-          // Create a deterministic seed based on day, cuisine, category, and index
-          // We mix the string hash of cuisine + category so the sequences don't just shift
           let strHash = 0;
           const comboStr = c + cat;
           for(let k=0; k<comboStr.length; k++) {
@@ -274,18 +273,15 @@ export default function Home() {
           
           const keyword = keywords[seed % keywords.length];
           const protein = proteins[(seed * 3) % proteins.length];
-          const noun = nouns[(seed * 5) % nouns.length];
+          const noun = nouns[i];
           
           let title = `${keyword} ${protein} ${noun}`;
           if (cat === 'snack') {
-            title = seed % 2 === 0 ? `${keyword} Energy ${noun}` : `${keyword} Hummus & ${noun}`;
+            title = i === 0 ? `${keyword} Energy ${noun}` : i === 1 ? `${keyword} Hummus & ${noun}` : `${keyword} Trail ${noun}`;
           } else if (cat === 'breakfast') {
-            title = seed % 2 === 0 ? `${keyword} ${noun} with Berries` : `${protein} & ${keyword} ${noun}`;
+            title = i === 0 ? `${keyword} ${noun} with Berries` : i === 1 ? `${protein} & ${keyword} ${noun}` : `${keyword} ${protein} ${noun}`;
           }
 
-          const catImages = imagesByCategory[cat];
-          const imgIdx = (seed + i) % catImages.length;
-          
           generatedRecipes.push({
             id: idCounter++,
             title,
@@ -296,7 +292,7 @@ export default function Home() {
             carbs: `${20 + ((seed * 13) % 40)}g`,
             fat: `${5 + ((seed * 17) % 20)}g`,
             time: `${5 + ((seed * 19) % 6) * 5} min`,
-            image: catImages[imgIdx],
+            image: catImages[i],
             match: `${85 + ((seed * 23) % 15)}% Match`
           });
         }
