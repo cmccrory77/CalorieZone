@@ -37,6 +37,9 @@ export default function Home() {
   const [timeframe, setTimeframe] = useState(12); // weeks
   const [mealType, setMealType] = useState("all");
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCuisine, setSelectedCuisine] = useState("all");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   
   // Mock calculations
   const maintenanceCalories = 2450;
@@ -46,12 +49,14 @@ export default function Home() {
   
   const progressPercentage = 35; // mock progress
 
+  // Add cuisine property to recipes for filtering
   const allRecipes = [
     // Breakfast
     {
       id: 2,
       title: "Berry & Nut Power Oatmeal",
       type: "breakfast",
+      cuisine: "american",
       calories: 380,
       protein: "15g",
       carbs: "52g",
@@ -64,6 +69,7 @@ export default function Home() {
       id: 6,
       title: "Avocado Toast with Poached Egg",
       type: "breakfast",
+      cuisine: "american",
       calories: 420,
       protein: "18g",
       carbs: "35g",
@@ -76,6 +82,7 @@ export default function Home() {
       id: 7,
       title: "Greek Yogurt Parfait",
       type: "breakfast",
+      cuisine: "mediterranean",
       calories: 310,
       protein: "22g",
       carbs: "38g",
@@ -89,6 +96,7 @@ export default function Home() {
       id: 1,
       title: "Grilled Lemon Herb Chicken Bowl",
       type: "lunch",
+      cuisine: "mediterranean",
       calories: 450,
       protein: "42g",
       carbs: "35g",
@@ -101,6 +109,7 @@ export default function Home() {
       id: 8,
       title: "Mediterranean Quinoa Salad",
       type: "lunch",
+      cuisine: "mediterranean",
       calories: 410,
       protein: "16g",
       carbs: "48g",
@@ -113,6 +122,7 @@ export default function Home() {
       id: 9,
       title: "Turkey & Spinach Wrap",
       type: "lunch",
+      cuisine: "american",
       calories: 390,
       protein: "32g",
       carbs: "36g",
@@ -126,6 +136,7 @@ export default function Home() {
       id: 3,
       title: "Roasted Salmon with Sweet Potato",
       type: "dinner",
+      cuisine: "american",
       calories: 520,
       protein: "38g",
       carbs: "40g",
@@ -138,6 +149,7 @@ export default function Home() {
       id: 5,
       title: "Lean Steak and Asparagus",
       type: "dinner",
+      cuisine: "american",
       calories: 490,
       protein: "45g",
       carbs: "12g",
@@ -150,6 +162,7 @@ export default function Home() {
       id: 10,
       title: "Baked Cod with Quinoa",
       type: "dinner",
+      cuisine: "mediterranean",
       calories: 440,
       protein: "36g",
       carbs: "42g",
@@ -163,6 +176,7 @@ export default function Home() {
       id: 4,
       title: "Hummus and Carrot Sticks",
       type: "snack",
+      cuisine: "mediterranean",
       calories: 210,
       protein: "8g",
       carbs: "22g",
@@ -175,6 +189,7 @@ export default function Home() {
       id: 11,
       title: "Apple Slices with Peanut Butter",
       type: "snack",
+      cuisine: "american",
       calories: 240,
       protein: "7g",
       carbs: "28g",
@@ -187,6 +202,7 @@ export default function Home() {
       id: 12,
       title: "Mixed Nuts Bowl",
       type: "snack",
+      cuisine: "vegetarian",
       calories: 280,
       protein: "9g",
       carbs: "12g",
@@ -196,6 +212,61 @@ export default function Home() {
       match: "91% Match"
     }
   ];
+
+  const handleSearch = (cuisineType = selectedCuisine, query = searchQuery) => {
+    let filtered = [...allRecipes];
+    
+    // Shuffle array for visual variety when showing "all"
+    if (cuisineType === "all" && !query) {
+      filtered = filtered.sort(() => 0.5 - Math.random());
+    } else {
+      if (cuisineType !== "all") {
+        filtered = filtered.filter(r => r.cuisine === cuisineType || cuisineType === "placeholder");
+      }
+      
+      if (query.trim()) {
+        const lowerQuery = query.toLowerCase();
+        filtered = filtered.filter(r => 
+          r.title.toLowerCase().includes(lowerQuery) || 
+          r.cuisine.toLowerCase().includes(lowerQuery)
+        );
+      }
+    }
+    
+    // If not enough results for a specific cuisine, duplicate them to show a full grid of 6
+    if (filtered.length > 0 && filtered.length < 6) {
+      const originalFiltered = [...filtered];
+      while (filtered.length < 6) {
+        // Add variations to make them look distinct
+        const sourceItem = originalFiltered[filtered.length % originalFiltered.length];
+        filtered.push({
+          ...sourceItem,
+          id: sourceItem.id + 100 + filtered.length, // Ensure unique ID
+        });
+      }
+    } else if (filtered.length === 0) {
+      // Fallback if no results match
+      filtered = allRecipes.slice(0, 6);
+    }
+    
+    setSearchResults(filtered.slice(0, 6));
+    setHasSearched(true);
+  };
+
+  const handleSearchQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const executeTextSearch = () => {
+    handleSearch(selectedCuisine, searchQuery);
+  };
+
+  const handleCuisineSelect = (val: string) => {
+    if (val !== "placeholder") {
+      setSelectedCuisine(val);
+      handleSearch(val, searchQuery);
+    }
+  };
 
   const recipes = mealType === "all" ? allRecipes : allRecipes.filter(r => r.type === mealType);
 
@@ -443,17 +514,18 @@ export default function Home() {
                           <Input 
                             placeholder="Search for ingredients, cuisines..." 
                             className="pl-10 h-12 bg-slate-50 border-slate-200 text-base"
+                            value={searchQuery}
+                            onChange={handleSearchQueryChange}
+                            onKeyDown={(e) => e.key === 'Enter' && executeTextSearch()}
                           />
                         </div>
-                        <Button className="h-12 px-6 bg-primary hover:bg-primary/90" onClick={() => setHasSearched(true)}>Go</Button>
+                        <Button className="h-12 px-6 bg-primary hover:bg-primary/90" onClick={executeTextSearch}>Go</Button>
                       </div>
                       
                       <div className="text-muted-foreground font-medium text-sm px-2">or</div>
                       
                       <div className="flex gap-2 w-full md:w-auto">
-                        <Select onValueChange={(val) => {
-                          if (val !== "placeholder") setHasSearched(true);
-                        }}>
+                        <Select value={selectedCuisine} onValueChange={handleCuisineSelect}>
                           <SelectTrigger className="w-full md:w-[220px] h-12 bg-slate-50 border-slate-200">
                             <SelectValue placeholder="Select Cuisine Type" />
                           </SelectTrigger>
@@ -481,7 +553,7 @@ export default function Home() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {allRecipes.slice(0, 6).map((recipe) => (
+                        {searchResults.map((recipe) => (
                           <Card key={`search-${recipe.id}`} className="border-none shadow-sm bg-slate-50 overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                             <div className="relative h-40 overflow-hidden">
                               <img 
