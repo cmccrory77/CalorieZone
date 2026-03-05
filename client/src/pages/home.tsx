@@ -67,6 +67,9 @@ export default function Home() {
   const [targetDate, setTargetDate] = useState<Date>(addWeeks(new Date(), 12));
   const [mealType, setMealType] = useState("all");
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
+  const [generatorIngredients, setGeneratorIngredients] = useState("");
+  const [generatedRecipe, setGeneratedRecipe] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [newFoodName, setNewFoodName] = useState("");
   const [newFoodCalories, setNewFoodCalories] = useState("");
   const [newFoodProtein, setNewFoodProtein] = useState("");
@@ -527,6 +530,121 @@ export default function Home() {
     return generatedRecipes;
   };
 
+  const handleGenerateRecipe = () => {
+    if (!generatorIngredients.trim()) return;
+    setIsGenerating(true);
+    setGeneratedRecipe(null);
+
+    setTimeout(() => {
+      const userIngredients = generatorIngredients.split(',').map(s => s.trim()).filter(Boolean);
+      const mealCal = Math.round(targetCalories / 3);
+      const categories = ["lunch", "dinner"];
+      const cat = categories[Math.floor(Math.random() * categories.length)];
+      const nouns: Record<string, string[]> = {
+        lunch: ["Bowl", "Salad", "Wrap"],
+        dinner: ["Skillet", "Stir-fry", "Roast"]
+      };
+      const noun = nouns[cat][Math.floor(Math.random() * nouns[cat].length)];
+      const adjectives = ["Zesty", "Savory", "Herb-Crusted", "Golden", "Spiced", "Seared", "Roasted", "Fresh"];
+      const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+      const mainIng = userIngredients[0] || "Protein";
+      const title = `${adj} ${mainIng} ${noun}`;
+
+      const proteinG = Math.round((mealCal * 0.3) / 4);
+      const carbsG = Math.round((mealCal * 0.4) / 4);
+      const fatG = Math.round((mealCal * 0.3) / 9);
+
+      const ingredients: { item: string; amount: string; cal: number }[] = [];
+      const calPerIng = Math.round(mealCal / (userIngredients.length + 3));
+
+      userIngredients.forEach((ing, idx) => {
+        const portions = ["4 oz (115g)", "1 cup", "½ cup", "3 oz (85g)", "2 oz (55g)"];
+        ingredients.push({
+          item: ing.charAt(0).toUpperCase() + ing.slice(1),
+          amount: portions[idx % portions.length],
+          cal: idx === 0 ? Math.round(calPerIng * 1.5) : calPerIng
+        });
+      });
+
+      ingredients.push({ item: "Olive oil", amount: "1 tbsp", cal: 120 });
+      ingredients.push({ item: "Seasoning & spices", amount: "1 tsp blend", cal: 5 });
+      ingredients.push({ item: "Salt and pepper", amount: "To taste", cal: 0 });
+
+      const currentTotal = ingredients.reduce((s, i) => s + i.cal, 0);
+      if (currentTotal < mealCal && ingredients.length > 0) {
+        ingredients[0].cal += (mealCal - currentTotal);
+      }
+
+      const stepSets: Record<string, string[]> = {
+        Bowl: [
+          `Cook your base grain according to package directions and set aside.`,
+          `Season ${mainIng.toLowerCase()} with spices, salt, and pepper.`,
+          `Cook ${mainIng.toLowerCase()} in a skillet over medium-high heat until done.`,
+          `Prepare remaining ingredients: ${userIngredients.slice(1).join(', ') || 'your toppings'}.`,
+          `Assemble the bowl with the grain base, ${mainIng.toLowerCase()}, and toppings. Drizzle with sauce and serve.`
+        ],
+        Salad: [
+          `Wash and chop all greens and vegetables.`,
+          `Season and cook ${mainIng.toLowerCase()} until golden and cooked through.`,
+          `Arrange the greens in a large bowl.`,
+          `Top with ${mainIng.toLowerCase()}, ${userIngredients.slice(1).join(', ') || 'fresh toppings'}, and any extras.`,
+          `Whisk together a simple dressing, drizzle over the salad, and serve.`
+        ],
+        Wrap: [
+          `Warm a tortilla in a dry skillet for 30 seconds per side.`,
+          `Season and cook ${mainIng.toLowerCase()} in a skillet until done.`,
+          `Spread hummus or sauce across the center of the tortilla.`,
+          `Layer ${mainIng.toLowerCase()}, ${userIngredients.slice(1).join(', ') || 'lettuce and vegetables'}.`,
+          `Fold in the sides, roll tightly, slice in half, and serve.`
+        ],
+        Skillet: [
+          `Season ${mainIng.toLowerCase()} generously with salt, pepper, and spices.`,
+          `Heat oil in a large skillet over medium-high heat.`,
+          `Sear ${mainIng.toLowerCase()} for 3-4 minutes per side until golden, then set aside.`,
+          `In the same skillet, sauté ${userIngredients.slice(1).join(', ') || 'diced vegetables'} until tender.`,
+          `Return ${mainIng.toLowerCase()} to the skillet, add sauce, and simmer to combine.`
+        ],
+        "Stir-fry": [
+          `Slice ${mainIng.toLowerCase()} thinly and prep ${userIngredients.slice(1).join(', ') || 'vegetables'}.`,
+          `Heat a wok or large skillet over high heat with oil.`,
+          `Cook ${mainIng.toLowerCase()} for 2-3 minutes until just done, then remove.`,
+          `Stir-fry the remaining ingredients for 3-4 minutes.`,
+          `Return ${mainIng.toLowerCase()}, add soy sauce and seasoning, toss, and serve over rice.`
+        ],
+        Roast: [
+          `Preheat oven to 400°F (200°C) and line a baking sheet with parchment.`,
+          `Season ${mainIng.toLowerCase()} with herbs, garlic, olive oil, salt, and pepper.`,
+          `Arrange ${mainIng.toLowerCase()} in the center, surround with ${userIngredients.slice(1).join(', ') || 'chopped vegetables'}.`,
+          `Roast for 25-35 minutes until cooked through and golden.`,
+          `Let rest 5 minutes, plate, and serve.`
+        ]
+      };
+
+      const catImages: Record<string, string[]> = {
+        lunch: [lunch1, lunch2, lunch3],
+        dinner: [dinner1, dinner2, dinner3]
+      };
+      const nounImgMap: Record<string, number> = { Wrap: 0, Salad: 1, Bowl: 2, Skillet: 0, Roast: 1, "Stir-fry": 2 };
+
+      setGeneratedRecipe({
+        id: Date.now(),
+        title,
+        type: cat,
+        cuisine: "custom",
+        calories: mealCal,
+        protein: `${proteinG}g`,
+        carbs: `${carbsG}g`,
+        fat: `${fatG}g`,
+        time: `${15 + Math.floor(Math.random() * 4) * 5} min`,
+        image: catImages[cat][nounImgMap[noun] ?? 0],
+        match: "Custom",
+        ingredients,
+        steps: stepSets[noun] || stepSets.Skillet
+      });
+      setIsGenerating(false);
+    }, 1200);
+  };
+
   const allRecipes = getDailyRecipes();
 
   const dailyPlanRecipes = allRecipes.filter(r => r.cuisine === 'all');
@@ -960,7 +1078,7 @@ export default function Home() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="ai" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <TabsContent value="ai" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
                 <Card className="border-none shadow-sm bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 overflow-hidden relative">
                   <div className="absolute -right-10 -top-10 text-blue-200 opacity-50">
                     <Wand2 className="h-48 w-48" />
@@ -972,7 +1090,7 @@ export default function Home() {
                       </div>
                       <h2 className="text-2xl font-display font-bold text-slate-800 mb-2">Recipe Generator</h2>
                       <p className="text-slate-600 mb-6">
-                        Tell us what ingredients you have in your fridge, and we'll generate a custom recipe tailored to exactly {Math.round(targetCalories / 3)} calories (your target per meal).
+                        Tell us what ingredients you have, separated by commas, and we'll generate a custom recipe tailored to {Math.round(targetCalories / 3)} calories (your target per meal).
                       </p>
                       
                       <div className="space-y-4">
@@ -981,15 +1099,91 @@ export default function Home() {
                           <Input 
                             placeholder="e.g. Chicken breast, broccoli, rice..." 
                             className="h-12 bg-white border-blue-200 shadow-sm"
+                            value={generatorIngredients}
+                            onChange={(e) => setGeneratorIngredients(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleGenerateRecipe()}
+                            data-testid="input-generator-ingredients"
                           />
                         </div>
-                        <Button className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white h-12 px-8">
-                          Generate Recipe
+                        <Button 
+                          className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white h-12 px-8"
+                          onClick={handleGenerateRecipe}
+                          disabled={isGenerating || !generatorIngredients.trim()}
+                          data-testid="button-generate-recipe"
+                        >
+                          {isGenerating ? (
+                            <span className="flex items-center gap-2">
+                              <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                              Generating...
+                            </span>
+                          ) : (
+                            "Generate Recipe"
+                          )}
                         </Button>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+
+                {generatedRecipe && (
+                  <Card className="border-none shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all duration-300">
+                    <div className="flex flex-col md:flex-row">
+                      <div className="relative md:w-72 h-48 md:h-auto overflow-hidden flex-shrink-0">
+                        <div className="absolute top-3 left-3 z-10 bg-accent/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm">
+                          {generatedRecipe.match}
+                        </div>
+                        <img 
+                          src={generatedRecipe.image} 
+                          alt={generatedRecipe.title} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 p-6 space-y-4">
+                        <div>
+                          <h3 className="font-display font-bold text-xl">{generatedRecipe.title}</h3>
+                          <p className="text-sm text-muted-foreground capitalize mt-1">{generatedRecipe.type} · {generatedRecipe.time}</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Calories</span>
+                            <span className="font-bold text-foreground">{generatedRecipe.calories}</span>
+                          </div>
+                          <div className="h-8 w-px bg-slate-100"></div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Protein</span>
+                            <span className="font-medium text-blue-600">{generatedRecipe.protein}</span>
+                          </div>
+                          <div className="h-8 w-px bg-slate-100"></div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Carbs</span>
+                            <span className="font-medium text-emerald-600">{generatedRecipe.carbs}</span>
+                          </div>
+                          <div className="h-8 w-px bg-slate-100"></div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Fat</span>
+                            <span className="font-medium text-amber-600">{generatedRecipe.fat}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                          <Button 
+                            variant="outline"
+                            className="flex-1 bg-slate-50 hover:bg-slate-100 text-foreground border border-slate-200"
+                            onClick={() => setSelectedRecipe(generatedRecipe)}
+                            data-testid="button-view-generated-recipe"
+                          >
+                            View Recipe
+                          </Button>
+                          <Button 
+                            className="bg-secondary hover:bg-secondary/90 text-white shrink-0"
+                            onClick={() => addRecipeToTracker(generatedRecipe)}
+                          >
+                            <Plus className="h-4 w-4 mr-1.5" /> Log
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                )}
               </TabsContent>
 
             </Tabs>
