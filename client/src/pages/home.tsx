@@ -488,11 +488,17 @@ export default function Home() {
                   indicatorClassName={trackedFoods.reduce((acc, food) => acc + food.calories, 0) > targetCalories ? "bg-red-500" : "bg-secondary"}
                 />
 
-                <div className="text-center text-sm font-medium pt-2 pb-4 border-b border-slate-100">
+                <div className="text-center py-3 px-4 rounded-xl bg-secondary/10 border border-secondary/20">
                   {targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0) > 0 ? (
-                    <span className="text-secondary">{targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0)} calories remaining</span>
+                    <div>
+                      <span className="text-2xl font-display font-bold text-secondary">{targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0)}</span>
+                      <span className="text-sm font-medium text-secondary/80 ml-1.5">calories remaining</span>
+                    </div>
                   ) : (
-                    <span className="text-red-500">Over goal by {Math.abs(targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0))} calories</span>
+                    <div>
+                      <span className="text-2xl font-display font-bold text-red-500">{Math.abs(targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0))}</span>
+                      <span className="text-sm font-medium text-red-400 ml-1.5">calories over goal</span>
+                    </div>
                   )}
                 </div>
 
