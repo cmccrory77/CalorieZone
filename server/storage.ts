@@ -1,38 +1,62 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { eq, and } from "drizzle-orm";
+import { db } from "./db";
+import {
+  userProfiles,
+  foodEntries,
+  type UserProfile,
+  type InsertUserProfile,
+  type FoodEntry,
+  type InsertFoodEntry,
+} from "@shared/schema";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getProfile(id: string): Promise<UserProfile | undefined>;
+  getDefaultProfile(): Promise<UserProfile>;
+  updateProfile(id: string, data: Partial<InsertUserProfile>): Promise<UserProfile>;
+
+  getFoodEntries(profileId: string, date: string): Promise<FoodEntry[]>;
+  addFoodEntry(entry: InsertFoodEntry): Promise<FoodEntry>;
+  removeFoodEntry(id: string): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async getProfile(id: string): Promise<UserProfile | undefined> {
+    const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.id, id));
+    return profile;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getDefaultProfile(): Promise<UserProfile> {
+    const [existing] = await db.select().from(userProfiles).limit(1);
+    if (existing) return existing;
+
+    const [created] = await db.insert(userProfiles).values({}).returning();
+    return created;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async updateProfile(id: string, data: Partial<InsertUserProfile>): Promise<UserProfile> {
+    const [updated] = await db
+      .update(userProfiles)
+      .set(data)
+      .where(eq(userProfiles.id, id))
+      .returning();
+    return updated;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getFoodEntries(profileId: string, date: string): Promise<FoodEntry[]> {
+    return db
+      .select()
+      .from(foodEntries)
+      .where(and(eq(foodEntries.profileId, profileId), eq(foodEntries.date, date)));
+  }
+
+  async addFoodEntry(entry: InsertFoodEntry): Promise<FoodEntry> {
+    const [created] = await db.insert(foodEntries).values(entry).returning();
+    return created;
+  }
+
+  async removeFoodEntry(id: string): Promise<void> {
+    await db.delete(foodEntries).where(eq(foodEntries.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

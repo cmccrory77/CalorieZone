@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Target, 
   Activity, 
   Flame, 
-  UtensilsCrossed, 
-  TrendingDown,
   Calendar,
   ChefHat,
   Wand2,
@@ -14,6 +14,7 @@ import {
   PieChart as PieChartIcon
 } from "lucide-react";
 import { format, addWeeks } from "date-fns";
+import type { UserProfile, FoodEntry } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,40 +40,102 @@ import recipe11 from "@/assets/images/recipe-11.jpg";
 import recipe12 from "@/assets/images/recipe-12.jpg";
 
 export default function Home() {
+  const queryClient = useQueryClient();
+  const today = format(new Date(), "yyyy-MM-dd");
+
+  const { data: profile } = useQuery<UserProfile>({
+    queryKey: ["/api/profile"],
+  });
+
+  const { data: foodEntries = [] } = useQuery<FoodEntry[]>({
+    queryKey: ["/api/food-entries", profile?.id, today],
+    enabled: !!profile?.id,
+    queryFn: async () => {
+      const res = await fetch(`/api/food-entries/${profile!.id}/${today}`);
+      if (!res.ok) throw new Error("Failed to load food entries");
+      return res.json();
+    },
+  });
+
   const [startingWeight, setStartingWeight] = useState(185);
   const [currentWeight, setCurrentWeight] = useState(185);
   const [targetWeight, setTargetWeight] = useState(165);
-  const [timeframe, setTimeframe] = useState(12); // weeks
+  const [timeframe, setTimeframe] = useState(12);
   const [targetDate, setTargetDate] = useState<Date>(addWeeks(new Date(), 12));
   const [mealType, setMealType] = useState("all");
-  
-  // Calorie Tracker State
-  const [trackedFoods, setTrackedFoods] = useState<{id: number, name: string, calories: number, protein: number, carbs: number, fat: number}[]>([]);
   const [newFoodName, setNewFoodName] = useState("");
   const [newFoodCalories, setNewFoodCalories] = useState("");
   const [newFoodProtein, setNewFoodProtein] = useState("");
   const [newFoodCarbs, setNewFoodCarbs] = useState("");
   const [newFoodFat, setNewFoodFat] = useState("");
-  
+
+  const profileSynced = useRef(false);
+  useEffect(() => {
+    if (profile && !profileSynced.current) {
+      setStartingWeight(profile.startingWeight);
+      setCurrentWeight(profile.currentWeight);
+      setTargetWeight(profile.targetWeight);
+      setTimeframe(profile.timeframe);
+      setTargetDate(addWeeks(new Date(), profile.timeframe));
+      profileSynced.current = true;
+    }
+  }, [profile]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: Partial<UserProfile>) => {
+      const res = await apiRequest("PATCH", `/api/profile/${profile!.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+    },
+  });
+
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+  const saveProfile = useCallback(
+    (data: Partial<UserProfile>) => {
+      if (!profile?.id) return;
+      clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => {
+        updateProfileMutation.mutate(data);
+      }, 500);
+    },
+    [profile?.id]
+  );
+
+  const addFoodMutation = useMutation({
+    mutationFn: async (entry: { name: string; calories: number; protein: number; carbs: number; fat: number }) => {
+      const res = await apiRequest("POST", "/api/food-entries", {
+        profileId: profile!.id,
+        date: today,
+        ...entry,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/food-entries"] });
+    },
+  });
+
+  const removeFoodMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/food-entries/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/food-entries"] });
+    },
+  });
+
+  const trackedFoods = foodEntries;
+
   const handleAddFood = () => {
     if (newFoodName && newFoodCalories) {
       const cals = parseInt(newFoodCalories);
-      // Generate some dummy macros if they aren't provided
       const prot = newFoodProtein ? parseInt(newFoodProtein) : Math.round(cals * 0.3 / 4);
       const carb = newFoodCarbs ? parseInt(newFoodCarbs) : Math.round(cals * 0.4 / 4);
       const fat = newFoodFat ? parseInt(newFoodFat) : Math.round(cals * 0.3 / 9);
 
-      setTrackedFoods([
-        ...trackedFoods, 
-        { 
-          id: Date.now(), 
-          name: newFoodName, 
-          calories: cals,
-          protein: prot,
-          carbs: carb,
-          fat: fat
-        }
-      ]);
+      addFoodMutation.mutate({ name: newFoodName, calories: cals, protein: prot, carbs: carb, fat: fat });
       setNewFoodName("");
       setNewFoodCalories("");
       setNewFoodProtein("");
@@ -81,42 +144,51 @@ export default function Home() {
     }
   };
 
-  const handleRemoveFood = (id: number) => {
-    setTrackedFoods(trackedFoods.filter(food => food.id !== id));
+  const handleRemoveFood = (id: string) => {
+    removeFoodMutation.mutate(id);
   };
   
   const addRecipeToTracker = (recipe: any) => {
-    setTrackedFoods([
-      ...trackedFoods,
-      {
-        id: Date.now(),
-        name: recipe.title,
-        calories: recipe.calories,
-        protein: parseInt(recipe.protein),
-        carbs: parseInt(recipe.carbs),
-        fat: parseInt(recipe.fat)
-      }
-    ]);
+    addFoodMutation.mutate({
+      name: recipe.title,
+      calories: recipe.calories,
+      protein: parseInt(recipe.protein),
+      carbs: parseInt(recipe.carbs),
+      fat: parseInt(recipe.fat),
+    });
   };
 
-  // Handle timeframe change (updates date)
+  const handleStartingWeightChange = (val: number) => {
+    setStartingWeight(val);
+    saveProfile({ startingWeight: val });
+  };
+  const handleCurrentWeightChange = (val: number) => {
+    setCurrentWeight(val);
+    saveProfile({ currentWeight: val });
+  };
+  const handleTargetWeightChange = (val: number) => {
+    setTargetWeight(val);
+    saveProfile({ targetWeight: val });
+  };
+
   const handleTimeframeChange = (weeks: number) => {
     setTimeframe(weeks);
     setTargetDate(addWeeks(new Date(), weeks));
+    saveProfile({ timeframe: weeks });
   };
 
-  // Handle date change (updates timeframe)
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
       setTargetDate(date);
       const diffTime = Math.abs(date.getTime() - new Date().getTime());
       const diffWeeks = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24 * 7)));
-      setTimeframe(Math.min(52, diffWeeks)); // Cap at 52 weeks
+      const capped = Math.min(52, diffWeeks);
+      setTimeframe(capped);
+      saveProfile({ timeframe: capped });
     }
   };
 
-  // Mock calculations
-  const maintenanceCalories = 2450;
+  const maintenanceCalories = profile?.maintenanceCalories ?? 2450;
   const isGainingWeight = targetWeight > startingWeight;
   const weeklyLossGoal = Math.abs(currentWeight - targetWeight) / timeframe;
   const dailyDifference = weeklyLossGoal * 500; // rough estimate 500 cal difference = 1 lb/week
@@ -294,7 +366,7 @@ export default function Home() {
                         id="starting-weight" 
                         type="number" 
                         value={startingWeight} 
-                        onChange={(e) => setStartingWeight(Number(e.target.value))}
+                        onChange={(e) => handleStartingWeightChange(Number(e.target.value))}
                         className="font-display font-semibold text-lg bg-slate-50 border-slate-200"
                         data-testid="input-starting-weight"
                       />
@@ -305,7 +377,7 @@ export default function Home() {
                         id="target-weight" 
                         type="number" 
                         value={targetWeight} 
-                        onChange={(e) => setTargetWeight(Number(e.target.value))}
+                        onChange={(e) => handleTargetWeightChange(Number(e.target.value))}
                         className="font-display font-semibold text-lg bg-slate-50 border-slate-200"
                         data-testid="input-target-weight"
                       />
@@ -318,7 +390,7 @@ export default function Home() {
                       id="current-weight" 
                       type="number" 
                       value={currentWeight} 
-                      onChange={(e) => setCurrentWeight(Number(e.target.value))}
+                      onChange={(e) => handleCurrentWeightChange(Number(e.target.value))}
                       className="font-display font-semibold text-lg bg-slate-50 border-slate-200"
                       data-testid="input-current-weight"
                     />
