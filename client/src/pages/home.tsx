@@ -7,8 +7,10 @@ import {
   TrendingDown,
   Calendar,
   ChefHat,
-  Wand2
+  Wand2,
+  CalendarDays
 } from "lucide-react";
+import { format, addWeeks } from "date-fns";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +18,8 @@ import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 import recipe1 from "@/assets/images/recipe-1.jpg";
 import recipe2 from "@/assets/images/recipe-2.jpg";
@@ -34,8 +38,25 @@ export default function Home() {
   const [currentWeight, setCurrentWeight] = useState(185);
   const [targetWeight, setTargetWeight] = useState(165);
   const [timeframe, setTimeframe] = useState(12); // weeks
+  const [targetDate, setTargetDate] = useState<Date>(addWeeks(new Date(), 12));
   const [mealType, setMealType] = useState("all");
   
+  // Handle timeframe change (updates date)
+  const handleTimeframeChange = (weeks: number) => {
+    setTimeframe(weeks);
+    setTargetDate(addWeeks(new Date(), weeks));
+  };
+
+  // Handle date change (updates timeframe)
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      setTargetDate(date);
+      const diffTime = Math.abs(date.getTime() - new Date().getTime());
+      const diffWeeks = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24 * 7)));
+      setTimeframe(Math.min(52, diffWeeks)); // Cap at 52 weeks
+    }
+  };
+
   // Mock calculations
   const maintenanceCalories = 2450;
   const weeklyLossGoal = (currentWeight - targetWeight) / timeframe;
@@ -249,14 +270,32 @@ export default function Home() {
                   <div className="space-y-2 pt-2">
                     <div className="flex justify-between items-center">
                       <Label htmlFor="timeframe" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Timeframe (Weeks)</Label>
-                      <span className="text-sm font-medium text-secondary">{timeframe} weeks</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-secondary">{timeframe} weeks</span>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-slate-100">
+                              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="end">
+                            <CalendarComponent
+                              mode="single"
+                              selected={targetDate}
+                              onSelect={handleDateChange}
+                              disabled={(date) => date < new Date() || date > addWeeks(new Date(), 52)}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
                     <input 
                       type="range" 
                       min="1" 
                       max="52" 
                       value={timeframe} 
-                      onChange={(e) => setTimeframe(Number(e.target.value))}
+                      onChange={(e) => handleTimeframeChange(Number(e.target.value))}
                       className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-secondary"
                       data-testid="slider-timeframe"
                     />
