@@ -26,6 +26,7 @@ export default function Home() {
   const [currentWeight, setCurrentWeight] = useState(185);
   const [targetWeight, setTargetWeight] = useState(165);
   const [timeframe, setTimeframe] = useState(12); // weeks
+  const [mealType, setMealType] = useState("all");
   
   // Mock calculations
   const maintenanceCalories = 2450;
@@ -35,10 +36,11 @@ export default function Home() {
   
   const progressPercentage = 35; // mock progress
 
-  const recipes = [
+  const allRecipes = [
     {
       id: 1,
       title: "Grilled Lemon Herb Chicken Bowl",
+      type: "lunch",
       calories: 450,
       protein: "42g",
       carbs: "35g",
@@ -50,6 +52,7 @@ export default function Home() {
     {
       id: 2,
       title: "Berry & Nut Power Oatmeal",
+      type: "breakfast",
       calories: 380,
       protein: "15g",
       carbs: "52g",
@@ -61,6 +64,7 @@ export default function Home() {
     {
       id: 3,
       title: "Roasted Salmon with Sweet Potato",
+      type: "dinner",
       calories: 520,
       protein: "38g",
       carbs: "40g",
@@ -68,8 +72,34 @@ export default function Home() {
       time: "35 min",
       image: recipe3,
       match: "89% Match"
+    },
+    {
+      id: 4,
+      title: "Hummus and Carrot Sticks",
+      type: "snack",
+      calories: 210,
+      protein: "8g",
+      carbs: "22g",
+      fat: "10g",
+      time: "5 min",
+      image: "/src/assets/images/recipe-4.jpg",
+      match: "99% Match"
+    },
+    {
+      id: 5,
+      title: "Lean Steak and Asparagus",
+      type: "dinner",
+      calories: 490,
+      protein: "45g",
+      carbs: "12g",
+      fat: "28g",
+      time: "20 min",
+      image: "/src/assets/images/recipe-5.jpg",
+      match: "92% Match"
     }
   ];
+
+  const recipes = mealType === "all" ? allRecipes : allRecipes.filter(r => r.type === mealType);
 
   return (
     <div className="min-h-screen bg-background">
@@ -236,14 +266,28 @@ export default function Home() {
               </div>
 
               <TabsContent value="recommended" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="mb-6">
-                  <h2 className="text-xl font-display font-semibold flex items-center gap-2">
-                    <ChefHat className="h-5 w-5 text-secondary" />
-                    Curated for your {targetCalories} kcal goal
-                  </h2>
-                  <p className="text-muted-foreground text-sm mt-1">
-                    These meals are perfectly portioned to help you maintain your {Math.round(dailyDeficit)} kcal deficit.
-                  </p>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <div>
+                    <h2 className="text-xl font-display font-semibold flex items-center gap-2">
+                      <ChefHat className="h-5 w-5 text-secondary" />
+                      Curated for your {targetCalories} kcal goal
+                    </h2>
+                    <p className="text-muted-foreground text-sm mt-1">
+                      These meals are perfectly portioned to help you maintain your {Math.round(dailyDeficit)} kcal deficit.
+                    </p>
+                  </div>
+                  <Select value={mealType} onValueChange={setMealType}>
+                    <SelectTrigger className="w-full sm:w-[180px] bg-white border-slate-200">
+                      <SelectValue placeholder="Meal Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Meals</SelectItem>
+                      <SelectItem value="breakfast">Breakfast</SelectItem>
+                      <SelectItem value="lunch">Lunch</SelectItem>
+                      <SelectItem value="dinner">Dinner</SelectItem>
+                      <SelectItem value="snack">Snacks</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
