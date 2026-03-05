@@ -26,18 +26,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
-import recipe1 from "@/assets/images/recipe-1.jpg";
-import recipe2 from "@/assets/images/recipe-2.jpg";
-import recipe3 from "@/assets/images/recipe-3.jpg";
-import recipe4 from "@/assets/images/recipe-4.jpg";
-import recipe5 from "@/assets/images/recipe-5.jpg";
-import recipe6 from "@/assets/images/recipe-6.jpg";
-import recipe7 from "@/assets/images/recipe-7.jpg";
-import recipe8 from "@/assets/images/recipe-8.jpg";
-import recipe9 from "@/assets/images/recipe-9.jpg";
-import recipe10 from "@/assets/images/recipe-10.jpg";
-import recipe11 from "@/assets/images/recipe-11.jpg";
-import recipe12 from "@/assets/images/recipe-12.jpg";
+import breakfast1 from "@/assets/images/breakfast_meals_1.jpg";
+import breakfast2 from "@/assets/images/breakfast_meals_2.jpg";
+import breakfast3 from "@/assets/images/breakfast_meals_3.jpg";
+import lunch1 from "@/assets/images/lunch_meals_1.jpg";
+import lunch2 from "@/assets/images/lunch_meals_2.jpg";
+import lunch3 from "@/assets/images/lunch_meals_3.jpg";
+import dinner1 from "@/assets/images/dinner_meals_1.jpg";
+import dinner2 from "@/assets/images/dinner_meals_2.jpg";
+import dinner3 from "@/assets/images/dinner_meals_3.jpg";
+import snack1 from "@/assets/images/snack_foods_1.jpg";
+import snack2 from "@/assets/images/snack_foods_2.jpg";
+import snack3 from "@/assets/images/snack_foods_3.jpg";
 
 export default function Home() {
   const queryClient = useQueryClient();
@@ -226,7 +226,12 @@ export default function Home() {
     const dayOfWeek = new Date().getDay(); // 0 to 6
     const cuisines = ["all", "vegetarian", "italian", "mediterranean", "asian", "mexican", "american"];
     const categories = ["breakfast", "lunch", "dinner", "snack"];
-    const images = [recipe1, recipe2, recipe3, recipe4, recipe5, recipe6, recipe7, recipe8, recipe9, recipe10, recipe11, recipe12];
+    const imagesByCategory: Record<string, string[]> = {
+      breakfast: [breakfast1, breakfast2, breakfast3],
+      lunch: [lunch1, lunch2, lunch3],
+      dinner: [dinner1, dinner2, dinner3],
+      snack: [snack1, snack2, snack3],
+    };
     
     const cuisineKeywords: Record<string, string[]> = {
       italian: ["Tuscan", "Garlic", "Basil", "Tomato", "Parmesan", "Herb", "Roasted", "Rustic"],
@@ -278,13 +283,8 @@ export default function Home() {
             title = seed % 2 === 0 ? `${keyword} ${noun} with Berries` : `${protein} & ${keyword} ${noun}`;
           }
 
-          // Distribute images nicely
-          let imgOffset = 0;
-          if (cat === 'breakfast') imgOffset = 1; // starts at recipe2
-          if (cat === 'dinner') imgOffset = 4;
-          if (cat === 'snack') imgOffset = 10;
-          
-          const imgIdx = (imgOffset + (seed % 5)) % images.length;
+          const catImages = imagesByCategory[cat];
+          const imgIdx = (seed + i) % catImages.length;
           
           generatedRecipes.push({
             id: idCounter++,
@@ -296,7 +296,7 @@ export default function Home() {
             carbs: `${20 + ((seed * 13) % 40)}g`,
             fat: `${5 + ((seed * 17) % 20)}g`,
             time: `${5 + ((seed * 19) % 6) * 5} min`,
-            image: images[imgIdx],
+            image: catImages[imgIdx],
             match: `${85 + ((seed * 23) % 15)}% Match`
           });
         }
