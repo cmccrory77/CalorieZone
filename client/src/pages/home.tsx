@@ -789,8 +789,8 @@ export default function Home() {
 
           <div className="lg:col-span-5 space-y-8">
             {/* Calories Tracker Card */}
-            <Card className="border-none shadow-sm bg-white overflow-hidden relative h-full flex flex-col">
-              <div className="h-2 bg-secondary w-full"></div>
+            <Card className="border-none shadow-sm bg-white relative h-full flex flex-col rounded-xl">
+              <div className="h-2 bg-secondary w-full rounded-t-xl"></div>
               <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
                 <Flame className="h-32 w-32 text-secondary" />
               </div>
