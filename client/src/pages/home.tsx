@@ -13,9 +13,11 @@ import {
   X,
   PieChart as PieChartIcon,
   Clock,
-  Utensils
+  Utensils,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
-import { format, addWeeks } from "date-fns";
+import { format, addWeeks, addDays, subDays, isToday, isSameDay } from "date-fns";
 import type { UserProfile, FoodEntry } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,17 +49,19 @@ import snack3 from "@/assets/images/snack_foods_3.png";
 
 export default function Home() {
   const queryClient = useQueryClient();
-  const today = format(new Date(), "yyyy-MM-dd");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+  const isViewingToday = isToday(selectedDate);
 
   const { data: profile } = useQuery<UserProfile>({
     queryKey: ["/api/profile"],
   });
 
   const { data: foodEntries = [] } = useQuery<FoodEntry[]>({
-    queryKey: ["/api/food-entries", profile?.id, today],
+    queryKey: ["/api/food-entries", profile?.id, selectedDateStr],
     enabled: !!profile?.id,
     queryFn: async () => {
-      const res = await fetch(`/api/food-entries/${profile!.id}/${today}`);
+      const res = await fetch(`/api/food-entries/${profile!.id}/${selectedDateStr}`);
       if (!res.ok) throw new Error("Failed to load food entries");
       return res.json();
     },
@@ -112,7 +116,7 @@ export default function Home() {
     mutationFn: async (entry: { name: string; calories: number; protein: number; carbs: number; fat: number }) => {
       const res = await apiRequest("POST", "/api/food-entries", {
         profileId: profile!.id,
-        date: today,
+        date: selectedDateStr,
         ...entry,
       });
       return res.json();
@@ -790,12 +794,89 @@ export default function Home() {
               <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
                 <Flame className="h-32 w-32 text-secondary" />
               </div>
-              <CardHeader className="pb-4 relative z-10">
-                <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
-                  <Activity className="h-5 w-5 text-secondary" />
-                  Daily Targets & Tracker
-                </CardTitle>
-                <CardDescription>Log your meals to hit your daily goal.</CardDescription>
+              <CardHeader className="pb-2 relative z-10">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+                    <Activity className="h-5 w-5 text-secondary" />
+                    Daily Targets & Tracker
+                  </CardTitle>
+                  {!isViewingToday && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedDate(new Date())}
+                      className="text-xs h-7 px-2.5 text-secondary border-secondary/30 hover:bg-secondary/10"
+                      data-testid="button-go-to-today"
+                    >
+                      Today
+                    </Button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 pt-3" data-testid="date-navigator">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full"
+                    onClick={() => setSelectedDate(prev => subDays(prev, 7))}
+                    data-testid="button-prev-week"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <div className="flex flex-1 justify-between gap-0.5">
+                    {Array.from({ length: 7 }, (_, i) => {
+                      const weekStart = subDays(selectedDate, selectedDate.getDay());
+                      const day = addDays(weekStart, i);
+                      const isSelected = isSameDay(day, selectedDate);
+                      const isDayToday = isToday(day);
+                      const isFuture = day > new Date();
+                      return (
+                        <button
+                          key={i}
+                          disabled={isFuture}
+                          onClick={() => setSelectedDate(day)}
+                          className={`flex flex-col items-center py-1.5 px-1 rounded-lg flex-1 transition-all ${
+                            isSelected
+                              ? "bg-secondary text-white shadow-sm"
+                              : isDayToday
+                              ? "bg-secondary/10 text-secondary hover:bg-secondary/20"
+                              : isFuture
+                              ? "text-slate-300 cursor-not-allowed"
+                              : "text-slate-500 hover:bg-slate-100"
+                          }`}
+                          data-testid={`day-button-${format(day, "yyyy-MM-dd")}`}
+                        >
+                          <span className={`text-[10px] font-medium uppercase leading-none ${isSelected ? "text-white/80" : ""}`}>
+                            {format(day, "EEE")}
+                          </span>
+                          <span className={`text-sm font-bold leading-none mt-1 ${isSelected ? "text-white" : ""}`}>
+                            {format(day, "d")}
+                          </span>
+                          {isDayToday && !isSelected && (
+                            <div className="w-1 h-1 rounded-full bg-secondary mt-0.5" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full"
+                    onClick={() => {
+                      const nextWeek = addDays(selectedDate, 7);
+                      if (nextWeek <= new Date()) setSelectedDate(nextWeek);
+                      else setSelectedDate(new Date());
+                    }}
+                    disabled={isViewingToday}
+                    data-testid="button-next-week"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground pt-1.5">
+                  {isViewingToday ? "Today" : format(selectedDate, "EEEE")}, {format(selectedDate, "MMMM d, yyyy")}
+                </p>
               </CardHeader>
               <CardContent className="relative z-10 flex-1 flex flex-col space-y-6">
                 
@@ -853,7 +934,7 @@ export default function Home() {
                 {/* Logged Foods List */}
                 {trackedFoods.length > 0 && (
                   <div className="space-y-3 pt-4 border-t border-slate-100">
-                    <h4 className="text-sm font-semibold text-slate-700">Today's Log</h4>
+                    <h4 className="text-sm font-semibold text-slate-700">{isViewingToday ? "Today's Log" : format(selectedDate, "MMM d") + " Log"}</h4>
                     <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
                       {trackedFoods.map(food => (
                         <div key={food.id} className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 group transition-colors">
