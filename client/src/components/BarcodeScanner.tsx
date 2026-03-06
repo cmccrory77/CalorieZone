@@ -58,18 +58,32 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
         const p = data.product;
         const nutriments = p.nutriments || {};
         const servingSize = p.serving_size || p.quantity || "1 serving";
+        const servingGrams = p.serving_quantity;
 
-        const caloriesPerServing = nutriments["energy-kcal_serving"]
-          ?? nutriments["energy-kcal_100g"]
-          ?? Math.round((nutriments["energy_serving"] ?? nutriments["energy_100g"] ?? 0) / 4.184);
+        const perServing = (key: string): number => {
+          const per100g = nutriments[`${key}_100g`];
+          if (per100g != null && servingGrams) {
+            return (per100g * servingGrams) / 100;
+          }
+          const srv = nutriments[`${key}_serving`];
+          if (srv != null) return srv;
+          if (per100g != null) return per100g;
+          return 0;
+        };
+
+        let calories = perServing("energy-kcal");
+        if (calories === 0) {
+          const energyKj = perServing("energy");
+          if (energyKj > 0) calories = energyKj / 4.184;
+        }
 
         setProduct({
           name: p.product_name || p.product_name_en || "Unknown Product",
           brand: p.brands || "",
-          calories: Math.round(caloriesPerServing),
-          protein: Math.round(nutriments["proteins_serving"] ?? nutriments["proteins_100g"] ?? 0),
-          carbs: Math.round(nutriments["carbohydrates_serving"] ?? nutriments["carbohydrates_100g"] ?? 0),
-          fat: Math.round(nutriments["fat_serving"] ?? nutriments["fat_100g"] ?? 0),
+          calories: Math.round(calories),
+          protein: Math.round(perServing("proteins")),
+          carbs: Math.round(perServing("carbohydrates")),
+          fat: Math.round(perServing("fat")),
           servingSize,
           imageUrl: p.image_front_small_url || p.image_url
         });
