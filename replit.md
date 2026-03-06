@@ -12,13 +12,14 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 ## Key Files
 - `shared/schema.ts` - Drizzle schema: `userProfiles`, `foodEntries` tables
 - `server/db.ts` - Database connection (pg Pool + Drizzle)
-- `server/storage.ts` - Storage interface with DatabaseStorage implementation
+- `server/storage.ts` - Storage interface with DatabaseStorage implementation (includes getFrequentFoods)
 - `server/routes.ts` - REST API routes prefixed with `/api`
-- `client/src/pages/home.tsx` - Main app UI (single page)
+- `client/src/pages/home.tsx` - Main app UI (single page) with date navigation
 - `client/src/components/ui/progress.tsx` - Extended with `indicatorClassName` prop
 - `client/src/components/BarcodeScanner.tsx` - Barcode scanning component
 - `client/src/components/MealScanner.tsx` - AI meal photo analysis component
-- `client/src/components/FoodSearch.tsx` - Autocomplete food search with database
+- `client/src/components/FoodSearch.tsx` - Autocomplete food search with database + recent/frequent history
+- `client/src/components/OnboardingDialog.tsx` - 2-step onboarding: name entry + avatar picker (12 DiceBear options)
 - `client/src/data/foodDatabase.ts` - 200+ food items with serving sizes, units, macros
 
 ## API Endpoints
@@ -27,6 +28,7 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - `GET /api/food-entries/:profileId/:date` - Get food entries for a date
 - `POST /api/food-entries` - Add a food entry
 - `DELETE /api/food-entries/:id` - Remove a food entry
+- `GET /api/food-entries/:profileId/frequent` - Get aggregated frequent/recent foods for autocomplete
 - `POST /api/analyze-meal` - AI vision analysis of meal photo (base64 image → food items with calories)
 
 ## Design System
@@ -43,7 +45,10 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - **Recipe Recommendations**: Procedurally generated per-category recipes with ingredients, steps, nutrition info
 - **Recipe Generator**: User inputs ingredients, generates custom recipe matched to calorie target
 - **Macro Tracking**: Pie chart breakdown of protein/carbs/fat
+- **Date Navigation**: Week-view calendar strip to view/log food entries for past days
+- **Recent/Frequent Foods**: Search prioritizes previously logged items; shows recent foods on focus
+- **Onboarding**: 2-step dialog (name + avatar) shown on first use; personalizes greeting and profile avatar
 
 ## Database Tables
-- `user_profiles`: id, starting_weight, current_weight, target_weight, timeframe, maintenance_calories
+- `user_profiles`: id, name, avatar_seed, starting_weight, current_weight, target_weight, timeframe, maintenance_calories
 - `food_entries`: id, profile_id, name, calories, protein, carbs, fat, date

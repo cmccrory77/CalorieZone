@@ -5,6 +5,8 @@ import { z } from "zod";
 
 export const userProfiles = pgTable("user_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name"),
+  avatarSeed: text("avatar_seed").notNull().default("Felix"),
   startingWeight: real("starting_weight").notNull().default(185),
   currentWeight: real("current_weight").notNull().default(185),
   targetWeight: real("target_weight").notNull().default(165),

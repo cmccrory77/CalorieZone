@@ -33,6 +33,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recha
 import BarcodeScanner from "@/components/BarcodeScanner";
 import MealScanner from "@/components/MealScanner";
 import FoodSearch from "@/components/FoodSearch";
+import OnboardingDialog from "@/components/OnboardingDialog";
 
 import breakfast1 from "@/assets/images/breakfast_meals_1.png";
 import breakfast2 from "@/assets/images/breakfast_meals_2.png";
@@ -121,6 +122,11 @@ export default function Home() {
     },
     [profile?.id]
   );
+
+  const handleOnboardingComplete = useCallback((name: string, avatarSeed: string) => {
+    if (!profile?.id) return;
+    updateProfileMutation.mutate({ name, avatarSeed } as any);
+  }, [profile?.id]);
 
   const addFoodMutation = useMutation({
     mutationFn: async (entry: { name: string; calories: number; protein: number; carbs: number; fat: number }) => {
@@ -673,7 +679,7 @@ export default function Home() {
                 <span>kcal daily goal</span>
               </div>
               <Button variant="ghost" size="icon" className="rounded-full">
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Felix`} alt="User avatar" className="h-8 w-8 rounded-full bg-muted" />
+                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.avatarSeed || "Felix"}`} alt="User avatar" className="h-8 w-8 rounded-full bg-muted" />
               </Button>
             </div>
           </div>
@@ -684,7 +690,7 @@ export default function Home() {
         
         {/* Header Section */}
         <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">Welcome back, Alex</h1>
+          <h1 className="text-3xl font-display font-bold text-foreground">Welcome back, {profile?.name || "there"}</h1>
           <p className="text-muted-foreground mt-1">Here's your progress and personalized plan for today.</p>
         </div>
 
@@ -1370,6 +1376,11 @@ export default function Home() {
           </DialogContent>
         )}
       </Dialog>
+
+      <OnboardingDialog
+        open={!!profile && !profile.name}
+        onComplete={handleOnboardingComplete}
+      />
     </div>
   );
 }
