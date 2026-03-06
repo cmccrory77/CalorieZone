@@ -30,6 +30,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import MealScanner from "@/components/MealScanner";
+import FoodSearch from "@/components/FoodSearch";
 
 import breakfast1 from "@/assets/images/breakfast_meals_1.png";
 import breakfast2 from "@/assets/images/breakfast_meals_2.png";
@@ -72,11 +73,6 @@ export default function Home() {
   const [generatorIngredients, setGeneratorIngredients] = useState("");
   const [generatedRecipe, setGeneratedRecipe] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [newFoodName, setNewFoodName] = useState("");
-  const [newFoodCalories, setNewFoodCalories] = useState("");
-  const [newFoodProtein, setNewFoodProtein] = useState("");
-  const [newFoodCarbs, setNewFoodCarbs] = useState("");
-  const [newFoodFat, setNewFoodFat] = useState("");
 
   const profileSynced = useRef(false);
   useEffect(() => {
@@ -136,22 +132,6 @@ export default function Home() {
   });
 
   const trackedFoods = foodEntries;
-
-  const handleAddFood = () => {
-    if (newFoodName && newFoodCalories) {
-      const cals = parseInt(newFoodCalories);
-      const prot = newFoodProtein ? parseInt(newFoodProtein) : Math.round(cals * 0.3 / 4);
-      const carb = newFoodCarbs ? parseInt(newFoodCarbs) : Math.round(cals * 0.4 / 4);
-      const fat = newFoodFat ? parseInt(newFoodFat) : Math.round(cals * 0.3 / 9);
-
-      addFoodMutation.mutate({ name: newFoodName, calories: cals, protein: prot, carbs: carb, fat: fat });
-      setNewFoodName("");
-      setNewFoodCalories("");
-      setNewFoodProtein("");
-      setNewFoodCarbs("");
-      setNewFoodFat("");
-    }
-  };
 
   const handleRemoveFood = (id: string) => {
     removeFoodMutation.mutate(id);
@@ -856,24 +836,7 @@ export default function Home() {
                       }} />
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="Food name" 
-                      value={newFoodName}
-                      onChange={(e) => setNewFoodName(e.target.value)}
-                      className="flex-1 bg-slate-50 border-slate-200 text-sm h-9"
-                    />
-                    <Input 
-                      type="number"
-                      placeholder="Kcal" 
-                      value={newFoodCalories}
-                      onChange={(e) => setNewFoodCalories(e.target.value)}
-                      className="w-20 bg-slate-50 border-slate-200 text-sm h-9"
-                    />
-                    <Button size="icon" onClick={handleAddFood} className="h-9 w-9 bg-secondary hover:bg-secondary/90 text-white shrink-0">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <FoodSearch onAdd={(food) => addFoodMutation.mutate(food)} />
                 </div>
 
                 {/* Logged Foods List */}
