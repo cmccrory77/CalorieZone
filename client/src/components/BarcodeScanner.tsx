@@ -53,20 +53,59 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
       if (data.status === 1 && data.product) {
         const p = data.product;
         const nutriments = p.nutriments || {};
-        const servingSize = p.serving_size || p.quantity || "1 serving";
 
-        const caloriesPerServing = nutriments["energy-kcal_serving"]
-          ?? nutriments["energy-kcal_100g"]
-          ?? Math.round((nutriments["energy_serving"] ?? nutriments["energy_100g"] ?? 0) / 4.184);
+        const servingSizeRaw = p.serving_size || "";
+        const servingQuantity = p.serving_quantity;
+        const numServings = p.product_quantity && servingQuantity
+          ? parseFloat(p.product_quantity) / servingQuantity
+          : null;
+
+        const getNutrient = (key: string): number => {
+          const perServing = nutriments[`${key}_serving`];
+          const per100g = nutriments[`${key}_100g`];
+
+          if (perServing != null && servingQuantity && numServings && numServings > 1.5) {
+            return per100g != null && servingQuantity
+              ? (per100g * servingQuantity) / 100
+              : perServing / numServings;
+          }
+
+          if (perServing != null && servingQuantity) {
+            if (per100g != null) {
+              const calcFromWeight = (per100g * servingQuantity) / 100;
+              if (Math.abs(perServing - calcFromWeight) < calcFromWeight * 0.3) {
+                return calcFromWeight;
+              }
+              return calcFromWeight;
+            }
+            return perServing;
+          }
+
+          if (per100g != null && servingQuantity) {
+            return (per100g * servingQuantity) / 100;
+          }
+
+          if (perServing != null) return perServing;
+          if (per100g != null) return per100g;
+          return 0;
+        };
+
+        let calories = getNutrient("energy-kcal");
+        if (calories === 0) {
+          const energyKj = getNutrient("energy");
+          if (energyKj > 0) calories = energyKj / 4.184;
+        }
+
+        const servingDisplay = servingSizeRaw || (servingQuantity ? `${servingQuantity}g` : "1 serving");
 
         setProduct({
           name: p.product_name || p.product_name_en || "Unknown Product",
           brand: p.brands || "",
-          calories: Math.round(caloriesPerServing),
-          protein: Math.round(nutriments["proteins_serving"] ?? nutriments["proteins_100g"] ?? 0),
-          carbs: Math.round(nutriments["carbohydrates_serving"] ?? nutriments["carbohydrates_100g"] ?? 0),
-          fat: Math.round(nutriments["fat_serving"] ?? nutriments["fat_100g"] ?? 0),
-          servingSize,
+          calories: Math.round(calories),
+          protein: Math.round(getNutrient("proteins")),
+          carbs: Math.round(getNutrient("carbohydrates")),
+          fat: Math.round(getNutrient("fat")),
+          servingSize: servingDisplay,
           imageUrl: p.image_front_small_url || p.image_url
         });
       } else {
