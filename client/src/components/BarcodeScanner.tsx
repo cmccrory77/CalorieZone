@@ -3,7 +3,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ScanBarcode, Camera, Plus, Loader2, AlertCircle, Minus, Hash, Search } from "lucide-react";
+import { ScanBarcode, Camera, Plus, Loader2, AlertCircle, Minus, Search } from "lucide-react";
 
 interface NutritionInfo {
   name: string;
@@ -30,8 +30,8 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
   const [servings, setServings] = useState(1);
   const [manualCode, setManualCode] = useState("");
   const [showManual, setShowManual] = useState(false);
+  const [containerId, setContainerId] = useState(() => "bcr-" + Math.random().toString(36).slice(2));
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const containerRef = useRef<string>("barcode-reader-" + Math.random().toString(36).slice(2));
 
   const stopScanner = useCallback(async () => {
     if (scannerRef.current) {
@@ -89,11 +89,13 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
     setError(null);
     setLogged(false);
     setShowManual(false);
+    const newId = "bcr-" + Math.random().toString(36).slice(2);
+    setContainerId(newId);
     setScanning(true);
 
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 500));
 
-    const el = document.getElementById(containerRef.current);
+    const el = document.getElementById(newId);
     if (!el) {
       setError("Scanner container not ready. Please try again.");
       setScanning(false);
@@ -101,7 +103,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
     }
 
     try {
-      const scanner = new Html5Qrcode(containerRef.current);
+      const scanner = new Html5Qrcode(newId);
       scannerRef.current = scanner;
 
       await scanner.start(
@@ -122,7 +124,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
       if (err?.toString?.().includes("NotAllowedError") || err?.toString?.().includes("Permission")) {
         setError("Camera access was denied. Please allow camera permissions in your browser settings and try again.");
       } else {
-        setError("Could not start camera. Make sure your device has a camera and no other app is using it.");
+        setError("Could not start camera. Try entering the barcode number manually instead.");
       }
     }
   }, [stopScanner, lookupBarcode]);
@@ -147,20 +149,20 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
     await lookupBarcode(code);
   };
 
-  const adjustedCalories = product ? Math.round(product.calories / servings) : 0;
-  const adjustedProtein = product ? Math.round(product.protein / servings) : 0;
-  const adjustedCarbs = product ? Math.round(product.carbs / servings) : 0;
-  const adjustedFat = product ? Math.round(product.fat / servings) : 0;
+  const displayCalories = product ? Math.round(product.calories * servings) : 0;
+  const displayProtein = product ? Math.round(product.protein * servings) : 0;
+  const displayCarbs = product ? Math.round(product.carbs * servings) : 0;
+  const displayFat = product ? Math.round(product.fat * servings) : 0;
 
   const handleLog = () => {
     if (product) {
-      const suffix = servings > 1 ? ` (1/${servings})` : "";
+      const suffix = servings !== 1 ? ` x${servings}` : "";
       onLog({
         name: (product.brand ? `${product.name} (${product.brand})` : product.name) + suffix,
-        calories: adjustedCalories,
-        protein: adjustedProtein,
-        carbs: adjustedCarbs,
-        fat: adjustedFat
+        calories: displayCalories,
+        protein: displayProtein,
+        carbs: displayCarbs,
+        fat: displayFat
       });
       setLogged(true);
     }
@@ -192,7 +194,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
           </DialogHeader>
 
           <div className="px-5 pb-5 space-y-4">
-            {!scanning && !product && !looking && !showManual && (
+            {!scanning && !product && !looking && !showManual && !error && (
               <div className="flex flex-col items-center gap-4 py-6">
                 <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <Camera className="h-10 w-10 text-primary" />
@@ -257,7 +259,8 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
             {scanning && (
               <div className="space-y-3">
                 <div
-                  id={containerRef.current}
+                  id={containerId}
+                  key={containerId}
                   className="rounded-xl overflow-hidden bg-black aspect-[16/10]"
                 ></div>
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -272,7 +275,6 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                     onClick={() => { stopScanner(); setShowManual(true); }}
                     data-testid="button-switch-to-manual"
                   >
-                    <Hash className="h-3.5 w-3.5 mr-1.5" />
                     Type Barcode Instead
                   </Button>
                   <Button
@@ -308,7 +310,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                     onClick={startScanner}
                     data-testid="button-try-again-scan"
                   >
-                    Try Again
+                    Try Camera
                   </Button>
                   <Button
                     variant="outline"
@@ -340,59 +342,59 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                       <p className="text-xs text-muted-foreground mt-0.5">{product.brand}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
-                      Serving: {product.servingSize}
+                      Per serving: {product.servingSize}
                     </p>
                   </div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                    Servings in package
+                    How many servings did you have?
                   </p>
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex items-center gap-3">
                     <Button
                       variant="outline"
                       size="icon"
                       className="h-8 w-8 rounded-full"
-                      onClick={() => setServings(Math.max(1, servings - 1))}
-                      disabled={servings <= 1}
+                      onClick={() => setServings(Math.max(0.5, servings - 0.5))}
+                      disabled={servings <= 0.5}
                       data-testid="button-decrease-servings"
                     >
                       <Minus className="h-3.5 w-3.5" />
                     </Button>
-                    <span className="text-lg font-bold text-slate-800 w-8 text-center" data-testid="text-servings-count">
+                    <span className="text-lg font-bold text-slate-800 min-w-[2rem] text-center" data-testid="text-servings-count">
                       {servings}
                     </span>
                     <Button
                       variant="outline"
                       size="icon"
                       className="h-8 w-8 rounded-full"
-                      onClick={() => setServings(servings + 1)}
+                      onClick={() => setServings(servings + 0.5)}
                       data-testid="button-increase-servings"
                     >
                       <Plus className="h-3.5 w-3.5" />
                     </Button>
                     <span className="text-xs text-muted-foreground ml-1">
-                      {servings === 1 ? "Logging full package" : `Logging 1 of ${servings} servings`}
+                      {servings === 1 ? "serving" : "servings"}
                     </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-4 gap-2">
                   <div className="text-center p-3 rounded-xl bg-secondary/10">
-                    <div className="text-lg font-bold text-secondary" data-testid="text-scanned-calories">{adjustedCalories}</div>
+                    <div className="text-lg font-bold text-secondary" data-testid="text-scanned-calories">{displayCalories}</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">kcal</div>
                   </div>
                   <div className="text-center p-3 rounded-xl bg-blue-50">
-                    <div className="text-lg font-bold text-blue-600">{adjustedProtein}g</div>
+                    <div className="text-lg font-bold text-blue-600">{displayProtein}g</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Protein</div>
                   </div>
                   <div className="text-center p-3 rounded-xl bg-emerald-50">
-                    <div className="text-lg font-bold text-emerald-600">{adjustedCarbs}g</div>
+                    <div className="text-lg font-bold text-emerald-600">{displayCarbs}g</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Carbs</div>
                   </div>
                   <div className="text-center p-3 rounded-xl bg-amber-50">
-                    <div className="text-lg font-bold text-amber-600">{adjustedFat}g</div>
+                    <div className="text-lg font-bold text-amber-600">{displayFat}g</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Fat</div>
                   </div>
                 </div>
