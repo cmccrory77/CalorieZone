@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ScanBarcode, Camera, X, Plus, Loader2, AlertCircle } from "lucide-react";
+import { ScanBarcode, Camera, Plus, Loader2, AlertCircle, Hash, Search } from "lucide-react";
 
 interface NutritionInfo {
   name: string;
@@ -19,6 +20,16 @@ interface BarcodeScannerProps {
   onLog: (food: { name: string; calories: number; protein: number; carbs: number; fat: number }) => void;
 }
 
+const BARCODE_FORMATS = [
+  Html5QrcodeSupportedFormats.UPC_A,
+  Html5QrcodeSupportedFormats.UPC_E,
+  Html5QrcodeSupportedFormats.EAN_13,
+  Html5QrcodeSupportedFormats.EAN_8,
+  Html5QrcodeSupportedFormats.CODE_128,
+  Html5QrcodeSupportedFormats.CODE_39,
+  Html5QrcodeSupportedFormats.ITF,
+];
+
 export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
   const [open, setOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -26,6 +37,8 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
   const [product, setProduct] = useState<NutritionInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [logged, setLogged] = useState(false);
+  const [manualCode, setManualCode] = useState("");
+  const [mode, setMode] = useState<"choose" | "camera" | "manual">("choose");
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<string>("barcode-reader-" + Math.random().toString(36).slice(2));
 
@@ -46,6 +59,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
   const lookupBarcode = useCallback(async (code: string) => {
     setLooking(true);
     setError(null);
+    setProduct(null);
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000);
@@ -78,9 +92,6 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
           if (perServing != null && servingQuantity) {
             if (per100g != null) {
               const calcFromWeight = (per100g * servingQuantity) / 100;
-              if (Math.abs(perServing - calcFromWeight) < calcFromWeight * 0.3) {
-                return calcFromWeight;
-              }
               return calcFromWeight;
             }
             return perServing;
@@ -119,7 +130,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
           imageUrl: p.image_front_small_url || p.image_url
         });
       } else {
-        setError("Product not found in database. Try a different product or enter calories manually.");
+        setError("Product not found in database. Try a different barcode or enter it manually.");
       }
     } catch (err: any) {
       if (err?.name === "AbortError") {
@@ -136,6 +147,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
     setProduct(null);
     setError(null);
     setLogged(false);
+    setMode("camera");
     setScanning(true);
 
     await new Promise(r => setTimeout(r, 300));
@@ -148,15 +160,19 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
     }
 
     try {
-      const scanner = new Html5Qrcode(containerRef.current);
+      const scanner = new Html5Qrcode(containerRef.current, {
+        formatsToSupport: BARCODE_FORMATS,
+        verbose: false,
+      });
       scannerRef.current = scanner;
 
       await scanner.start(
         { facingMode: "environment" },
         {
-          fps: 10,
-          qrbox: { width: 280, height: 160 },
+          fps: 15,
+          qrbox: { width: 280, height: 120 },
           aspectRatio: 1.6,
+          disableFlip: false,
         },
         async (decodedText) => {
           try {
@@ -185,8 +201,17 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
       setProduct(null);
       setError(null);
       setLogged(false);
+      setManualCode("");
+      setMode("choose");
     }
   }, [open, stopScanner]);
+
+  const handleManualLookup = async () => {
+    const code = manualCode.trim();
+    if (!code) return;
+    await stopScanner();
+    await lookupBarcode(code);
+  };
 
   const handleLog = () => {
     if (product) {
@@ -199,6 +224,15 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
       });
       setLogged(true);
     }
+  };
+
+  const resetToChoose = () => {
+    stopScanner();
+    setProduct(null);
+    setError(null);
+    setLogged(false);
+    setManualCode("");
+    setMode("choose");
   };
 
   return (
@@ -222,26 +256,78 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
               Barcode Scanner
             </DialogTitle>
             <DialogDescription className="text-sm">
-              Scan a product barcode to look up nutrition facts
+              Scan or type a barcode to look up nutrition facts
             </DialogDescription>
           </DialogHeader>
 
           <div className="px-5 pb-5 space-y-4">
-            {!scanning && !product && !looking && (
-              <div className="flex flex-col items-center gap-4 py-6">
-                <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Camera className="h-10 w-10 text-primary" />
-                </div>
-                <p className="text-sm text-center text-muted-foreground max-w-[240px]">
-                  Position the barcode in front of your camera to scan it automatically
-                </p>
-                <Button
+            {mode === "choose" && !product && !looking && !error && (
+              <div className="space-y-3">
+                <button
                   onClick={startScanner}
-                  className="bg-primary hover:bg-primary/90 text-white gap-2"
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
                   data-testid="button-start-scanning"
                 >
-                  <Camera className="h-4 w-4" />
-                  Open Camera
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <Camera className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm text-slate-800">Scan with Camera</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Point your camera at a product barcode</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => { setMode("manual"); setError(null); setProduct(null); }}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
+                  data-testid="button-enter-barcode"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
+                    <Hash className="h-6 w-6 text-secondary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm text-slate-800">Enter Barcode Number</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Type the number printed below the barcode</p>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {mode === "manual" && !product && !looking && (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Enter the barcode number found below the barcode on the product packaging.
+                  </p>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="e.g. 012345678901"
+                      value={manualCode}
+                      onChange={(e) => setManualCode(e.target.value.replace(/[^0-9]/g, ""))}
+                      onKeyDown={(e) => e.key === "Enter" && handleManualLookup()}
+                      className="flex-1 bg-slate-50 border-slate-200 text-sm h-10 font-mono tracking-wider"
+                      autoFocus
+                      inputMode="numeric"
+                      data-testid="input-barcode-number"
+                    />
+                    <Button
+                      onClick={handleManualLookup}
+                      disabled={!manualCode.trim()}
+                      className="h-10 px-4 bg-primary hover:bg-primary/90 text-white gap-1.5"
+                      data-testid="button-lookup-barcode"
+                    >
+                      <Search className="h-4 w-4" />
+                      Look Up
+                    </Button>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-muted-foreground"
+                  onClick={resetToChoose}
+                >
+                  Back
                 </Button>
               </div>
             )}
@@ -256,15 +342,27 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Point camera at a barcode...
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={stopScanner}
-                  data-testid="button-cancel-scanning"
-                >
-                  Cancel
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => { stopScanner(); setMode("manual"); }}
+                    data-testid="button-switch-to-manual"
+                  >
+                    <Hash className="h-3.5 w-3.5 mr-1.5" />
+                    Type Barcode Instead
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={resetToChoose}
+                    data-testid="button-cancel-scanning"
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -281,14 +379,26 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                   <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                   <p className="text-sm text-red-700">{error}</p>
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={startScanner}
-                  data-testid="button-try-again-scan"
-                >
-                  Try Again
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={startScanner}
+                    data-testid="button-try-again-scan"
+                  >
+                    <Camera className="h-3.5 w-3.5 mr-1.5" />
+                    Try Camera
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => { setError(null); setMode("manual"); }}
+                    data-testid="button-try-manual"
+                  >
+                    <Hash className="h-3.5 w-3.5 mr-1.5" />
+                    Type Barcode
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -348,7 +458,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                       <Button
                         variant="outline"
                         className="shrink-0"
-                        onClick={startScanner}
+                        onClick={resetToChoose}
                         data-testid="button-scan-another"
                       >
                         Scan Another
@@ -365,7 +475,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                       <Button
                         variant="outline"
                         className="shrink-0"
-                        onClick={startScanner}
+                        onClick={resetToChoose}
                         data-testid="button-scan-another-after-log"
                       >
                         Scan Another
