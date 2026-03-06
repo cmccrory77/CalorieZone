@@ -123,9 +123,12 @@ export default function Home() {
     [profile?.id]
   );
 
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+
   const handleOnboardingComplete = useCallback((name: string, avatarSeed: string) => {
     if (!profile?.id) return;
     updateProfileMutation.mutate({ name, avatarSeed } as any);
+    setEditProfileOpen(false);
   }, [profile?.id]);
 
   const addFoodMutation = useMutation({
@@ -678,7 +681,7 @@ export default function Home() {
                 <span className="font-medium text-foreground">{targetCalories}</span>
                 <span>kcal daily goal</span>
               </div>
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setEditProfileOpen(true)} data-testid="button-edit-profile">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.avatarSeed || "Felix"}`} alt="User avatar" className="h-8 w-8 rounded-full bg-muted" />
               </Button>
             </div>
@@ -1380,6 +1383,15 @@ export default function Home() {
       <OnboardingDialog
         open={!!profile && !profile.name}
         onComplete={handleOnboardingComplete}
+      />
+
+      <OnboardingDialog
+        open={editProfileOpen}
+        onComplete={handleOnboardingComplete}
+        onClose={() => setEditProfileOpen(false)}
+        initialName={profile?.name || ""}
+        initialAvatar={profile?.avatarSeed || "Felix"}
+        editMode
       />
     </div>
   );

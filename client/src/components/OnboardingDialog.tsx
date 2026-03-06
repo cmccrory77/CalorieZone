@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,10 @@ import { Activity, ChevronRight } from "lucide-react";
 interface OnboardingDialogProps {
   open: boolean;
   onComplete: (name: string, avatarSeed: string) => void;
+  onClose?: () => void;
+  initialName?: string;
+  initialAvatar?: string;
+  editMode?: boolean;
 }
 
 const avatarOptions = [
@@ -49,10 +53,18 @@ const avatarOptions = [
   { seed: "Ingrid", label: "Ingrid" },
 ];
 
-export default function OnboardingDialog({ open, onComplete }: OnboardingDialogProps) {
-  const [name, setName] = useState("");
-  const [selectedAvatar, setSelectedAvatar] = useState("Felix");
+export default function OnboardingDialog({ open, onComplete, onClose, initialName, initialAvatar, editMode }: OnboardingDialogProps) {
+  const [name, setName] = useState(initialName || "");
+  const [selectedAvatar, setSelectedAvatar] = useState(initialAvatar || "Felix");
   const [step, setStep] = useState<"name" | "avatar">("name");
+
+  useEffect(() => {
+    if (open) {
+      setName(initialName || "");
+      setSelectedAvatar(initialAvatar || "Felix");
+      setStep("name");
+    }
+  }, [open, initialName, initialAvatar]);
 
   const handleNext = () => {
     if (step === "name" && name.trim()) {
@@ -67,8 +79,8 @@ export default function OnboardingDialog({ open, onComplete }: OnboardingDialogP
   };
 
   return (
-    <Dialog open={open}>
-      <DialogContent className="max-w-md p-0 overflow-hidden [&>button]:hidden">
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen && onClose) onClose(); }}>
+      <DialogContent className={`max-w-md p-0 overflow-hidden ${!editMode ? "[&>button]:hidden" : ""}`}>
         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
@@ -78,12 +90,14 @@ export default function OnboardingDialog({ open, onComplete }: OnboardingDialogP
           </div>
           <DialogHeader className="text-left">
             <DialogTitle className="text-xl font-display">
-              {step === "name" ? "What's your name?" : "Choose your avatar"}
+              {step === "name"
+                ? (editMode ? "Edit your profile" : "What's your name?")
+                : (editMode ? "Update your avatar" : "Choose your avatar")}
             </DialogTitle>
             <DialogDescription className="text-sm">
               {step === "name"
-                ? "We'll use this to personalize your experience."
-                : "Pick an avatar that represents you."}
+                ? (editMode ? "Update your display name." : "We'll use this to personalize your experience.")
+                : (editMode ? "Pick a new avatar that represents you." : "Pick an avatar that represents you.")}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -174,7 +188,7 @@ export default function OnboardingDialog({ open, onComplete }: OnboardingDialogP
                   onClick={handleFinish}
                   data-testid="button-onboarding-finish"
                 >
-                  Get Started
+                  {editMode ? "Save Changes" : "Get Started"}
                 </Button>
               </div>
             </>
