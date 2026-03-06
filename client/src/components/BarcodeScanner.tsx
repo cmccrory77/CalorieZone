@@ -47,7 +47,12 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
     setLooking(true);
     setError(null);
     try {
-      const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
       const data = await res.json();
 
       if (data.status === 1 && data.product) {
@@ -90,9 +95,14 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
           return 0;
         };
 
-        let calories = getNutrient("energy-kcal");
+        const safeNutrient = (key: string): number => {
+          const val = getNutrient(key);
+          return isFinite(val) ? val : 0;
+        };
+
+        let calories = safeNutrient("energy-kcal");
         if (calories === 0) {
-          const energyKj = getNutrient("energy");
+          const energyKj = safeNutrient("energy");
           if (energyKj > 0) calories = energyKj / 4.184;
         }
 
@@ -102,17 +112,21 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
           name: p.product_name || p.product_name_en || "Unknown Product",
           brand: p.brands || "",
           calories: Math.round(calories),
-          protein: Math.round(getNutrient("proteins")),
-          carbs: Math.round(getNutrient("carbohydrates")),
-          fat: Math.round(getNutrient("fat")),
+          protein: Math.round(safeNutrient("proteins")),
+          carbs: Math.round(safeNutrient("carbohydrates")),
+          fat: Math.round(safeNutrient("fat")),
           servingSize: servingDisplay,
           imageUrl: p.image_front_small_url || p.image_url
         });
       } else {
         setError("Product not found in database. Try a different product or enter calories manually.");
       }
-    } catch {
-      setError("Could not look up product. Check your internet connection and try again.");
+    } catch (err: any) {
+      if (err?.name === "AbortError") {
+        setError("Lookup timed out. Check your internet connection and try again.");
+      } else {
+        setError("Could not look up product. Check your internet connection and try again.");
+      }
     } finally {
       setLooking(false);
     }
@@ -145,8 +159,13 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
           aspectRatio: 1.6,
         },
         async (decodedText) => {
-          await stopScanner();
-          lookupBarcode(decodedText);
+          try {
+            await stopScanner();
+            await lookupBarcode(decodedText);
+          } catch {
+            setLooking(false);
+            setError("Something went wrong looking up the product. Please try again.");
+          }
         },
         () => {}
       );
