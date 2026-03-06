@@ -67,6 +67,16 @@ export default function Home() {
     },
   });
 
+  const { data: frequentFoods = [] } = useQuery<{ name: string; calories: number; protein: number; carbs: number; fat: number; frequency: number; lastUsed: string }[]>({
+    queryKey: ["/api/food-entries", profile?.id, "frequent"],
+    enabled: !!profile?.id,
+    queryFn: async () => {
+      const res = await fetch(`/api/food-entries/${profile!.id}/frequent`);
+      if (!res.ok) throw new Error("Failed to load frequent foods");
+      return res.json();
+    },
+  });
+
   const [startingWeight, setStartingWeight] = useState(185);
   const [currentWeight, setCurrentWeight] = useState(185);
   const [targetWeight, setTargetWeight] = useState(165);
@@ -928,7 +938,7 @@ export default function Home() {
                       }} />
                     </div>
                   </div>
-                  <FoodSearch onAdd={(food) => addFoodMutation.mutate(food)} />
+                  <FoodSearch onAdd={(food) => addFoodMutation.mutate(food)} frequentFoods={frequentFoods} />
                 </div>
 
                 {/* Logged Foods List */}

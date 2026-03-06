@@ -28,6 +28,15 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/food-entries/:profileId/frequent", async (req, res) => {
+    try {
+      const foods = await storage.getFrequentFoods(req.params.profileId);
+      res.json(foods);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to load frequent foods" });
+    }
+  });
+
   app.get("/api/food-entries/:profileId/:date", async (req, res) => {
     try {
       const entries = await storage.getFoodEntries(req.params.profileId, req.params.date);
