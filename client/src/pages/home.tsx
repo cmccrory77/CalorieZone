@@ -479,13 +479,24 @@ export default function Home() {
             title = i === 0 ? `${keyword} ${noun} with Berries` : i === 1 ? `${protein} & ${keyword} ${noun}` : `${keyword} ${protein} ${noun}`;
           }
 
-          const steps = (stepTemplates[cat]?.[noun] || []).map(s => s[0]);
+          const proteinLower = protein.toLowerCase();
+          const substituteProtein = (text: string) =>
+            text
+              .replace(/\bProtein of choice,?\s*/gi, protein + ' ')
+              .replace(/\bSeasoned protein\b/gi, `Seasoned ${proteinLower}`)
+              .replace(/\bGrilled protein\b/gi, `Grilled ${proteinLower}`)
+              .replace(/\bSliced protein\b/gi, `Sliced ${proteinLower}`)
+              .replace(/\byour protein\b/gi, proteinLower)
+              .replace(/\bthe protein\b/gi, `the ${proteinLower}`)
+              .replace(/\bprotein\b/g, proteinLower);
+
+          const steps = (stepTemplates[cat]?.[noun] || []).map(s => substituteProtein(s[0]));
           const baseIngredients = ingredientTemplates[cat]?.[noun] || [];
           const recipeCals = 200 + ((seed * 7) % 300) + (cat === 'snack' ? -100 : 100);
           const baseCals = baseIngredients.reduce((sum, ing) => sum + ing.cal, 0);
           const scale = baseCals > 0 ? recipeCals / baseCals : 1;
           const ingredients = baseIngredients.map(ing => ({
-            item: ing.item,
+            item: substituteProtein(ing.item),
             amount: ing.amount,
             cal: Math.round(ing.cal * scale)
           }));
