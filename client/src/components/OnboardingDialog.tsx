@@ -23,6 +23,30 @@ const avatarOptions = [
   { seed: "Luna", label: "Luna" },
   { seed: "Avery", label: "Avery" },
   { seed: "Sam", label: "Sam" },
+  { seed: "Marcus", label: "Marcus" },
+  { seed: "Priya", label: "Priya" },
+  { seed: "Hiro", label: "Hiro" },
+  { seed: "Amara", label: "Amara" },
+  { seed: "Devon", label: "Devon" },
+  { seed: "Rosa", label: "Rosa" },
+  { seed: "Jamal", label: "Jamal" },
+  { seed: "Suki", label: "Suki" },
+  { seed: "Omar", label: "Omar" },
+  { seed: "Ling", label: "Ling" },
+  { seed: "Carlos", label: "Carlos" },
+  { seed: "Fatima", label: "Fatima" },
+  { seed: "Henrik", label: "Henrik" },
+  { seed: "Yuki", label: "Yuki" },
+  { seed: "Dante", label: "Dante" },
+  { seed: "Nadia", label: "Nadia" },
+  { seed: "Ravi", label: "Ravi" },
+  { seed: "Elena", label: "Elena" },
+  { seed: "Kwame", label: "Kwame" },
+  { seed: "Sophie", label: "Sophie" },
+  { seed: "Jin", label: "Jin" },
+  { seed: "Anika", label: "Anika" },
+  { seed: "Mateo", label: "Mateo" },
+  { seed: "Ingrid", label: "Ingrid" },
 ];
 
 export default function OnboardingDialog({ open, onComplete }: OnboardingDialogProps) {
@@ -44,7 +68,7 @@ export default function OnboardingDialog({ open, onComplete }: OnboardingDialogP
 
   return (
     <Dialog open={open}>
-      <DialogContent className="max-w-sm p-0 overflow-hidden [&>button]:hidden">
+      <DialogContent className="max-w-md p-0 overflow-hidden [&>button]:hidden">
         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
@@ -108,7 +132,7 @@ export default function OnboardingDialog({ open, onComplete }: OnboardingDialogP
                 </div>
               </div>
 
-              <div className="grid grid-cols-6 gap-2">
+              <div className="grid grid-cols-6 gap-2 max-h-[240px] overflow-y-auto pr-1">
                 {avatarOptions.map((avatar) => (
                   <button
                     key={avatar.seed}
