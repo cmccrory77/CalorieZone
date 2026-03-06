@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ScanBarcode, Camera, Plus, Loader2, AlertCircle, Hash, Search } from "lucide-react";
+import { ScanBarcode, Camera, Plus, Loader2, AlertCircle, Minus, Hash, Search } from "lucide-react";
 
 interface NutritionInfo {
   name: string;
@@ -20,16 +20,6 @@ interface BarcodeScannerProps {
   onLog: (food: { name: string; calories: number; protein: number; carbs: number; fat: number }) => void;
 }
 
-const BARCODE_FORMATS = [
-  Html5QrcodeSupportedFormats.UPC_A,
-  Html5QrcodeSupportedFormats.UPC_E,
-  Html5QrcodeSupportedFormats.EAN_13,
-  Html5QrcodeSupportedFormats.EAN_8,
-  Html5QrcodeSupportedFormats.CODE_128,
-  Html5QrcodeSupportedFormats.CODE_39,
-  Html5QrcodeSupportedFormats.ITF,
-];
-
 export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
   const [open, setOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -37,8 +27,9 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
   const [product, setProduct] = useState<NutritionInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [logged, setLogged] = useState(false);
+  const [servings, setServings] = useState(1);
   const [manualCode, setManualCode] = useState("");
-  const [mode, setMode] = useState<"choose" | "camera" | "manual">("choose");
+  const [showManual, setShowManual] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<string>("barcode-reader-" + Math.random().toString(36).slice(2));
 
@@ -59,14 +50,8 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
   const lookupBarcode = useCallback(async (code: string) => {
     setLooking(true);
     setError(null);
-    setProduct(null);
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-      const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`, {
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
+      const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`);
       const data = await res.json();
 
       if (data.status === 1 && data.product) {
@@ -88,15 +73,12 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
           servingSize,
           imageUrl: p.image_front_small_url || p.image_url
         });
+        setServings(1);
       } else {
-        setError("Product not found in database. Try a different barcode or enter it manually.");
+        setError("Product not found in database. Try a different product or enter calories manually.");
       }
-    } catch (err: any) {
-      if (err?.name === "AbortError") {
-        setError("Lookup timed out. Check your internet connection and try again.");
-      } else {
-        setError("Could not look up product. Check your internet connection and try again.");
-      }
+    } catch {
+      setError("Could not look up product. Check your internet connection and try again.");
     } finally {
       setLooking(false);
     }
@@ -106,7 +88,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
     setProduct(null);
     setError(null);
     setLogged(false);
-    setMode("camera");
+    setShowManual(false);
     setScanning(true);
 
     await new Promise(r => setTimeout(r, 300));
@@ -119,28 +101,19 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
     }
 
     try {
-      const scanner = new Html5Qrcode(containerRef.current, {
-        formatsToSupport: BARCODE_FORMATS,
-        verbose: false,
-      });
+      const scanner = new Html5Qrcode(containerRef.current);
       scannerRef.current = scanner;
 
       await scanner.start(
         { facingMode: "environment" },
         {
-          fps: 15,
-          qrbox: { width: 280, height: 120 },
+          fps: 10,
+          qrbox: { width: 280, height: 160 },
           aspectRatio: 1.6,
-          disableFlip: false,
         },
         async (decodedText) => {
-          try {
-            await stopScanner();
-            await lookupBarcode(decodedText);
-          } catch {
-            setLooking(false);
-            setError("Something went wrong looking up the product. Please try again.");
-          }
+          await stopScanner();
+          lookupBarcode(decodedText);
         },
         () => {}
       );
@@ -160,8 +133,9 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
       setProduct(null);
       setError(null);
       setLogged(false);
+      setServings(1);
       setManualCode("");
-      setMode("choose");
+      setShowManual(false);
     }
   }, [open, stopScanner]);
 
@@ -169,29 +143,27 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
     const code = manualCode.trim();
     if (!code) return;
     await stopScanner();
+    setShowManual(false);
     await lookupBarcode(code);
   };
 
+  const adjustedCalories = product ? Math.round(product.calories / servings) : 0;
+  const adjustedProtein = product ? Math.round(product.protein / servings) : 0;
+  const adjustedCarbs = product ? Math.round(product.carbs / servings) : 0;
+  const adjustedFat = product ? Math.round(product.fat / servings) : 0;
+
   const handleLog = () => {
     if (product) {
+      const suffix = servings > 1 ? ` (1/${servings})` : "";
       onLog({
-        name: product.brand ? `${product.name} (${product.brand})` : product.name,
-        calories: product.calories,
-        protein: product.protein,
-        carbs: product.carbs,
-        fat: product.fat
+        name: (product.brand ? `${product.name} (${product.brand})` : product.name) + suffix,
+        calories: adjustedCalories,
+        protein: adjustedProtein,
+        carbs: adjustedCarbs,
+        fat: adjustedFat
       });
       setLogged(true);
     }
-  };
-
-  const resetToChoose = () => {
-    stopScanner();
-    setProduct(null);
-    setError(null);
-    setLogged(false);
-    setManualCode("");
-    setMode("choose");
   };
 
   return (
@@ -215,76 +187,67 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
               Barcode Scanner
             </DialogTitle>
             <DialogDescription className="text-sm">
-              Scan or type a barcode to look up nutrition facts
+              Scan a product barcode to look up nutrition facts
             </DialogDescription>
           </DialogHeader>
 
           <div className="px-5 pb-5 space-y-4">
-            {mode === "choose" && !product && !looking && !error && (
-              <div className="space-y-3">
-                <button
+            {!scanning && !product && !looking && !showManual && (
+              <div className="flex flex-col items-center gap-4 py-6">
+                <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Camera className="h-10 w-10 text-primary" />
+                </div>
+                <p className="text-sm text-center text-muted-foreground max-w-[240px]">
+                  Position the barcode in front of your camera to scan it automatically
+                </p>
+                <Button
                   onClick={startScanner}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
+                  className="bg-primary hover:bg-primary/90 text-white gap-2"
                   data-testid="button-start-scanning"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                    <Camera className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm text-slate-800">Scan with Camera</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Point your camera at a product barcode</p>
-                  </div>
-                </button>
-
+                  <Camera className="h-4 w-4" />
+                  Open Camera
+                </Button>
                 <button
-                  onClick={() => { setMode("manual"); setError(null); setProduct(null); }}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
+                  onClick={() => setShowManual(true)}
+                  className="text-xs text-muted-foreground hover:text-primary underline underline-offset-2 transition-colors"
                   data-testid="button-enter-barcode"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
-                    <Hash className="h-6 w-6 text-secondary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm text-slate-800">Enter Barcode Number</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Type the number printed below the barcode</p>
-                  </div>
+                  Or enter barcode number manually
                 </button>
               </div>
             )}
 
-            {mode === "manual" && !product && !looking && (
+            {showManual && !product && !looking && (
               <div className="space-y-3">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Enter the barcode number found below the barcode on the product packaging.
-                  </p>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="e.g. 012345678901"
-                      value={manualCode}
-                      onChange={(e) => setManualCode(e.target.value.replace(/[^0-9]/g, ""))}
-                      onKeyDown={(e) => e.key === "Enter" && handleManualLookup()}
-                      className="flex-1 bg-slate-50 border-slate-200 text-sm h-10 font-mono tracking-wider"
-                      autoFocus
-                      inputMode="numeric"
-                      data-testid="input-barcode-number"
-                    />
-                    <Button
-                      onClick={handleManualLookup}
-                      disabled={!manualCode.trim()}
-                      className="h-10 px-4 bg-primary hover:bg-primary/90 text-white gap-1.5"
-                      data-testid="button-lookup-barcode"
-                    >
-                      <Search className="h-4 w-4" />
-                      Look Up
-                    </Button>
-                  </div>
+                <p className="text-sm text-muted-foreground">
+                  Type the number printed below the barcode on the packaging.
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="e.g. 012345678901"
+                    value={manualCode}
+                    onChange={(e) => setManualCode(e.target.value.replace(/[^0-9]/g, ""))}
+                    onKeyDown={(e) => e.key === "Enter" && handleManualLookup()}
+                    className="flex-1 bg-slate-50 border-slate-200 text-sm h-10 font-mono tracking-wider"
+                    autoFocus
+                    inputMode="numeric"
+                    data-testid="input-barcode-number"
+                  />
+                  <Button
+                    onClick={handleManualLookup}
+                    disabled={!manualCode.trim()}
+                    className="h-10 px-4 bg-primary hover:bg-primary/90 text-white gap-1.5"
+                    data-testid="button-lookup-barcode"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="w-full text-xs text-muted-foreground"
-                  onClick={resetToChoose}
+                  onClick={() => setShowManual(false)}
                 >
                   Back
                 </Button>
@@ -306,7 +269,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => { stopScanner(); setMode("manual"); }}
+                    onClick={() => { stopScanner(); setShowManual(true); }}
                     data-testid="button-switch-to-manual"
                   >
                     <Hash className="h-3.5 w-3.5 mr-1.5" />
@@ -316,7 +279,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                     variant="outline"
                     size="sm"
                     className="shrink-0"
-                    onClick={resetToChoose}
+                    onClick={stopScanner}
                     data-testid="button-cancel-scanning"
                   >
                     Cancel
@@ -345,16 +308,14 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                     onClick={startScanner}
                     data-testid="button-try-again-scan"
                   >
-                    <Camera className="h-3.5 w-3.5 mr-1.5" />
-                    Try Camera
+                    Try Again
                   </Button>
                   <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={() => { setError(null); setMode("manual"); }}
+                    onClick={() => { setError(null); setShowManual(true); }}
                     data-testid="button-try-manual"
                   >
-                    <Hash className="h-3.5 w-3.5 mr-1.5" />
                     Type Barcode
                   </Button>
                 </div>
@@ -379,26 +340,59 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                       <p className="text-xs text-muted-foreground mt-0.5">{product.brand}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
-                      Per serving ({product.servingSize})
+                      Serving: {product.servingSize}
                     </p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    Servings in package
+                  </p>
+                  <div className="flex items-center justify-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 rounded-full"
+                      onClick={() => setServings(Math.max(1, servings - 1))}
+                      disabled={servings <= 1}
+                      data-testid="button-decrease-servings"
+                    >
+                      <Minus className="h-3.5 w-3.5" />
+                    </Button>
+                    <span className="text-lg font-bold text-slate-800 w-8 text-center" data-testid="text-servings-count">
+                      {servings}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 rounded-full"
+                      onClick={() => setServings(servings + 1)}
+                      data-testid="button-increase-servings"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </Button>
+                    <span className="text-xs text-muted-foreground ml-1">
+                      {servings === 1 ? "Logging full package" : `Logging 1 of ${servings} servings`}
+                    </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-4 gap-2">
                   <div className="text-center p-3 rounded-xl bg-secondary/10">
-                    <div className="text-lg font-bold text-secondary" data-testid="text-scanned-calories">{product.calories}</div>
+                    <div className="text-lg font-bold text-secondary" data-testid="text-scanned-calories">{adjustedCalories}</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">kcal</div>
                   </div>
                   <div className="text-center p-3 rounded-xl bg-blue-50">
-                    <div className="text-lg font-bold text-blue-600">{product.protein}g</div>
+                    <div className="text-lg font-bold text-blue-600">{adjustedProtein}g</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Protein</div>
                   </div>
                   <div className="text-center p-3 rounded-xl bg-emerald-50">
-                    <div className="text-lg font-bold text-emerald-600">{product.carbs}g</div>
+                    <div className="text-lg font-bold text-emerald-600">{adjustedCarbs}g</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Carbs</div>
                   </div>
                   <div className="text-center p-3 rounded-xl bg-amber-50">
-                    <div className="text-lg font-bold text-amber-600">{product.fat}g</div>
+                    <div className="text-lg font-bold text-amber-600">{adjustedFat}g</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Fat</div>
                   </div>
                 </div>
@@ -417,7 +411,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                       <Button
                         variant="outline"
                         className="shrink-0"
-                        onClick={resetToChoose}
+                        onClick={() => { setProduct(null); setLogged(false); setServings(1); }}
                         data-testid="button-scan-another"
                       >
                         Scan Another
@@ -434,7 +428,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                       <Button
                         variant="outline"
                         className="shrink-0"
-                        onClick={resetToChoose}
+                        onClick={() => { setProduct(null); setLogged(false); setServings(1); }}
                         data-testid="button-scan-another-after-log"
                       >
                         Scan Another
