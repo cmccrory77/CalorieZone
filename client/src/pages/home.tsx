@@ -662,6 +662,9 @@ export default function Home() {
                       style={{ width: `${Math.min(100, progressPercentage)}%` }}
                     />
                   </div>
+                  <span className="text-xs font-semibold text-primary whitespace-nowrap" data-testid="text-progress-percent">
+                    {Math.round(progressPercentage)}%
+                  </span>
                   <span className="text-xs text-muted-foreground whitespace-nowrap">
                     {currentWeight} / {targetWeight} lbs
                   </span>
