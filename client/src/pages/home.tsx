@@ -609,12 +609,6 @@ export default function Home() {
         ]
       };
 
-      const catImages: Record<string, string[]> = {
-        lunch: [lunch1, lunch2, lunch3],
-        dinner: [dinner1, dinner2, dinner3]
-      };
-      const nounImgMap: Record<string, number> = { Wrap: 0, Salad: 1, Bowl: 2, Skillet: 0, Roast: 1, "Stir-fry": 2 };
-
       setGeneratedRecipe({
         id: Date.now(),
         title,
@@ -625,7 +619,7 @@ export default function Home() {
         carbs: `${carbsG}g`,
         fat: `${fatG}g`,
         time: `${15 + Math.floor(Math.random() * 4) * 5} min`,
-        image: catImages[cat][nounImgMap[noun] ?? 0],
+        image: null,
         match: "Custom",
         ingredients,
         steps: stepSets[noun] || stepSets.Skillet
@@ -1105,15 +1099,16 @@ export default function Home() {
                 {generatedRecipe && (
                   <Card className="border-none shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all duration-300">
                     <div className="flex flex-col md:flex-row">
-                      <div className="relative md:w-72 h-48 md:h-auto overflow-hidden flex-shrink-0">
+                      <div className="relative md:w-72 h-48 md:h-auto overflow-hidden flex-shrink-0 bg-gradient-to-br from-primary/20 via-secondary/15 to-accent/20 flex items-center justify-center">
                         <div className="absolute top-3 left-3 z-10 bg-accent/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm">
                           {generatedRecipe.match}
                         </div>
-                        <img 
-                          src={generatedRecipe.image} 
-                          alt={generatedRecipe.title} 
-                          className="w-full h-full object-cover"
-                        />
+                        <div className="flex flex-col items-center gap-2 text-center px-4">
+                          <div className="w-16 h-16 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                            <ChefHat className="h-8 w-8 text-primary" />
+                          </div>
+                          <p className="text-sm font-display font-bold text-slate-700">{profile?.name || "Your"}'s Custom Recipe</p>
+                        </div>
                       </div>
                       <div className="flex-1 p-6 space-y-4">
                         <div>
@@ -1172,11 +1167,22 @@ export default function Home() {
         {selectedRecipe && (
           <DialogContent className="max-w-md p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="relative h-56 overflow-hidden">
-              <img 
-                src={selectedRecipe.image} 
-                alt={selectedRecipe.title} 
-                className="w-full h-full object-cover"
-              />
+              {selectedRecipe.image ? (
+                <img 
+                  src={selectedRecipe.image} 
+                  alt={selectedRecipe.title} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-secondary/15 to-accent/20 flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-3 text-center px-4">
+                    <div className="w-20 h-20 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                      <ChefHat className="h-10 w-10 text-primary" />
+                    </div>
+                    <p className="text-base font-display font-bold text-slate-700">{profile?.name || "Your"}'s Custom Recipe</p>
+                  </div>
+                </div>
+              )}
               <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-primary shadow-sm">
                 {selectedRecipe.match}
               </div>
