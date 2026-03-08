@@ -634,9 +634,9 @@ export default function Home() {
   const recipes = mealType === "all" ? dailyPlanRecipes : dailyPlanRecipes.filter(r => r.type === mealType);
 
   return (
-    <div className="min-h-screen bg-green-50/40">
+    <div className="min-h-screen bg-green-50/40 dark:bg-slate-950">
       {/* Navigation */}
-      <nav className="bg-white border-b border-border sticky top-0 z-10">
+      <nav className="bg-white dark:bg-slate-900 border-b border-border sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-2 text-primary">
@@ -650,7 +650,7 @@ export default function Home() {
                 </div>
                 <div className="text-slate-200">|</div>
                 <div className="flex items-center gap-2">
-                  <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-24 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-primary rounded-full transition-all"
                       style={{ width: `${Math.min(100, progressPercentage)}%` }}
@@ -693,14 +693,14 @@ export default function Home() {
 
           <div className="lg:col-span-7 space-y-8">
             {/* Calories Tracker Card */}
-            <Card className="border-none shadow-sm bg-white relative h-full flex flex-col rounded-xl">
+            <Card className="border-none shadow-sm bg-white dark:bg-slate-900 relative h-full flex flex-col rounded-xl">
               <div className="h-2 bg-secondary w-full rounded-t-xl"></div>
               <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
                 <Flame className="h-32 w-32 text-secondary" />
               </div>
               <CardHeader className="pb-2 relative z-10">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+                  <CardTitle className="text-slate-900 dark:text-slate-100 flex items-center gap-2 text-lg">
                     <Activity className="h-5 w-5 text-secondary" />
                     Daily Targets & Tracker
                   </CardTitle>
@@ -721,7 +721,7 @@ export default function Home() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full"
+                    className="h-8 w-8 shrink-0 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
                     onClick={() => setSelectedDate(prev => subDays(prev, 7))}
                     data-testid="button-prev-week"
                   >
@@ -745,8 +745,8 @@ export default function Home() {
                               : isDayToday
                               ? "bg-secondary/10 text-secondary hover:bg-secondary/20"
                               : isFuture
-                              ? "text-slate-300 cursor-not-allowed"
-                              : "text-slate-500 hover:bg-slate-100"
+                              ? "text-slate-300 dark:text-slate-600 cursor-not-allowed"
+                              : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                           }`}
                           data-testid={`day-button-${format(day, "yyyy-MM-dd")}`}
                         >
@@ -766,7 +766,7 @@ export default function Home() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full"
+                    className="h-8 w-8 shrink-0 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
                     onClick={() => {
                       const nextWeek = addDays(selectedDate, 7);
                       if (nextWeek <= new Date()) setSelectedDate(nextWeek);
@@ -786,22 +786,22 @@ export default function Home() {
                 
                 <div className="flex justify-between items-end mb-2">
                   <div>
-                    <div className="text-4xl font-display font-bold text-slate-900 tracking-tight">
+                    <div className="text-4xl font-display font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                       {trackedFoods.reduce((acc, food) => acc + food.calories, 0)}
                     </div>
-                    <div className="text-slate-500 text-xs uppercase tracking-wide font-medium mt-1">Consumed</div>
+                    <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide font-medium mt-1">Consumed</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-display font-bold text-slate-400 tracking-tight">
+                    <div className="text-2xl font-display font-bold text-slate-400 dark:text-slate-500 tracking-tight">
                       {targetCalories}
                     </div>
-                    <div className="text-slate-500 text-xs uppercase tracking-wide font-medium mt-1">Target</div>
+                    <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide font-medium mt-1">Target</div>
                   </div>
                 </div>
 
                 <Progress 
                   value={Math.min(100, (trackedFoods.reduce((acc, food) => acc + food.calories, 0) / targetCalories) * 100)} 
-                  className="h-3 bg-slate-100" 
+                  className="h-3 bg-slate-100 dark:bg-slate-800" 
                   indicatorClassName={trackedFoods.reduce((acc, food) => acc + food.calories, 0) > targetCalories ? "bg-red-500" : "bg-secondary"}
                 />
 
@@ -822,7 +822,7 @@ export default function Home() {
                 {/* Add Custom Food */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-slate-700">Quick Add</h4>
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Quick Add</h4>
                     <div className="flex gap-1.5">
                       <BarcodeScanner onLog={(food) => {
                         addFoodMutation.mutate(food);
@@ -837,14 +837,14 @@ export default function Home() {
 
                 {/* Logged Foods List */}
                 {trackedFoods.length > 0 && (
-                  <div className="space-y-3 pt-4 border-t border-slate-100">
-                    <h4 className="text-sm font-semibold text-slate-700">{isViewingToday ? "Today's Log" : format(selectedDate, "MMM d") + " Log"}</h4>
+                  <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">{isViewingToday ? "Today's Log" : format(selectedDate, "MMM d") + " Log"}</h4>
                     <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
                       {trackedFoods.map(food => (
-                        <div key={food.id} className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 group transition-colors">
-                          <span className="text-sm font-medium text-slate-700 truncate pr-2">{food.name}</span>
+                        <div key={food.id} className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-slate-700 group transition-colors">
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate pr-2">{food.name}</span>
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-sm text-slate-500 font-semibold">{food.calories} kcal</span>
+                            <span className="text-sm text-slate-500 dark:text-slate-400 font-semibold">{food.calories} kcal</span>
                             <button 
                               onClick={() => handleRemoveFood(food.id)}
                               className="text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
@@ -858,13 +858,13 @@ export default function Home() {
                   </div>
                 )}
                 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 mt-auto">
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto">
                   <div>
-                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-1">Maintenance</div>
-                    <div className="font-semibold text-slate-700">{maintenanceCalories} kcal</div>
+                    <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-1">Maintenance</div>
+                    <div className="font-semibold text-slate-700 dark:text-slate-300">{maintenanceCalories} kcal</div>
                   </div>
                   <div>
-                    <div className="text-slate-500 text-xs uppercase tracking-wider mb-1">
+                    <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-1">
                       {isGainingWeight ? 'Daily Surplus' : 'Daily Deficit'}
                     </div>
                     <div className="font-semibold text-secondary">
@@ -877,10 +877,10 @@ export default function Home() {
           </div>
 
           <div className="lg:col-span-3 space-y-8">
-            <Card className="border-none shadow-sm bg-white overflow-hidden h-full flex flex-col">
+            <Card className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden h-full flex flex-col">
               <div className="h-2 bg-accent w-full"></div>
               <CardHeader className="pb-0">
-                <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+                <CardTitle className="text-slate-900 dark:text-slate-100 flex items-center gap-2 text-lg">
                   <PieChartIcon className="h-5 w-5 text-accent" />
                   Macros
                 </CardTitle>
@@ -917,7 +917,7 @@ export default function Home() {
                   </ResponsiveContainer>
                 </div>
                 
-                <div className="space-y-3 pt-4 border-t border-slate-100 mt-4">
+                <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-4">
                   {[
                     { label: "Protein", current: totalProtein, target: targetProtein, color: "bg-blue-500", textColor: "text-blue-600" },
                     { label: "Carbs", current: totalCarbs, target: targetCarbs, color: "bg-emerald-500", textColor: "text-emerald-600" },
@@ -929,14 +929,14 @@ export default function Home() {
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-1.5">
                             <div className={`w-2 h-2 rounded-full ${macro.color}`}></div>
-                            <span className="text-xs font-semibold text-slate-600">{macro.label}</span>
+                            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{macro.label}</span>
                           </div>
                           <span className="text-xs font-semibold">
                             <span className={macro.textColor}>{macro.current}g</span>
                             <span className="text-muted-foreground"> / {macro.target}g</span>
                           </span>
                         </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${macro.color} transition-all duration-500`}
                             style={{ width: `${pct}%` }}
@@ -958,7 +958,7 @@ export default function Home() {
             
             <Tabs defaultValue="recommended" className="w-full">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <TabsList className="bg-white p-1 border border-slate-100 shadow-sm rounded-xl">
+                <TabsList className="bg-white dark:bg-slate-900 p-1 border border-slate-100 dark:border-slate-800 shadow-sm rounded-xl">
                   <TabsTrigger value="recommended" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                     Recommended
                   </TabsTrigger>
@@ -968,7 +968,7 @@ export default function Home() {
                   </TabsTrigger>
                 </TabsList>
                 
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground bg-white px-3 py-1.5 rounded-lg border border-slate-100 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm">
                   <Calendar className="h-4 w-4" />
                   Today's Plan
                 </div>
@@ -986,7 +986,7 @@ export default function Home() {
                     </p>
                   </div>
                   <Select value={mealType} onValueChange={setMealType}>
-                    <SelectTrigger className="w-full sm:w-[180px] bg-white border-slate-200">
+                    <SelectTrigger className="w-full sm:w-[180px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
                       <SelectValue placeholder="Meal Type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1001,7 +1001,7 @@ export default function Home() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {recipes.map((recipe) => (
-                    <Card key={recipe.id} className="border-none shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                    <Card key={recipe.id} className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                       <div className="relative h-48 overflow-hidden">
                         <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-primary shadow-sm">
                           {recipe.match}
@@ -1022,21 +1022,21 @@ export default function Home() {
                             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Calories</span>
                             <span className="font-bold text-foreground">{recipe.calories}</span>
                           </div>
-                          <div className="h-8 w-px bg-slate-100"></div>
+                          <div className="h-8 w-px bg-slate-100 dark:bg-slate-700"></div>
                           <div className="flex flex-col">
                             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Protein</span>
-                            <span className="font-medium text-slate-600">{recipe.protein}</span>
+                            <span className="font-medium text-slate-600 dark:text-slate-400">{recipe.protein}</span>
                           </div>
-                          <div className="h-8 w-px bg-slate-100"></div>
+                          <div className="h-8 w-px bg-slate-100 dark:bg-slate-700"></div>
                           <div className="flex flex-col">
                             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Time</span>
-                            <span className="font-medium text-slate-600">{recipe.time}</span>
+                            <span className="font-medium text-slate-600 dark:text-slate-400">{recipe.time}</span>
                           </div>
                         </div>
                       </CardContent>
                       <CardFooter className="p-5 pt-0 flex gap-2">
                         <Button 
-                          className="flex-1 bg-slate-50 hover:bg-slate-100 text-foreground border border-slate-200" 
+                          className="flex-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-foreground border border-slate-200 dark:border-slate-700" 
                           variant="outline"
                           onClick={() => setSelectedRecipe(recipe)}
                           data-testid={`button-view-recipe-${recipe.id}`}
@@ -1065,17 +1065,17 @@ export default function Home() {
                       <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-xl mb-4">
                         <Wand2 className="h-6 w-6 text-accent" />
                       </div>
-                      <h2 className="text-2xl font-display font-bold text-slate-800 mb-2">Recipe Generator</h2>
-                      <p className="text-slate-600 mb-6">
+                      <h2 className="text-2xl font-display font-bold text-slate-800 dark:text-slate-100 mb-2">Recipe Generator</h2>
+                      <p className="text-slate-600 dark:text-slate-400 mb-6">
                         Tell us what ingredients you have, separated by commas, and we'll generate a custom recipe tailored to {Math.round(targetCalories / 3)} calories (your target per meal).
                       </p>
                       
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label className="text-slate-700 font-semibold">What ingredients do you have?</Label>
+                          <Label className="text-slate-700 dark:text-slate-300 font-semibold">What ingredients do you have?</Label>
                           <Input 
                             placeholder="e.g. Chicken breast, broccoli, rice..." 
-                            className="h-12 bg-white border-blue-200 shadow-sm"
+                            className="h-12 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm"
                             value={generatorIngredients}
                             onChange={(e) => setGeneratorIngredients(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleGenerateRecipe()}
@@ -1103,7 +1103,7 @@ export default function Home() {
                 </Card>
 
                 {generatedRecipe && (
-                  <Card className="border-none shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all duration-300">
+                  <Card className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all duration-300">
                     <div className="flex flex-col md:flex-row">
                       <div className="relative md:w-72 h-48 md:h-auto overflow-hidden flex-shrink-0 bg-gradient-to-br from-primary/20 via-secondary/15 to-accent/20 flex items-center justify-center">
                         <div className="absolute top-3 left-3 z-10 bg-accent/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm">
@@ -1113,7 +1113,7 @@ export default function Home() {
                           <div className="w-16 h-16 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm">
                             <ChefHat className="h-8 w-8 text-primary" />
                           </div>
-                          <p className="text-sm font-display font-bold text-slate-700">{profile?.name || "Your"}'s Custom Recipe</p>
+                          <p className="text-sm font-display font-bold text-slate-700 dark:text-slate-200">{profile?.name || "Your"}'s Custom Recipe</p>
                         </div>
                       </div>
                       <div className="flex-1 p-6 space-y-4">
@@ -1126,17 +1126,17 @@ export default function Home() {
                             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Calories</span>
                             <span className="font-bold text-foreground">{generatedRecipe.calories}</span>
                           </div>
-                          <div className="h-8 w-px bg-slate-100"></div>
+                          <div className="h-8 w-px bg-slate-100 dark:bg-slate-700"></div>
                           <div className="flex flex-col">
                             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Protein</span>
                             <span className="font-medium text-blue-600">{generatedRecipe.protein}</span>
                           </div>
-                          <div className="h-8 w-px bg-slate-100"></div>
+                          <div className="h-8 w-px bg-slate-100 dark:bg-slate-700"></div>
                           <div className="flex flex-col">
                             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Carbs</span>
                             <span className="font-medium text-emerald-600">{generatedRecipe.carbs}</span>
                           </div>
-                          <div className="h-8 w-px bg-slate-100"></div>
+                          <div className="h-8 w-px bg-slate-100 dark:bg-slate-700"></div>
                           <div className="flex flex-col">
                             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Fat</span>
                             <span className="font-medium text-amber-600">{generatedRecipe.fat}</span>
@@ -1145,7 +1145,7 @@ export default function Home() {
                         <div className="flex gap-2 pt-2">
                           <Button 
                             variant="outline"
-                            className="flex-1 bg-slate-50 hover:bg-slate-100 text-foreground border border-slate-200"
+                            className="flex-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-foreground border border-slate-200 dark:border-slate-700"
                             onClick={() => setSelectedRecipe(generatedRecipe)}
                             data-testid="button-view-generated-recipe"
                           >
@@ -1185,7 +1185,7 @@ export default function Home() {
                     <div className="w-20 h-20 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm">
                       <ChefHat className="h-10 w-10 text-primary" />
                     </div>
-                    <p className="text-base font-display font-bold text-slate-700">{profile?.name || "Your"}'s Custom Recipe</p>
+                    <p className="text-base font-display font-bold text-slate-700 dark:text-slate-200">{profile?.name || "Your"}'s Custom Recipe</p>
                   </div>
                 </div>
               )}
@@ -1200,19 +1200,19 @@ export default function Home() {
               </DialogHeader>
 
               <div className="grid grid-cols-4 gap-3">
-                <div className="bg-slate-50 rounded-xl p-3 text-center">
+                <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-center">
                   <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Calories</div>
                   <div className="font-bold text-lg text-foreground">{selectedRecipe.calories}</div>
                 </div>
-                <div className="bg-blue-50 rounded-xl p-3 text-center">
+                <div className="bg-blue-50 dark:bg-blue-950/50 rounded-xl p-3 text-center">
                   <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Protein</div>
                   <div className="font-bold text-lg text-blue-600">{selectedRecipe.protein}</div>
                 </div>
-                <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                <div className="bg-emerald-50 dark:bg-emerald-950/50 rounded-xl p-3 text-center">
                   <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Carbs</div>
                   <div className="font-bold text-lg text-emerald-600">{selectedRecipe.carbs}</div>
                 </div>
-                <div className="bg-amber-50 rounded-xl p-3 text-center">
+                <div className="bg-amber-50 dark:bg-amber-950/50 rounded-xl p-3 text-center">
                   <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Fat</div>
                   <div className="font-bold text-lg text-amber-600">{selectedRecipe.fat}</div>
                 </div>
@@ -1232,13 +1232,13 @@ export default function Home() {
                   </h4>
                   <ul className="space-y-1.5">
                     {selectedRecipe.ingredients.map((ing: { item: string; amount: string; cal: number }, idx: number) => (
-                      <li key={idx} className="flex items-center justify-between text-sm py-1 border-b border-slate-50 last:border-0">
+                      <li key={idx} className="flex items-center justify-between text-sm py-1 border-b border-slate-50 dark:border-slate-800 last:border-0">
                         <div className="flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-primary/40 flex-shrink-0"></span>
-                          <span className="text-slate-700">{ing.item}</span>
+                          <span className="text-slate-700 dark:text-slate-300">{ing.item}</span>
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0">
-                          <span className="text-slate-400 text-xs">{ing.amount}</span>
+                          <span className="text-slate-400 dark:text-slate-500 text-xs">{ing.amount}</span>
                           {ing.cal > 0 && <span className="text-slate-400 text-xs w-12 text-right">{ing.cal} cal</span>}
                         </div>
                       </li>
@@ -1259,7 +1259,7 @@ export default function Home() {
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center mt-0.5">
                           {idx + 1}
                         </span>
-                        <span className="text-slate-600 leading-relaxed">{step}</span>
+                        <span className="text-slate-600 dark:text-slate-400 leading-relaxed">{step}</span>
                       </li>
                     ))}
                   </ol>

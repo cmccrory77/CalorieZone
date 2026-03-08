@@ -33,9 +33,10 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 
 ## Design System
 - Fonts: Poppins (display/headings) + Inter (body)
-- Palette: primary green `#4CAF50`, secondary orange `#FF9800`, accent blue `#03A9F4`, background `bg-green-50/40`
+- Palette: primary green `#4CAF50`, secondary orange `#FF9800`, accent blue `#03A9F4`, background `bg-green-50/40` (light) / `bg-slate-950` (dark)
 - Layout: 2-column top row [Daily Targets (col-7) | Macros (col-5)], full-width Recipes below; navbar has Settings gear icon + weight progress bar
-- All cards: white background, colored `h-2` top bar (green/orange/blue)
+- All cards: white/dark background, colored `h-2` top bar (green/orange/blue)
+- **Dark Mode**: Toggle in Settings dialog via Switch component; `.dark` class on `<html>` element; persisted in localStorage (`caloriq-dark-mode`); inline script in `index.html` restores preference before React render to prevent flash; CSS dark variables defined in `client/src/index.css` `.dark` block; all components use `dark:` Tailwind variants
 
 ## Features
 - **Weight Goal Tracker**: Set starting/current/target weights + timeframe in Settings dialog; auto-calculates daily caloric target; progress shown in navbar
@@ -47,7 +48,8 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - **Macro Tracking**: Pie chart breakdown of protein/carbs/fat
 - **Date Navigation**: Week-view calendar strip to view/log food entries for past days
 - **Recent/Frequent Foods**: Search prioritizes previously logged items; shows recent foods on focus
-- **Onboarding/Settings**: 2-step dialog (profile/weight goals + avatar) shown on first use; accessible later via Settings gear icon in navbar to edit name, avatar, and weight goals
+- **Onboarding/Settings**: 2-step dialog (profile/weight goals + avatar) shown on first use; accessible later via Settings gear icon in navbar to edit name, avatar, weight goals, and dark mode toggle
+- **Dark Mode**: Full dark theme with toggle in Settings; persists across sessions via localStorage
 
 ## Database Tables
 - `user_profiles`: id, name, avatar_seed, starting_weight, current_weight, target_weight, timeframe, maintenance_calories

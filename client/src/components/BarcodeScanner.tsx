@@ -187,7 +187,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
       <Button
         variant="outline"
         size="sm"
-        className="h-9 gap-1.5 text-xs border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600"
+        className="h-9 gap-1.5 text-xs border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
         onClick={() => setOpen(true)}
         data-testid="button-barcode-scanner"
       >
@@ -245,7 +245,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                     value={manualCode}
                     onChange={(e) => setManualCode(e.target.value.replace(/[^0-9]/g, ""))}
                     onKeyDown={(e) => e.key === "Enter" && handleManualLookup()}
-                    className="flex-1 bg-slate-50 border-slate-200 text-sm h-10 font-mono tracking-wider"
+                    className="flex-1 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm h-10 font-mono tracking-wider"
                     autoFocus
                     inputMode="numeric"
                     data-testid="input-barcode-number"
@@ -345,11 +345,11 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                     <img
                       src={product.imageUrl}
                       alt={product.name}
-                      className="w-16 h-16 rounded-lg object-cover border border-slate-100 shrink-0"
+                      className="w-16 h-16 rounded-lg object-cover border border-slate-100 dark:border-slate-700 shrink-0"
                     />
                   )}
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-sm text-slate-800 leading-tight" data-testid="text-scanned-product-name">
+                    <h3 className="font-semibold text-sm text-slate-800 dark:text-slate-200 leading-tight" data-testid="text-scanned-product-name">
                       {product.name}
                     </h3>
                     {product.brand && (
@@ -361,8 +361,8 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                     How many servings did you have?
                   </p>
                   <div className="flex items-center gap-3">
@@ -376,7 +376,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                     >
                       <Minus className="h-3.5 w-3.5" />
                     </Button>
-                    <span className="text-lg font-bold text-slate-800 min-w-[2rem] text-center" data-testid="text-servings-count">
+                    <span className="text-lg font-bold text-slate-800 dark:text-slate-200 min-w-[2rem] text-center" data-testid="text-servings-count">
                       {servings}
                     </span>
                     <Button

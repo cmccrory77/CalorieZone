@@ -316,7 +316,7 @@ export default function MealScanner({ onLog }: MealScannerProps) {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-sm font-semibold text-slate-800">Detected Items</span>
+                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">Detected Items</span>
                     <span className="text-xs text-muted-foreground ml-2">({result.items.length})</span>
                   </div>
                   <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${confidenceColor[result.confidence] || confidenceColor.medium}`}>
@@ -328,11 +328,11 @@ export default function MealScanner({ onLog }: MealScannerProps) {
                   {result.items.map((item, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700"
                       data-testid={`card-meal-item-${idx}`}
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm text-slate-800 truncate">{item.name}</div>
+                        <div className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">{item.name}</div>
                         <div className="text-xs text-muted-foreground">{item.portion}</div>
                         <div className="flex gap-3 mt-1">
                           <span className="text-xs font-semibold text-secondary">{item.calories} kcal</span>

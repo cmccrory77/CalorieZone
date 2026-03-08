@@ -263,7 +263,7 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-3" data-testid="quantity-selector">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-800 truncate" data-testid="text-pending-food-name">
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate" data-testid="text-pending-food-name">
                 {pendingItem.name}
               </p>
               {pendingItem.serving && (
@@ -282,7 +282,7 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-white rounded-lg border border-slate-200 shadow-sm">
+            <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
               <button
                 onClick={() => adjustQty(-0.25)}
                 disabled={qty <= 0.25}
@@ -363,7 +363,7 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
                 onChange={(e) => handleSearch(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onFocus={handleFocus}
-                className="pl-8 bg-slate-50 border-slate-200 text-sm h-9"
+                className="pl-8 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm h-9"
                 data-testid="input-food-search"
               />
             </div>
@@ -375,7 +375,7 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
                   value={customCalories}
                   onChange={(e) => setCustomCalories(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleManualAdd()}
-                  className="w-20 bg-slate-50 border-slate-200 text-sm h-9"
+                  className="w-20 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm h-9"
                   data-testid="input-custom-calories"
                 />
                 <Button
@@ -394,10 +394,10 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
           {showDropdown && displayItems.length > 0 && (
             <div
               ref={dropdownRef}
-              className="absolute z-50 w-full mt-1 bg-white rounded-xl border border-slate-200 shadow-lg overflow-hidden max-h-[320px] overflow-y-auto"
+              className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden max-h-[320px] overflow-y-auto"
             >
               {showingRecents && (
-                <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 flex items-center gap-1.5">
+                <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 flex items-center gap-1.5">
                   <Clock className="h-3 w-3 text-slate-400" />
                   <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Recent & Frequent</span>
                 </div>
@@ -406,8 +406,8 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
                 <button
                   key={`${item.name}-${idx}`}
                   data-dropdown-item
-                  className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-colors border-b border-slate-50 last:border-0 ${
-                    idx === selectedIndex ? "bg-green-50" : "hover:bg-slate-50"
+                  className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0 ${
+                    idx === selectedIndex ? "bg-green-50 dark:bg-green-950/30" : "hover:bg-slate-50 dark:hover:bg-slate-800"
                   }`}
                   onClick={() => handleSelect(item)}
                   onMouseEnter={() => setSelectedIndex(idx)}
@@ -418,7 +418,7 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
                       {item.isHistory && (
                         <Clock className="h-3 w-3 text-slate-400 shrink-0" />
                       )}
-                      <span className="text-sm font-medium text-slate-800 truncate">{item.name}</span>
+                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{item.name}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       {item.isHistory && item.frequency && item.frequency > 1 ? (

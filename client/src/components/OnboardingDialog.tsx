@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Activity, ChevronRight, CalendarDays } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Activity, ChevronRight, CalendarDays, Moon, Sun } from "lucide-react";
 import { addWeeks, format } from "date-fns";
 
 interface OnboardingDialogProps {
@@ -87,6 +88,7 @@ export default function OnboardingDialog({
   const [timeframe, setTimeframe] = useState(initialTimeframe || 12);
   const [targetDate, setTargetDate] = useState<Date>(addWeeks(new Date(), initialTimeframe || 12));
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
   const [step, setStep] = useState<"profile" | "avatar">("profile");
 
   useEffect(() => {
@@ -174,13 +176,13 @@ export default function OnboardingDialog({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleNext()}
-                  className="text-lg h-12 bg-slate-50 border-slate-200 font-medium"
+                  className="text-lg h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-medium"
                   autoFocus
                   data-testid="input-onboarding-name"
                 />
               </div>
 
-              <div className="border-t border-slate-100 pt-4">
+              <div className="border-t border-slate-100 dark:border-slate-700 pt-4">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Weight Goals</p>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
@@ -190,7 +192,7 @@ export default function OnboardingDialog({
                       type="number"
                       value={startingWeight}
                       onChange={(e) => setStartingWeight(Number(e.target.value))}
-                      className="h-10 bg-slate-50 border-slate-200 font-semibold"
+                      className="h-10 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-semibold"
                       data-testid="input-onboard-starting-weight"
                     />
                   </div>
@@ -201,7 +203,7 @@ export default function OnboardingDialog({
                       type="number"
                       value={currentWeight}
                       onChange={(e) => setCurrentWeight(Number(e.target.value))}
-                      className="h-10 bg-slate-50 border-slate-200 font-semibold"
+                      className="h-10 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-semibold"
                       data-testid="input-onboard-current-weight"
                     />
                   </div>
@@ -212,7 +214,7 @@ export default function OnboardingDialog({
                       type="number"
                       value={targetWeight}
                       onChange={(e) => setTargetWeight(Number(e.target.value))}
-                      className="h-10 bg-slate-50 border-slate-200 font-semibold"
+                      className="h-10 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-semibold"
                       data-testid="input-onboard-target-weight"
                     />
                   </div>
@@ -243,7 +245,7 @@ export default function OnboardingDialog({
                 <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                   <PopoverTrigger asChild>
                     <button
-                      className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
+                      className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
                       data-testid="button-target-date-picker"
                     >
                       <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
@@ -256,7 +258,7 @@ export default function OnboardingDialog({
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 border-slate-200 shadow-lg" align="center" sideOffset={8}>
+                  <PopoverContent className="w-auto p-0 border-slate-200 dark:border-slate-700 shadow-lg" align="center" sideOffset={8}>
                     <div className="p-1">
                       <Calendar
                         mode="single"
@@ -270,6 +272,38 @@ export default function OnboardingDialog({
                   </PopoverContent>
                 </Popover>
               </div>
+
+              {editMode && (
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                      {darkMode ? (
+                        <Moon className="h-4.5 w-4.5 text-indigo-400" />
+                      ) : (
+                        <Sun className="h-4.5 w-4.5 text-amber-500" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Dark Mode</p>
+                      <p className="text-xs text-muted-foreground">Switch to a darker theme</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={darkMode}
+                    onCheckedChange={(checked) => {
+                      setDarkMode(checked);
+                      if (checked) {
+                        document.documentElement.classList.add("dark");
+                        localStorage.setItem("caloriq-dark-mode", "true");
+                      } else {
+                        document.documentElement.classList.remove("dark");
+                        localStorage.setItem("caloriq-dark-mode", "false");
+                      }
+                    }}
+                    data-testid="switch-dark-mode"
+                  />
+                </div>
+              )}
 
               <Button
                 className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold gap-2"
@@ -285,14 +319,14 @@ export default function OnboardingDialog({
 
           {step === "avatar" && (
             <>
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
                 <img
                   src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedAvatar}`}
                   alt="Selected avatar"
                   className="h-16 w-16 rounded-full bg-white border-2 border-primary/20 shadow-sm"
                 />
                 <div>
-                  <p className="font-semibold text-slate-800">Hi, {name}!</p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-200">Hi, {name}!</p>
                   <p className="text-sm text-muted-foreground">Looking great with this avatar</p>
                 </div>
               </div>
@@ -305,7 +339,7 @@ export default function OnboardingDialog({
                     className={`relative p-1 rounded-xl transition-all ${
                       selectedAvatar === avatar.seed
                         ? "ring-2 ring-primary bg-primary/5 scale-105"
-                        : "hover:bg-slate-50 hover:scale-105"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800 hover:scale-105"
                     }`}
                     data-testid={`avatar-option-${avatar.seed}`}
                   >
