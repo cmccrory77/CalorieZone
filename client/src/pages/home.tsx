@@ -2,22 +2,21 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { 
-  Target, 
   Activity, 
   Flame, 
   Calendar,
   ChefHat,
   Wand2,
-  CalendarDays,
   Plus,
   X,
   PieChart as PieChartIcon,
   Clock,
   Utensils,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Settings
 } from "lucide-react";
-import { format, addWeeks, addDays, subDays, isToday, isSameDay } from "date-fns";
+import { format, addDays, subDays, isToday, isSameDay } from "date-fns";
 import type { UserProfile, FoodEntry } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import MealScanner from "@/components/MealScanner";
@@ -82,7 +80,6 @@ export default function Home() {
   const [currentWeight, setCurrentWeight] = useState(185);
   const [targetWeight, setTargetWeight] = useState(165);
   const [timeframe, setTimeframe] = useState(12);
-  const [targetDate, setTargetDate] = useState<Date>(addWeeks(new Date(), 12));
   const [mealType, setMealType] = useState("all");
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
   const [generatorIngredients, setGeneratorIngredients] = useState("");
@@ -96,7 +93,6 @@ export default function Home() {
       setCurrentWeight(profile.currentWeight);
       setTargetWeight(profile.targetWeight);
       setTimeframe(profile.timeframe);
-      setTargetDate(addWeeks(new Date(), profile.timeframe));
       profileSynced.current = true;
     }
   }, [profile]);
@@ -111,23 +107,29 @@ export default function Home() {
     },
   });
 
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
-  const saveProfile = useCallback(
-    (data: Partial<UserProfile>) => {
-      if (!profile?.id) return;
-      clearTimeout(debounceTimer.current);
-      debounceTimer.current = setTimeout(() => {
-        updateProfileMutation.mutate(data);
-      }, 500);
-    },
-    [profile?.id]
-  );
-
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
-  const handleOnboardingComplete = useCallback((name: string, avatarSeed: string) => {
+  const handleOnboardingComplete = useCallback((data: {
+    name: string;
+    avatarSeed: string;
+    startingWeight: number;
+    currentWeight: number;
+    targetWeight: number;
+    timeframe: number;
+  }) => {
     if (!profile?.id) return;
-    updateProfileMutation.mutate({ name, avatarSeed } as any);
+    updateProfileMutation.mutate({
+      name: data.name,
+      avatarSeed: data.avatarSeed,
+      startingWeight: data.startingWeight,
+      currentWeight: data.currentWeight,
+      targetWeight: data.targetWeight,
+      timeframe: data.timeframe,
+    } as any);
+    setStartingWeight(data.startingWeight);
+    setCurrentWeight(data.currentWeight);
+    setTargetWeight(data.targetWeight);
+    setTimeframe(data.timeframe);
     setEditProfileOpen(false);
   }, [profile?.id]);
 
@@ -170,35 +172,6 @@ export default function Home() {
     });
   };
 
-  const handleStartingWeightChange = (val: number) => {
-    setStartingWeight(val);
-    saveProfile({ startingWeight: val });
-  };
-  const handleCurrentWeightChange = (val: number) => {
-    setCurrentWeight(val);
-    saveProfile({ currentWeight: val });
-  };
-  const handleTargetWeightChange = (val: number) => {
-    setTargetWeight(val);
-    saveProfile({ targetWeight: val });
-  };
-
-  const handleTimeframeChange = (weeks: number) => {
-    setTimeframe(weeks);
-    setTargetDate(addWeeks(new Date(), weeks));
-    saveProfile({ timeframe: weeks });
-  };
-
-  const handleDateChange = (date: Date | undefined) => {
-    if (date) {
-      setTargetDate(date);
-      const diffTime = Math.abs(date.getTime() - new Date().getTime());
-      const diffWeeks = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24 * 7)));
-      const capped = Math.min(52, diffWeeks);
-      setTimeframe(capped);
-      saveProfile({ timeframe: capped });
-    }
-  };
 
   const maintenanceCalories = profile?.maintenanceCalories ?? 2450;
   const isGainingWeight = targetWeight > startingWeight;
@@ -676,14 +649,36 @@ export default function Home() {
               <Activity className="h-6 w-6" />
               <span className="font-display font-bold text-xl tracking-tight">Caloriq</span>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="hidden sm:flex items-center space-x-1 text-sm text-muted-foreground mr-4">
-                <span className="font-medium text-foreground">{targetCalories}</span>
-                <span>kcal daily goal</span>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-3 mr-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">{targetCalories} kcal/day</span>
+                </div>
+                <div className="text-slate-200">|</div>
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all"
+                      style={{ width: `${Math.min(100, progressPercentage)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {currentWeight} / {targetWeight} lbs
+                  </span>
+                </div>
               </div>
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setEditProfileOpen(true)} data-testid="button-edit-profile">
+              <div className="flex items-center gap-1">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.avatarSeed || "Felix"}`} alt="User avatar" className="h-8 w-8 rounded-full bg-muted" />
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full h-9 w-9 text-muted-foreground hover:text-foreground"
+                  onClick={() => setEditProfileOpen(true)}
+                  data-testid="button-edit-profile"
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -698,115 +693,8 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Top Row - Cards (Left & Right) */}
-          <div className="lg:col-span-4 space-y-8">
-            {/* Weight Goal Card */}
-            <Card className="border-none shadow-sm bg-white overflow-hidden">
-              <div className="h-2 bg-primary w-full"></div>
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Target className="h-5 w-5 text-primary" />
-                  Weight Goal
-                </CardTitle>
-                <CardDescription>Adjust your metrics to recalculate your plan.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2 min-w-0">
-                      <Label htmlFor="starting-weight" className="text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Starting (lbs)</Label>
-                      <Input 
-                        id="starting-weight" 
-                        type="number" 
-                        value={startingWeight} 
-                        onChange={(e) => handleStartingWeightChange(Number(e.target.value))}
-                        className="font-display font-semibold text-lg bg-slate-50 border-slate-200"
-                        data-testid="input-starting-weight"
-                      />
-                    </div>
-                    <div className="space-y-2 min-w-0">
-                      <Label htmlFor="target-weight" className="text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Target (lbs)</Label>
-                      <Input 
-                        id="target-weight" 
-                        type="number" 
-                        value={targetWeight} 
-                        onChange={(e) => handleTargetWeightChange(Number(e.target.value))}
-                        className="font-display font-semibold text-lg bg-slate-50 border-slate-200"
-                        data-testid="input-target-weight"
-                      />
-                    </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="current-weight" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Current (lbs)</Label>
-                    <Input 
-                      id="current-weight" 
-                      type="number" 
-                      value={currentWeight} 
-                      onChange={(e) => handleCurrentWeightChange(Number(e.target.value))}
-                      className="font-display font-semibold text-lg bg-slate-50 border-slate-200"
-                      data-testid="input-current-weight"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2 pt-2">
-                    <div className="flex justify-between items-center">
-                      <Label htmlFor="timeframe" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Timeframe (Weeks)</Label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-secondary">{timeframe} weeks</span>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-slate-100">
-                              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="end">
-                            <CalendarComponent
-                              mode="single"
-                              selected={targetDate}
-                              onSelect={handleDateChange}
-                              disabled={(date) => date < new Date() || date > addWeeks(new Date(), 52)}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </div>
-                    <input 
-                      type="range" 
-                      min="1" 
-                      max="52" 
-                      value={timeframe} 
-                      onChange={(e) => handleTimeframeChange(Number(e.target.value))}
-                      className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-secondary"
-                      data-testid="slider-timeframe"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Aggressive</span>
-                      <span>Steady</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="font-medium">Progress</span>
-                    <span className="font-bold text-primary">
-                      {weightChangedSoFar} lbs {isGainingWeight ? 'gained' : 'lost'}
-                    </span>
-                  </div>
-                  <Progress value={progressPercentage} className="h-2 bg-slate-100" />
-                  <p className="text-xs text-muted-foreground mt-2 text-center">
-                    {Math.abs(currentWeight - targetWeight)} lbs {isGainingWeight ? 'more to gain' : 'remaining to reach your goal'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="lg:col-span-5 space-y-8">
+          <div className="lg:col-span-7 space-y-8">
             {/* Calories Tracker Card */}
             <Card className="border-none shadow-sm bg-white relative h-full flex flex-col rounded-xl">
               <div className="h-2 bg-secondary w-full rounded-t-xl"></div>
@@ -1383,6 +1271,10 @@ export default function Home() {
       <OnboardingDialog
         open={!!profile && !profile.name}
         onComplete={handleOnboardingComplete}
+        initialStartingWeight={startingWeight}
+        initialCurrentWeight={currentWeight}
+        initialTargetWeight={targetWeight}
+        initialTimeframe={timeframe}
       />
 
       <OnboardingDialog
@@ -1391,6 +1283,10 @@ export default function Home() {
         onClose={() => setEditProfileOpen(false)}
         initialName={profile?.name || ""}
         initialAvatar={profile?.avatarSeed || "Felix"}
+        initialStartingWeight={startingWeight}
+        initialCurrentWeight={currentWeight}
+        initialTargetWeight={targetWeight}
+        initialTimeframe={timeframe}
         editMode
       />
     </div>

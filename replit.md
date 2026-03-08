@@ -19,7 +19,7 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - `client/src/components/BarcodeScanner.tsx` - Barcode scanning component
 - `client/src/components/MealScanner.tsx` - AI meal photo analysis component
 - `client/src/components/FoodSearch.tsx` - Autocomplete food search with database + recent/frequent history
-- `client/src/components/OnboardingDialog.tsx` - 2-step onboarding: name entry + avatar picker (12 DiceBear options)
+- `client/src/components/OnboardingDialog.tsx` - 2-step settings/onboarding: profile + weight goals (step 1) + avatar picker (step 2); 36 DiceBear options
 - `client/src/data/foodDatabase.ts` - 200+ food items with serving sizes, units, macros
 
 ## API Endpoints
@@ -34,11 +34,11 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 ## Design System
 - Fonts: Poppins (display/headings) + Inter (body)
 - Palette: primary green `#4CAF50`, secondary orange `#FF9800`, accent blue `#03A9F4`, background `bg-green-50/40`
-- Layout: 3-column top row [Weight Goal | Daily Targets | Macros], full-width Recipes below
+- Layout: 2-column top row [Daily Targets (col-7) | Macros (col-5)], full-width Recipes below; navbar has Settings gear icon + weight progress bar
 - All cards: white background, colored `h-2` top bar (green/orange/blue)
 
 ## Features
-- **Weight Goal Tracker**: Set starting/current/target weights, timeframe, auto-calculates daily caloric target
+- **Weight Goal Tracker**: Set starting/current/target weights + timeframe in Settings dialog; auto-calculates daily caloric target; progress shown in navbar
 - **Daily Calorie Tracking**: Searchable food database (200+ items) with autocomplete, serving sizes, and calorie auto-fill; manual entry fallback for unlisted foods
 - **Barcode Scanner**: Camera-based barcode scanning using `html5-qrcode`, product lookup via Open Food Facts API (free, no key), optional logging to diary
 - **AI Meal Scanner**: Take a photo of a meal, GPT-4o vision analyzes food items with calories/macros, log individually or all at once (uses Replit AI Integrations / OpenAI)
@@ -47,7 +47,7 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - **Macro Tracking**: Pie chart breakdown of protein/carbs/fat
 - **Date Navigation**: Week-view calendar strip to view/log food entries for past days
 - **Recent/Frequent Foods**: Search prioritizes previously logged items; shows recent foods on focus
-- **Onboarding**: 2-step dialog (name + avatar) shown on first use; personalizes greeting and profile avatar
+- **Onboarding/Settings**: 2-step dialog (profile/weight goals + avatar) shown on first use; accessible later via Settings gear icon in navbar to edit name, avatar, and weight goals
 
 ## Database Tables
 - `user_profiles`: id, name, avatar_seed, starting_weight, current_weight, target_weight, timeframe, maintenance_calories

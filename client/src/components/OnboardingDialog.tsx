@@ -7,10 +7,21 @@ import { Activity, ChevronRight } from "lucide-react";
 
 interface OnboardingDialogProps {
   open: boolean;
-  onComplete: (name: string, avatarSeed: string) => void;
+  onComplete: (data: {
+    name: string;
+    avatarSeed: string;
+    startingWeight: number;
+    currentWeight: number;
+    targetWeight: number;
+    timeframe: number;
+  }) => void;
   onClose?: () => void;
   initialName?: string;
   initialAvatar?: string;
+  initialStartingWeight?: number;
+  initialCurrentWeight?: number;
+  initialTargetWeight?: number;
+  initialTimeframe?: number;
   editMode?: boolean;
 }
 
@@ -53,28 +64,54 @@ const avatarOptions = [
   { seed: "Ingrid", label: "Ingrid" },
 ];
 
-export default function OnboardingDialog({ open, onComplete, onClose, initialName, initialAvatar, editMode }: OnboardingDialogProps) {
+export default function OnboardingDialog({
+  open,
+  onComplete,
+  onClose,
+  initialName,
+  initialAvatar,
+  initialStartingWeight,
+  initialCurrentWeight,
+  initialTargetWeight,
+  initialTimeframe,
+  editMode
+}: OnboardingDialogProps) {
   const [name, setName] = useState(initialName || "");
   const [selectedAvatar, setSelectedAvatar] = useState(initialAvatar || "Felix");
-  const [step, setStep] = useState<"name" | "avatar">("name");
+  const [startingWeight, setStartingWeight] = useState(initialStartingWeight || 185);
+  const [currentWeight, setCurrentWeight] = useState(initialCurrentWeight || 185);
+  const [targetWeight, setTargetWeight] = useState(initialTargetWeight || 165);
+  const [timeframe, setTimeframe] = useState(initialTimeframe || 12);
+  const [step, setStep] = useState<"profile" | "avatar">("profile");
 
   useEffect(() => {
     if (open) {
       setName(initialName || "");
       setSelectedAvatar(initialAvatar || "Felix");
-      setStep("name");
+      setStartingWeight(initialStartingWeight || 185);
+      setCurrentWeight(initialCurrentWeight || 185);
+      setTargetWeight(initialTargetWeight || 165);
+      setTimeframe(initialTimeframe || 12);
+      setStep("profile");
     }
-  }, [open, initialName, initialAvatar]);
+  }, [open, initialName, initialAvatar, initialStartingWeight, initialCurrentWeight, initialTargetWeight, initialTimeframe]);
 
   const handleNext = () => {
-    if (step === "name" && name.trim()) {
+    if (step === "profile" && name.trim()) {
       setStep("avatar");
     }
   };
 
   const handleFinish = () => {
     if (name.trim()) {
-      onComplete(name.trim(), selectedAvatar);
+      onComplete({
+        name: name.trim(),
+        avatarSeed: selectedAvatar,
+        startingWeight,
+        currentWeight,
+        targetWeight,
+        timeframe,
+      });
     }
   };
 
@@ -90,20 +127,20 @@ export default function OnboardingDialog({ open, onComplete, onClose, initialNam
           </div>
           <DialogHeader className="text-left">
             <DialogTitle className="text-xl font-display">
-              {step === "name"
-                ? (editMode ? "Edit your profile" : "What's your name?")
+              {step === "profile"
+                ? (editMode ? "Settings" : "Let's get started!")
                 : (editMode ? "Update your avatar" : "Choose your avatar")}
             </DialogTitle>
             <DialogDescription className="text-sm">
-              {step === "name"
-                ? (editMode ? "Update your display name." : "We'll use this to personalize your experience.")
+              {step === "profile"
+                ? (editMode ? "Update your profile and weight goals." : "Tell us about yourself and your goals.")
                 : (editMode ? "Pick a new avatar that represents you." : "Pick an avatar that represents you.")}
             </DialogDescription>
           </DialogHeader>
         </div>
 
-        <div className="px-6 pb-6 space-y-5">
-          {step === "name" && (
+        <div className="px-6 pb-6 space-y-5 max-h-[70vh] overflow-y-auto">
+          {step === "profile" && (
             <>
               <div className="space-y-2">
                 <Label htmlFor="onboarding-name" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -120,6 +157,68 @@ export default function OnboardingDialog({ open, onComplete, onClose, initialNam
                   data-testid="input-onboarding-name"
                 />
               </div>
+
+              <div className="border-t border-slate-100 pt-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Weight Goals</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="onboard-starting" className="text-xs text-muted-foreground">Starting (lbs)</Label>
+                    <Input
+                      id="onboard-starting"
+                      type="number"
+                      value={startingWeight}
+                      onChange={(e) => setStartingWeight(Number(e.target.value))}
+                      className="h-10 bg-slate-50 border-slate-200 font-semibold"
+                      data-testid="input-onboard-starting-weight"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="onboard-current" className="text-xs text-muted-foreground">Current (lbs)</Label>
+                    <Input
+                      id="onboard-current"
+                      type="number"
+                      value={currentWeight}
+                      onChange={(e) => setCurrentWeight(Number(e.target.value))}
+                      className="h-10 bg-slate-50 border-slate-200 font-semibold"
+                      data-testid="input-onboard-current-weight"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="onboard-target" className="text-xs text-muted-foreground">Target (lbs)</Label>
+                    <Input
+                      id="onboard-target"
+                      type="number"
+                      value={targetWeight}
+                      onChange={(e) => setTargetWeight(Number(e.target.value))}
+                      className="h-10 bg-slate-50 border-slate-200 font-semibold"
+                      data-testid="input-onboard-target-weight"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Timeframe
+                  </Label>
+                  <span className="text-sm font-semibold text-secondary">{timeframe} weeks</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="52"
+                  value={timeframe}
+                  onChange={(e) => setTimeframe(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-secondary"
+                  data-testid="slider-onboard-timeframe"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Aggressive</span>
+                  <span>Steady</span>
+                </div>
+              </div>
+
               <Button
                 className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold gap-2"
                 onClick={handleNext}
@@ -178,7 +277,7 @@ export default function OnboardingDialog({ open, onComplete, onClose, initialNam
                 <Button
                   variant="outline"
                   className="flex-1 h-11"
-                  onClick={() => setStep("name")}
+                  onClick={() => setStep("profile")}
                   data-testid="button-onboarding-back"
                 >
                   Back
