@@ -917,31 +917,37 @@ export default function Home() {
                   </ResponsiveContainer>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-2 text-center pt-4 border-t border-slate-100 mt-4">
-                  <div>
-                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Protein</div>
-                    </div>
-                    <div className="font-semibold text-sm">{totalProtein}g</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">{targetProtein}g max</div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Carbs</div>
-                    </div>
-                    <div className="font-semibold text-sm">{totalCarbs}g</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">{targetCarbs}g max</div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                      <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Fat</div>
-                    </div>
-                    <div className="font-semibold text-sm">{totalFat}g</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">{targetFat}g max</div>
-                  </div>
+                <div className="space-y-3 pt-4 border-t border-slate-100 mt-4">
+                  {[
+                    { label: "Protein", current: totalProtein, target: targetProtein, color: "bg-blue-500", textColor: "text-blue-600" },
+                    { label: "Carbs", current: totalCarbs, target: targetCarbs, color: "bg-emerald-500", textColor: "text-emerald-600" },
+                    { label: "Fat", current: totalFat, target: targetFat, color: "bg-amber-500", textColor: "text-amber-600" },
+                  ].map((macro) => {
+                    const pct = macro.target > 0 ? Math.min(100, Math.round((macro.current / macro.target) * 100)) : 0;
+                    return (
+                      <div key={macro.label} data-testid={`macro-bar-${macro.label.toLowerCase()}`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <div className={`w-2 h-2 rounded-full ${macro.color}`}></div>
+                            <span className="text-xs font-semibold text-slate-600">{macro.label}</span>
+                          </div>
+                          <span className="text-xs font-semibold">
+                            <span className={macro.textColor}>{macro.current}g</span>
+                            <span className="text-muted-foreground"> / {macro.target}g</span>
+                          </span>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${macro.color} transition-all duration-500`}
+                            style={{ width: `${pct}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-right mt-0.5">
+                          <span className="text-[10px] font-semibold text-muted-foreground">{pct}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
