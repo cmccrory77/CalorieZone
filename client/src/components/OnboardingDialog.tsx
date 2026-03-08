@@ -3,7 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Activity, ChevronRight } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Activity, ChevronRight, CalendarDays } from "lucide-react";
+import { addWeeks, format } from "date-fns";
 
 interface OnboardingDialogProps {
   open: boolean;
@@ -82,6 +85,8 @@ export default function OnboardingDialog({
   const [currentWeight, setCurrentWeight] = useState(initialCurrentWeight || 185);
   const [targetWeight, setTargetWeight] = useState(initialTargetWeight || 165);
   const [timeframe, setTimeframe] = useState(initialTimeframe || 12);
+  const [targetDate, setTargetDate] = useState<Date>(addWeeks(new Date(), initialTimeframe || 12));
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [step, setStep] = useState<"profile" | "avatar">("profile");
 
   useEffect(() => {
@@ -92,9 +97,26 @@ export default function OnboardingDialog({
       setCurrentWeight(initialCurrentWeight || 185);
       setTargetWeight(initialTargetWeight || 165);
       setTimeframe(initialTimeframe || 12);
+      setTargetDate(addWeeks(new Date(), initialTimeframe || 12));
+      setCalendarOpen(false);
       setStep("profile");
     }
   }, [open, initialName, initialAvatar, initialStartingWeight, initialCurrentWeight, initialTargetWeight, initialTimeframe]);
+
+  const handleTimeframeSlider = (weeks: number) => {
+    setTimeframe(weeks);
+    setTargetDate(addWeeks(new Date(), weeks));
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setTargetDate(date);
+      const diffMs = date.getTime() - new Date().getTime();
+      const diffWeeks = Math.max(1, Math.min(52, Math.round(diffMs / (1000 * 60 * 60 * 24 * 7))));
+      setTimeframe(diffWeeks);
+      setCalendarOpen(false);
+    }
+  };
 
   const handleNext = () => {
     if (step === "profile" && name.trim()) {
@@ -197,7 +219,7 @@ export default function OnboardingDialog({
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Timeframe
@@ -209,7 +231,7 @@ export default function OnboardingDialog({
                   min="1"
                   max="52"
                   value={timeframe}
-                  onChange={(e) => setTimeframe(Number(e.target.value))}
+                  onChange={(e) => handleTimeframeSlider(Number(e.target.value))}
                   className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-secondary"
                   data-testid="slider-onboard-timeframe"
                 />
@@ -217,6 +239,36 @@ export default function OnboardingDialog({
                   <span>Aggressive</span>
                   <span>Steady</span>
                 </div>
+
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
+                      data-testid="button-target-date-picker"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
+                        <CalendarDays className="h-4.5 w-4.5 text-secondary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground">Target Date</p>
+                        <p className="text-sm font-semibold text-slate-800">{format(targetDate, "MMMM d, yyyy")}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 border-slate-200 shadow-lg" align="center" sideOffset={8}>
+                    <div className="p-1">
+                      <Calendar
+                        mode="single"
+                        selected={targetDate}
+                        onSelect={handleDateSelect}
+                        disabled={(date) => date < new Date() || date > addWeeks(new Date(), 52)}
+                        initialFocus
+                        className="rounded-lg"
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <Button
