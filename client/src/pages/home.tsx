@@ -858,13 +858,13 @@ export default function Home() {
                 
                 <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto">
                   <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
-                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Target</div>
-                    <div className="font-bold text-secondary text-sm">{targetCalories}</div>
+                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Maintenance</div>
+                    <div className="font-bold text-slate-700 dark:text-slate-300 text-sm">{maintenanceCalories}</div>
                     <div className="text-[10px] text-muted-foreground">kcal/day</div>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
-                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Maintenance</div>
-                    <div className="font-bold text-slate-700 dark:text-slate-300 text-sm">{maintenanceCalories}</div>
+                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Target</div>
+                    <div className="font-bold text-secondary text-sm">{targetCalories}</div>
                     <div className="text-[10px] text-muted-foreground">kcal/day</div>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
