@@ -645,10 +645,8 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-3 mr-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">{targetCalories} kcal/day</span>
-                </div>
-                <div className="text-slate-200">|</div>
+                <span className="text-sm font-semibold text-primary">Weight Goal</span>
+                <div className="text-slate-200 dark:text-slate-700">|</div>
                 <div className="flex items-center gap-2">
                   <div className="w-24 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
@@ -858,18 +856,25 @@ export default function Home() {
                   </div>
                 )}
                 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto">
-                  <div>
-                    <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-1">Maintenance</div>
-                    <div className="font-semibold text-slate-700 dark:text-slate-300">{maintenanceCalories} kcal</div>
+                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto">
+                  <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
+                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Target</div>
+                    <div className="font-bold text-secondary text-sm">{targetCalories}</div>
+                    <div className="text-[10px] text-muted-foreground">kcal/day</div>
                   </div>
-                  <div>
-                    <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-1">
-                      {isGainingWeight ? 'Daily Surplus' : 'Daily Deficit'}
+                  <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
+                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Maintenance</div>
+                    <div className="font-bold text-slate-700 dark:text-slate-300 text-sm">{maintenanceCalories}</div>
+                    <div className="text-[10px] text-muted-foreground">kcal/day</div>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
+                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">
+                      {isGainingWeight ? 'Surplus' : 'Deficit'}
                     </div>
-                    <div className="font-semibold text-secondary">
-                      {isGainingWeight ? '+' : '-'}{Math.round(dailyDifference)} kcal
+                    <div className="font-bold text-secondary text-sm">
+                      {isGainingWeight ? '+' : '-'}{Math.round(dailyDifference)}
                     </div>
+                    <div className="text-[10px] text-muted-foreground">kcal/day</div>
                   </div>
                 </div>
               </CardContent>
