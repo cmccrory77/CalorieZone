@@ -3,10 +3,13 @@ import { db } from "./db";
 import {
   userProfiles,
   foodEntries,
+  savedRecipes,
   type UserProfile,
   type InsertUserProfile,
   type FoodEntry,
   type InsertFoodEntry,
+  type SavedRecipe,
+  type InsertSavedRecipe,
 } from "@shared/schema";
 
 export interface FrequentFood {
@@ -28,6 +31,10 @@ export interface IStorage {
   addFoodEntry(entry: InsertFoodEntry): Promise<FoodEntry>;
   removeFoodEntry(id: string): Promise<void>;
   getFrequentFoods(profileId: string): Promise<FrequentFood[]>;
+
+  getSavedRecipes(profileId: string): Promise<SavedRecipe[]>;
+  addSavedRecipe(recipe: InsertSavedRecipe): Promise<SavedRecipe>;
+  removeSavedRecipe(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -86,6 +93,22 @@ export class DatabaseStorage implements IStorage {
       .orderBy(sql`COUNT(*) DESC, MAX(${foodEntries.date}) DESC`)
       .limit(50);
     return results;
+  }
+
+  async getSavedRecipes(profileId: string): Promise<SavedRecipe[]> {
+    return db
+      .select()
+      .from(savedRecipes)
+      .where(eq(savedRecipes.profileId, profileId));
+  }
+
+  async addSavedRecipe(recipe: InsertSavedRecipe): Promise<SavedRecipe> {
+    const [created] = await db.insert(savedRecipes).values(recipe).returning();
+    return created;
+  }
+
+  async removeSavedRecipe(id: string): Promise<void> {
+    await db.delete(savedRecipes).where(eq(savedRecipes.id, id));
   }
 }
 

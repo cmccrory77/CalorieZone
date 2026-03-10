@@ -2,7 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { type Server } from "http";
 import { storage } from "./storage";
-import { insertFoodEntrySchema, updateUserProfileSchema } from "@shared/schema";
+import { insertFoodEntrySchema, updateUserProfileSchema, insertSavedRecipeSchema } from "@shared/schema";
 import OpenAI from "openai";
 
 export async function registerRoutes(
@@ -62,6 +62,34 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to remove food entry" });
+    }
+  });
+
+  app.get("/api/saved-recipes/:profileId", async (req, res) => {
+    try {
+      const recipes = await storage.getSavedRecipes(req.params.profileId);
+      res.json(recipes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to load saved recipes" });
+    }
+  });
+
+  app.post("/api/saved-recipes", async (req, res) => {
+    try {
+      const parsed = insertSavedRecipeSchema.parse(req.body);
+      const recipe = await storage.addSavedRecipe(parsed);
+      res.json(recipe);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid recipe data" });
+    }
+  });
+
+  app.delete("/api/saved-recipes/:id", async (req, res) => {
+    try {
+      await storage.removeSavedRecipe(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove saved recipe" });
     }
   });
 

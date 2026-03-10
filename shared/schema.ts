@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, real, date } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, real, date, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -25,11 +25,29 @@ export const foodEntries = pgTable("food_entries", {
   date: date("date").notNull(),
 });
 
+export const savedRecipes = pgTable("saved_recipes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  profileId: varchar("profile_id").notNull(),
+  title: text("title").notNull(),
+  type: text("type").notNull(),
+  cuisine: text("cuisine").notNull().default("custom"),
+  calories: integer("calories").notNull(),
+  protein: text("protein").notNull(),
+  carbs: text("carbs").notNull(),
+  fat: text("fat").notNull(),
+  time: text("time").notNull(),
+  ingredients: jsonb("ingredients").notNull().default([]),
+  steps: jsonb("steps").notNull().default([]),
+});
+
 export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true });
 export const updateUserProfileSchema = insertUserProfileSchema.partial();
 export const insertFoodEntrySchema = createInsertSchema(foodEntries).omit({ id: true });
+export const insertSavedRecipeSchema = createInsertSchema(savedRecipes).omit({ id: true });
 
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type InsertFoodEntry = z.infer<typeof insertFoodEntrySchema>;
 export type FoodEntry = typeof foodEntries.$inferSelect;
+export type InsertSavedRecipe = z.infer<typeof insertSavedRecipeSchema>;
+export type SavedRecipe = typeof savedRecipes.$inferSelect;

@@ -14,10 +14,12 @@ import {
   Utensils,
   ChevronLeft,
   ChevronRight,
-  Settings
+  Settings,
+  Bookmark,
+  Trash2
 } from "lucide-react";
 import { format, addDays, subDays, isToday, isSameDay } from "date-fns";
-import type { UserProfile, FoodEntry } from "@shared/schema";
+import type { UserProfile, FoodEntry, SavedRecipe } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +86,50 @@ export default function Home() {
   const [generatorIngredients, setGeneratorIngredients] = useState("");
   const [generatedRecipe, setGeneratedRecipe] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [genProteinSource, setGenProteinSource] = useState("chicken");
+  const [genMealType, setGenMealType] = useState("dinner");
+  const [genServings, setGenServings] = useState(1);
+
+  const { data: savedRecipesData = [] } = useQuery<SavedRecipe[]>({
+    queryKey: ["/api/saved-recipes", profile?.id],
+    enabled: !!profile?.id,
+    queryFn: async () => {
+      const res = await fetch(`/api/saved-recipes/${profile!.id}`);
+      if (!res.ok) throw new Error("Failed to load saved recipes");
+      return res.json();
+    },
+  });
+
+  const addSavedRecipeMutation = useMutation({
+    mutationFn: async (recipe: any) => {
+      const res = await apiRequest("POST", "/api/saved-recipes", {
+        profileId: profile!.id,
+        title: recipe.title,
+        type: recipe.type,
+        cuisine: recipe.cuisine || "custom",
+        calories: recipe.calories,
+        protein: recipe.protein,
+        carbs: recipe.carbs,
+        fat: recipe.fat,
+        time: recipe.time,
+        ingredients: recipe.ingredients || [],
+        steps: recipe.steps || [],
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-recipes"] });
+    },
+  });
+
+  const removeSavedRecipeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/saved-recipes/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-recipes"] });
+    },
+  });
 
   const profileSynced = useRef(false);
   useEffect(() => {
@@ -510,23 +556,25 @@ export default function Home() {
   };
 
   const handleGenerateRecipe = () => {
-    if (!generatorIngredients.trim()) return;
     setIsGenerating(true);
     setGeneratedRecipe(null);
 
     setTimeout(() => {
       const userIngredients = generatorIngredients.split(',').map(s => s.trim()).filter(Boolean);
       const mealCal = Math.round(targetCalories / 3);
-      const categories = ["lunch", "dinner"];
-      const cat = categories[Math.floor(Math.random() * categories.length)];
+      const cat = genMealType;
+      const proteinLabel = genProteinSource === "vegetarian" ? "Tofu" : genProteinSource.charAt(0).toUpperCase() + genProteinSource.slice(1);
       const nouns: Record<string, string[]> = {
+        breakfast: ["Scramble", "Bowl", "Plate"],
         lunch: ["Bowl", "Salad", "Wrap"],
-        dinner: ["Skillet", "Stir-fry", "Roast"]
+        dinner: ["Skillet", "Stir-fry", "Roast"],
+        snack: ["Bites", "Plate", "Cup"]
       };
-      const noun = nouns[cat][Math.floor(Math.random() * nouns[cat].length)];
+      const catNouns = nouns[cat] || nouns.dinner;
+      const noun = catNouns[Math.floor(Math.random() * catNouns.length)];
       const adjectives = ["Zesty", "Savory", "Herb-Crusted", "Golden", "Spiced", "Seared", "Roasted", "Fresh"];
       const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-      const mainIng = userIngredients[0] || "Protein";
+      const mainIng = proteinLabel;
       const title = `${adj} ${mainIng} ${noun}`;
 
       const proteinG = Math.round((mealCal * 0.3) / 4);
@@ -534,9 +582,10 @@ export default function Home() {
       const fatG = Math.round((mealCal * 0.3) / 9);
 
       const ingredients: { item: string; amount: string; cal: number }[] = [];
-      const calPerIng = Math.round(mealCal / (userIngredients.length + 3));
+      const allIngs = [proteinLabel, ...userIngredients];
+      const calPerIng = Math.round(mealCal / (allIngs.length + 3));
 
-      userIngredients.forEach((ing, idx) => {
+      allIngs.forEach((ing, idx) => {
         const portions = ["4 oz (115g)", "1 cup", "½ cup", "3 oz (85g)", "2 oz (55g)"];
         ingredients.push({
           item: ing.charAt(0).toUpperCase() + ing.slice(1),
@@ -599,19 +648,20 @@ export default function Home() {
         ]
       };
 
+      const totalCal = mealCal * genServings;
       setGeneratedRecipe({
         id: Date.now(),
         title,
         type: cat,
         cuisine: "custom",
-        calories: mealCal,
-        protein: `${proteinG}g`,
-        carbs: `${carbsG}g`,
-        fat: `${fatG}g`,
+        calories: totalCal,
+        protein: `${proteinG * genServings}g`,
+        carbs: `${carbsG * genServings}g`,
+        fat: `${fatG * genServings}g`,
         time: `${15 + Math.floor(Math.random() * 4) * 5} min`,
         image: null,
-        match: "Custom",
-        ingredients,
+        match: `${genServings} serving${genServings > 1 ? 's' : ''}`,
+        ingredients: ingredients.map(i => ({ ...i, cal: i.cal * genServings, amount: genServings > 1 ? `${genServings}x ${i.amount}` : i.amount })),
         steps: stepSets[noun] || stepSets.Skillet
       });
       setIsGenerating(false);
@@ -920,8 +970,8 @@ export default function Home() {
                     Recommended
                   </TabsTrigger>
                   <TabsTrigger value="ai" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white transition-all">
-                    <Wand2 className="h-3.5 w-3.5 mr-2" />
-                    Recipe Generator
+                    <Bookmark className="h-3.5 w-3.5 mr-2" />
+                    My Recipes
                   </TabsTrigger>
                 </TabsList>
                 
@@ -1013,25 +1063,72 @@ export default function Home() {
               </TabsContent>
 
               <TabsContent value="ai" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-                <Card className="border-none shadow-sm bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 overflow-hidden relative">
-                  <div className="absolute -right-10 -top-10 text-blue-200 opacity-50">
+                <Card className="border-none shadow-sm bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 overflow-hidden relative">
+                  <div className="absolute -right-10 -top-10 text-blue-200 dark:text-slate-700 opacity-50">
                     <Wand2 className="h-48 w-48" />
                   </div>
                   <CardContent className="p-8 relative z-10">
-                    <div className="max-w-xl">
-                      <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-xl mb-4">
+                    <div className="max-w-2xl">
+                      <div className="inline-flex items-center justify-center p-2 bg-blue-100 dark:bg-accent/20 rounded-xl mb-4">
                         <Wand2 className="h-6 w-6 text-accent" />
                       </div>
                       <h2 className="text-2xl font-display font-bold text-slate-800 dark:text-slate-100 mb-2">Recipe Generator</h2>
                       <p className="text-slate-600 dark:text-slate-400 mb-6">
-                        Tell us what ingredients you have, separated by commas, and we'll generate a custom recipe tailored to {Math.round(targetCalories / 3)} calories (your target per meal).
+                        Create a custom recipe tailored to {Math.round(targetCalories / 3)} calories per meal.
                       </p>
                       
                       <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="text-slate-700 dark:text-slate-300 font-semibold">What ingredients do you have?</Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="space-y-1.5">
+                            <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Protein Source</Label>
+                            <Select value={genProteinSource} onValueChange={setGenProteinSource}>
+                              <SelectTrigger className="bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-protein-source">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="chicken">Chicken</SelectItem>
+                                <SelectItem value="fish">Fish</SelectItem>
+                                <SelectItem value="beef">Beef</SelectItem>
+                                <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Meal Type</Label>
+                            <Select value={genMealType} onValueChange={setGenMealType}>
+                              <SelectTrigger className="bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-meal-type">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="breakfast">Breakfast</SelectItem>
+                                <SelectItem value="lunch">Lunch</SelectItem>
+                                <SelectItem value="dinner">Dinner</SelectItem>
+                                <SelectItem value="snack">Snack</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Servings</Label>
+                            <Select value={String(genServings)} onValueChange={(v) => setGenServings(Number(v))}>
+                              <SelectTrigger className="bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-servings">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">1</SelectItem>
+                                <SelectItem value="2">2</SelectItem>
+                                <SelectItem value="3">3</SelectItem>
+                                <SelectItem value="4">4</SelectItem>
+                                <SelectItem value="5">5</SelectItem>
+                                <SelectItem value="6">6</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Optional Ingredients <span className="normal-case font-normal text-muted-foreground">(Add your own)</span></Label>
                           <Input 
-                            placeholder="e.g. Chicken breast, broccoli, rice..." 
+                            placeholder="e.g. broccoli, rice, bell peppers..." 
                             className="h-12 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm"
                             value={generatorIngredients}
                             onChange={(e) => setGeneratorIngredients(e.target.value)}
@@ -1039,10 +1136,11 @@ export default function Home() {
                             data-testid="input-generator-ingredients"
                           />
                         </div>
+
                         <Button 
                           className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white h-12 px-8"
                           onClick={handleGenerateRecipe}
-                          disabled={isGenerating || !generatorIngredients.trim()}
+                          disabled={isGenerating}
                           data-testid="button-generate-recipe"
                         >
                           {isGenerating ? (
@@ -1109,6 +1207,14 @@ export default function Home() {
                             View Recipe
                           </Button>
                           <Button 
+                            className="bg-accent hover:bg-accent/90 text-white shrink-0"
+                            onClick={() => addSavedRecipeMutation.mutate(generatedRecipe)}
+                            disabled={addSavedRecipeMutation.isPending}
+                            data-testid="button-add-to-my-recipes"
+                          >
+                            <Bookmark className="h-4 w-4 mr-1.5" /> Add to My Recipes
+                          </Button>
+                          <Button 
                             className="bg-secondary hover:bg-secondary/90 text-white shrink-0"
                             onClick={() => addRecipeToTracker(generatedRecipe)}
                           >
@@ -1118,6 +1224,89 @@ export default function Home() {
                       </div>
                     </div>
                   </Card>
+                )}
+
+                {savedRecipesData.length > 0 && (
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-display font-semibold flex items-center gap-2">
+                      <Bookmark className="h-5 w-5 text-accent" />
+                      My Saved Recipes
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {savedRecipesData.map((recipe) => (
+                        <Card key={recipe.id} className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                          <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/15 to-accent/20 flex items-center justify-center">
+                            <div className="absolute top-3 left-3 z-10 bg-accent/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm capitalize">
+                              {recipe.type}
+                            </div>
+                            <div className="absolute top-3 right-3 z-10">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-950 text-slate-400 hover:text-red-500 rounded-full"
+                                onClick={() => removeSavedRecipeMutation.mutate(recipe.id)}
+                                data-testid={`button-remove-saved-${recipe.id}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex flex-col items-center gap-2 text-center px-4">
+                              <div className="w-16 h-16 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                                <ChefHat className="h-8 w-8 text-primary" />
+                              </div>
+                              <p className="text-sm font-display font-bold text-slate-700 dark:text-slate-200">{profile?.name || "Your"}'s Custom Recipe</p>
+                            </div>
+                          </div>
+                          <CardContent className="p-5">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-display font-semibold text-lg leading-tight line-clamp-2">{recipe.title}</h3>
+                            </div>
+                            
+                            <div className="flex items-center gap-4 mt-4">
+                              <div className="flex flex-col">
+                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Calories</span>
+                                <span className="font-bold text-foreground">{recipe.calories}</span>
+                              </div>
+                              <div className="h-8 w-px bg-slate-100 dark:bg-slate-700"></div>
+                              <div className="flex flex-col">
+                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Protein</span>
+                                <span className="font-medium text-slate-600 dark:text-slate-400">{recipe.protein}</span>
+                              </div>
+                              <div className="h-8 w-px bg-slate-100 dark:bg-slate-700"></div>
+                              <div className="flex flex-col">
+                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Time</span>
+                                <span className="font-medium text-slate-600 dark:text-slate-400">{recipe.time}</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                          <CardFooter className="p-5 pt-0 flex gap-2">
+                            <Button 
+                              className="flex-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-foreground border border-slate-200 dark:border-slate-700" 
+                              variant="outline"
+                              onClick={() => setSelectedRecipe({
+                                ...recipe,
+                                match: recipe.type,
+                                image: null,
+                              })}
+                              data-testid={`button-view-saved-${recipe.id}`}
+                            >
+                              View Recipe
+                            </Button>
+                            <Button 
+                              className="bg-secondary hover:bg-secondary/90 text-white shrink-0" 
+                              onClick={() => addRecipeToTracker({
+                                ...recipe,
+                                match: recipe.type,
+                                image: null,
+                              })}
+                            >
+                              <Plus className="h-4 w-4 mr-1.5" /> Log
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </TabsContent>
 

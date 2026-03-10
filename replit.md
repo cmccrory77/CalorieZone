@@ -10,7 +10,7 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - **State Management**: TanStack React Query for server state, local React state for UI
 
 ## Key Files
-- `shared/schema.ts` - Drizzle schema: `userProfiles`, `foodEntries` tables
+- `shared/schema.ts` - Drizzle schema: `userProfiles`, `foodEntries`, `savedRecipes` tables
 - `server/db.ts` - Database connection (pg Pool + Drizzle)
 - `server/storage.ts` - Storage interface with DatabaseStorage implementation (includes getFrequentFoods)
 - `server/routes.ts` - REST API routes prefixed with `/api`
@@ -30,11 +30,14 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - `DELETE /api/food-entries/:id` - Remove a food entry
 - `GET /api/food-entries/:profileId/frequent` - Get aggregated frequent/recent foods for autocomplete
 - `POST /api/analyze-meal` - AI vision analysis of meal photo (base64 image → food items with calories)
+- `GET /api/saved-recipes/:profileId` - Get user's saved recipes
+- `POST /api/saved-recipes` - Save a generated recipe
+- `DELETE /api/saved-recipes/:id` - Remove a saved recipe
 
 ## Design System
 - Fonts: Poppins (display/headings) + Inter (body)
 - Palette: primary green `#4CAF50`, secondary orange `#FF9800`, accent blue `#03A9F4`, background `bg-green-50/40` (light) / `bg-slate-950` (dark)
-- Layout: 2-column top row [Daily Targets (col-7) | Macros (col-5)], full-width Recipes below; navbar has Settings gear icon + weight progress bar
+- Layout: Single-column Daily Targets card (with Macros consolidated + Maintenance/Target/Deficit footer), full-width Recipes below; navbar has "Weight Goal" label + weight progress bar + Settings gear
 - All cards: white/dark background, colored `h-2` top bar (green/orange/blue)
 - **Dark Mode**: Toggle in Settings dialog via Switch component; `.dark` class on `<html>` element; persisted in localStorage (`caloriq-dark-mode`); inline script in `index.html` restores preference before React render to prevent flash; CSS dark variables defined in `client/src/index.css` `.dark` block; all components use `dark:` Tailwind variants
 
@@ -44,8 +47,8 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - **Barcode Scanner**: Camera-based barcode scanning using `html5-qrcode`, product lookup via Open Food Facts API (free, no key), optional logging to diary
 - **AI Meal Scanner**: Take a photo of a meal, GPT-4o vision analyzes food items with calories/macros, log individually or all at once (uses Replit AI Integrations / OpenAI)
 - **Recipe Recommendations**: Procedurally generated per-category recipes with ingredients, steps, nutrition info
-- **Recipe Generator**: User inputs ingredients, generates custom recipe matched to calorie target
-- **Macro Tracking**: Pie chart breakdown of protein/carbs/fat
+- **My Recipes / Recipe Generator**: Select protein source (Chicken/Fish/Beef/Vegetarian), meal type, servings; optional custom ingredients; generated recipes can be saved to "My Recipes" and displayed as cards; saved to PostgreSQL `saved_recipes` table
+- **Macro Tracking**: Progress bars for protein/carbs/fat consolidated into Daily Targets card
 - **Date Navigation**: Week-view calendar strip to view/log food entries for past days
 - **Recent/Frequent Foods**: Search prioritizes previously logged items; shows recent foods on focus
 - **Onboarding/Settings**: 2-step dialog (profile/weight goals + avatar) shown on first use; accessible later via Settings gear icon in navbar to edit name, avatar, weight goals, and dark mode toggle
@@ -54,3 +57,4 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 ## Database Tables
 - `user_profiles`: id, name, avatar_seed, starting_weight, current_weight, target_weight, timeframe, maintenance_calories
 - `food_entries`: id, profile_id, name, calories, protein, carbs, fat, date
+- `saved_recipes`: id, profile_id, title, type, cuisine, calories, protein, carbs, fat, time, ingredients (jsonb), steps (jsonb)
