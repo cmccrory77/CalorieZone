@@ -27,7 +27,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import MealScanner from "@/components/MealScanner";
 import FoodSearch from "@/components/FoodSearch";
@@ -194,15 +193,6 @@ export default function Home() {
   const totalCarbs = trackedFoods.reduce((acc, food) => acc + (food.carbs || 0), 0);
   const totalFat = trackedFoods.reduce((acc, food) => acc + (food.fat || 0), 0);
   
-  const hasMacros = totalProtein > 0 || totalCarbs > 0 || totalFat > 0;
-  const macroData = hasMacros ? [
-    { name: 'Protein', value: totalProtein, color: '#3b82f6' }, // blue-500
-    { name: 'Carbs', value: totalCarbs, color: '#10b981' },   // emerald-500
-    { name: 'Fat', value: totalFat, color: '#f59e0b' }        // amber-500
-  ] : [
-    { name: 'No Data', value: 1, color: '#f1f5f9' }           // slate-100
-  ];
-
   const targetProtein = Math.round((targetCalories * 0.3) / 4);
   const targetCarbs = Math.round((targetCalories * 0.4) / 4);
   const targetFat = Math.round((targetCalories * 0.3) / 9);
@@ -689,7 +679,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-          <div className="lg:col-span-7 space-y-8">
+          <div className="lg:col-span-12 space-y-8">
             {/* Calories Tracker Card */}
             <Card className="border-none shadow-sm bg-white dark:bg-slate-900 relative h-full flex flex-col rounded-xl">
               <div className="h-2 bg-secondary w-full rounded-t-xl"></div>
@@ -877,82 +867,44 @@ export default function Home() {
                     <div className="text-[10px] text-muted-foreground">kcal/day</div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
 
-          <div className="lg:col-span-3 space-y-8">
-            <Card className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden h-full flex flex-col">
-              <div className="h-2 bg-accent w-full"></div>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-slate-900 dark:text-slate-100 flex items-center gap-2 text-lg">
-                  <PieChartIcon className="h-5 w-5 text-accent" />
-                  Macros
-                </CardTitle>
-                <CardDescription>Daily macronutrient breakdown</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-between pt-4">
-                <div className="h-[180px] w-full relative">
-                  {!hasMacros && (
-                    <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400 z-10 pointer-events-none">
-                      No macros logged yet
-                    </div>
-                  )}
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={macroData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={70}
-                        paddingAngle={2}
-                        dataKey="value"
-                        stroke="none"
-                      >
-                        {macroData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value) => [`${value}g`, '']}
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                
-                <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-4">
-                  {[
-                    { label: "Protein", current: totalProtein, target: targetProtein, color: "bg-blue-500", textColor: "text-blue-600" },
-                    { label: "Carbs", current: totalCarbs, target: targetCarbs, color: "bg-emerald-500", textColor: "text-emerald-600" },
-                    { label: "Fat", current: totalFat, target: targetFat, color: "bg-amber-500", textColor: "text-amber-600" },
-                  ].map((macro) => {
-                    const pct = macro.target > 0 ? Math.min(100, Math.round((macro.current / macro.target) * 100)) : 0;
-                    return (
-                      <div key={macro.label} data-testid={`macro-bar-${macro.label.toLowerCase()}`}>
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-1.5">
-                            <div className={`w-2 h-2 rounded-full ${macro.color}`}></div>
-                            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{macro.label}</span>
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-3">
+                    <PieChartIcon className="h-4 w-4 text-accent" />
+                    Macros
+                  </h4>
+                  <div className="space-y-3">
+                    {[
+                      { label: "Protein", current: totalProtein, target: targetProtein, color: "bg-blue-500", textColor: "text-blue-600" },
+                      { label: "Carbs", current: totalCarbs, target: targetCarbs, color: "bg-emerald-500", textColor: "text-emerald-600" },
+                      { label: "Fat", current: totalFat, target: targetFat, color: "bg-amber-500", textColor: "text-amber-600" },
+                    ].map((macro) => {
+                      const pct = macro.target > 0 ? Math.min(100, Math.round((macro.current / macro.target) * 100)) : 0;
+                      return (
+                        <div key={macro.label} data-testid={`macro-bar-${macro.label.toLowerCase()}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1.5">
+                              <div className={`w-2 h-2 rounded-full ${macro.color}`}></div>
+                              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{macro.label}</span>
+                            </div>
+                            <span className="text-xs font-semibold">
+                              <span className={macro.textColor}>{macro.current}g</span>
+                              <span className="text-muted-foreground"> / {macro.target}g</span>
+                            </span>
                           </div>
-                          <span className="text-xs font-semibold">
-                            <span className={macro.textColor}>{macro.current}g</span>
-                            <span className="text-muted-foreground"> / {macro.target}g</span>
-                          </span>
+                          <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${macro.color} transition-all duration-500`}
+                              style={{ width: `${pct}%` }}
+                            ></div>
+                          </div>
+                          <div className="text-right mt-0.5">
+                            <span className="text-[10px] font-semibold text-muted-foreground">{pct}%</span>
+                          </div>
                         </div>
-                        <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${macro.color} transition-all duration-500`}
-                            style={{ width: `${pct}%` }}
-                          ></div>
-                        </div>
-                        <div className="text-right mt-0.5">
-                          <span className="text-[10px] font-semibold text-muted-foreground">{pct}%</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </CardContent>
             </Card>
