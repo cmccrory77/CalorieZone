@@ -173,6 +173,8 @@ export default function Home() {
   });
 
   const profileSynced = useRef(false);
+  const recipesTabRef = useRef<HTMLDivElement>(null);
+  const [activeRecipesTab, setActiveRecipesTab] = useState<string | undefined>(undefined);
   useEffect(() => {
     if (profile && !profileSynced.current) {
       setStartingWeight(profile.startingWeight);
@@ -1147,8 +1149,11 @@ export default function Home() {
 
                 {todayPlannedMeals.length > 0 ? (
                   <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Today's Plan</Label>
-                    <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Today's Preview</Label>
+                      <span className="text-[10px] text-muted-foreground bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">{todayPlannedMeals.length} meals</span>
+                    </div>
+                    <div className="space-y-1.5 max-h-[120px] overflow-y-auto pr-1">
                       {todayPlannedMeals.map(meal => (
                         <div key={meal.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-sm" data-testid={`planned-meal-${meal.id}`}>
                           <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
@@ -1169,11 +1174,20 @@ export default function Home() {
                         </div>
                       ))}
                     </div>
-                    <div className="text-center pt-1">
-                      <span className="text-xs text-muted-foreground">
-                        Total: <span className="font-semibold text-secondary">{todayPlannedMeals.reduce((s, m) => s + m.calories, 0)} kcal</span>
-                      </span>
-                    </div>
+                    <button
+                      onClick={() => {
+                        setActiveRecipesTab("planned");
+                        setTimeout(() => {
+                          recipesTabRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }, 100);
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 bg-primary/5 hover:bg-primary/10 dark:bg-primary/10 dark:hover:bg-primary/15 py-2 rounded-lg transition-all"
+                      data-testid="view-full-plan-button"
+                    >
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      View Full Week Plan
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 ) : (
                   <div className="flex-1 flex items-center justify-center py-4">
@@ -1299,7 +1313,7 @@ export default function Home() {
           {/* Right Column - Recipes & Meals */}
           <div className="lg:col-span-12 space-y-6">
             
-            <Tabs defaultValue={plannedMealsData.length > 0 ? "planned" : "recommended"} className="w-full">
+            <Tabs value={activeRecipesTab ?? (plannedMealsData.length > 0 ? "planned" : "recommended")} onValueChange={setActiveRecipesTab} className="w-full" ref={recipesTabRef}>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <TabsList className="bg-white dark:bg-slate-900 p-1 border border-slate-100 dark:border-slate-800 shadow-sm rounded-xl">
                   {plannedMealsData.length > 0 && (
