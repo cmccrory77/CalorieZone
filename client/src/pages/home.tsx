@@ -16,10 +16,15 @@ import {
   ChevronRight,
   Settings,
   Bookmark,
-  Trash2
+  Trash2,
+  CalendarDays,
+  Check,
+  Coffee,
+  UtensilsCrossed,
+  Cookie
 } from "lucide-react";
-import { format, addDays, subDays, isToday, isSameDay } from "date-fns";
-import type { UserProfile, FoodEntry, SavedRecipe } from "@shared/schema";
+import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
+import type { UserProfile, FoodEntry, SavedRecipe, PlannedMeal } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import MealScanner from "@/components/MealScanner";
 import FoodSearch from "@/components/FoodSearch";
@@ -128,6 +134,41 @@ export default function Home() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/saved-recipes"] });
+    },
+  });
+
+  const [mpBreakfast, setMpBreakfast] = useState(true);
+  const [mpLunch, setMpLunch] = useState(true);
+  const [mpDinner, setMpDinner] = useState(true);
+  const [mpSnacks, setMpSnacks] = useState(true);
+  const [mpSnackCount, setMpSnackCount] = useState(1);
+  const [mpPreference, setMpPreference] = useState("balanced");
+  const [mpIncludeMyRecipes, setMpIncludeMyRecipes] = useState(false);
+  const [mpGenerating, setMpGenerating] = useState(false);
+
+  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 0 });
+  const currentWeekEnd = endOfWeek(new Date(), { weekStartsOn: 0 });
+  const weekStartStr = format(currentWeekStart, "yyyy-MM-dd");
+  const weekEndStr = format(currentWeekEnd, "yyyy-MM-dd");
+
+  const { data: plannedMealsData = [] } = useQuery<PlannedMeal[]>({
+    queryKey: ["/api/planned-meals", profile?.id, weekStartStr, weekEndStr],
+    enabled: !!profile?.id,
+    queryFn: async () => {
+      const res = await fetch(`/api/planned-meals/${profile!.id}/${weekStartStr}/${weekEndStr}`);
+      if (!res.ok) throw new Error("Failed to load planned meals");
+      return res.json();
+    },
+  });
+
+  const generateMealPlanMutation = useMutation({
+    mutationFn: async (meals: any[]) => {
+      await apiRequest("DELETE", `/api/planned-meals/${profile!.id}/${weekStartStr}/${weekEndStr}`);
+      const res = await apiRequest("POST", "/api/planned-meals", { meals });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/planned-meals"] });
     },
   });
 
@@ -555,6 +596,110 @@ export default function Home() {
     return generatedRecipes;
   };
 
+  const handleGenerateWeekPlan = () => {
+    if (!profile?.id) return;
+    setMpGenerating(true);
+
+    const mealTypes: string[] = [];
+    if (mpBreakfast) mealTypes.push("breakfast");
+    if (mpLunch) mealTypes.push("lunch");
+    if (mpDinner) mealTypes.push("dinner");
+    if (mpSnacks) for (let s = 0; s < mpSnackCount; s++) mealTypes.push("snack");
+
+    if (mealTypes.length === 0) { setMpGenerating(false); return; }
+
+    const calPerMeal = Math.round(targetCalories / mealTypes.length);
+
+    const macroRatios: Record<string, { p: number; c: number; f: number }> = {
+      balanced: { p: 0.3, c: 0.4, f: 0.3 },
+      "high-protein": { p: 0.4, c: 0.3, f: 0.3 },
+      keto: { p: 0.3, c: 0.1, f: 0.6 },
+      vegetarian: { p: 0.25, c: 0.45, f: 0.3 },
+    };
+    const ratios = macroRatios[mpPreference] || macroRatios.balanced;
+
+    const mealNames: Record<string, string[]> = {
+      breakfast: ["Power Oatmeal Bowl", "Protein Scramble", "Greek Yogurt Parfait", "Berry Smoothie Bowl", "Avocado Toast Plate", "Banana Pancakes", "Egg Muffin Cups"],
+      lunch: ["Grilled Chicken Salad", "Quinoa Power Bowl", "Turkey Avocado Wrap", "Mediterranean Bowl", "Asian Noodle Bowl", "Southwest Burrito Bowl", "Harvest Grain Bowl"],
+      dinner: ["Herb Roasted Chicken", "Salmon with Vegetables", "Lean Beef Stir-fry", "Lemon Garlic Shrimp", "Baked Cod & Greens", "Turkey Meatball Skillet", "Chickpea Curry Bowl"],
+      snack: ["Apple & Almond Butter", "Greek Yogurt & Berries", "Trail Mix Cup", "Hummus & Veggie Sticks", "Protein Energy Bites", "Cottage Cheese Bowl", "Rice Cake & PB"],
+    };
+
+    if (mpPreference === "vegetarian") {
+      mealNames.lunch = ["Lentil Soup Bowl", "Falafel Wrap", "Caprese Quinoa Bowl", "Black Bean Burrito", "Tofu Stir-fry Bowl", "Veggie Pad Thai", "Mushroom Risotto Bowl"];
+      mealNames.dinner = ["Chickpea Curry Bowl", "Stuffed Bell Peppers", "Eggplant Parmesan", "Lentil Bolognese", "Vegetable Stir-fry", "Sweet Potato Black Bean", "Mushroom Stroganoff"];
+    }
+    if (mpPreference === "keto") {
+      mealNames.breakfast = ["Bacon & Egg Plate", "Keto Avocado Bowl", "Cheese Omelette", "Sausage & Spinach", "Cream Cheese Pancakes", "Bulletproof Smoothie", "Ham & Cheese Roll-ups"];
+      mealNames.snack = ["Cheese & Nuts", "Celery & Cream Cheese", "Beef Jerky", "Avocado Halves", "Pork Rind Nachos", "Fat Bombs", "Olives & Almonds"];
+    }
+
+    const useSavedRecipes = mpIncludeMyRecipes && savedRecipesData.length > 0;
+    const savedByType: Record<string, any[]> = {};
+    if (useSavedRecipes) {
+      savedRecipesData.forEach(r => {
+        const t = r.type || "dinner";
+        if (!savedByType[t]) savedByType[t] = [];
+        savedByType[t].push(r);
+      });
+    }
+
+    const allMeals: any[] = [];
+    for (let day = 0; day < 7; day++) {
+      const dateStr = format(addDays(currentWeekStart, day), "yyyy-MM-dd");
+
+      mealTypes.forEach((mt, mtIdx) => {
+        let usedSaved = false;
+        if (useSavedRecipes && savedByType[mt] && savedByType[mt].length > 0 && Math.random() > 0.5) {
+          const saved = savedByType[mt][Math.floor(Math.random() * savedByType[mt].length)];
+          allMeals.push({
+            profileId: profile!.id,
+            date: dateStr,
+            mealType: mt,
+            title: saved.title,
+            calories: saved.calories,
+            protein: saved.protein,
+            carbs: saved.carbs,
+            fat: saved.fat,
+            time: saved.time,
+            ingredients: saved.ingredients,
+            steps: saved.steps,
+          });
+          usedSaved = true;
+        }
+        if (!usedSaved) {
+          const names = mealNames[mt] || mealNames.dinner;
+          const nameIdx = (day * (mtIdx + 1) + mtIdx) % names.length;
+          const proteinG = Math.round((calPerMeal * ratios.p) / 4);
+          const carbsG = Math.round((calPerMeal * ratios.c) / 4);
+          const fatG = Math.round((calPerMeal * ratios.f) / 9);
+
+          allMeals.push({
+            profileId: profile!.id,
+            date: dateStr,
+            mealType: mt,
+            title: names[nameIdx],
+            calories: calPerMeal,
+            protein: `${proteinG}g`,
+            carbs: `${carbsG}g`,
+            fat: `${fatG}g`,
+            time: mt === "snack" ? "5 min" : `${15 + Math.floor(Math.random() * 4) * 5} min`,
+            ingredients: [],
+            steps: [],
+          });
+        }
+      });
+    }
+
+    generateMealPlanMutation.mutate(allMeals, {
+      onSettled: () => setMpGenerating(false),
+    });
+  };
+
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const todayPlannedMeals = plannedMealsData.filter(m => m.date === todayStr);
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
   const handleGenerateRecipe = () => {
     setIsGenerating(true);
     setGeneratedRecipe(null);
@@ -729,7 +874,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-          <div className="lg:col-span-12 space-y-8">
+          <div className="lg:col-span-7 space-y-8">
             {/* Calories Tracker Card */}
             <Card className="border-none shadow-sm bg-white dark:bg-slate-900 relative h-full flex flex-col rounded-xl">
               <div className="h-2 bg-secondary w-full rounded-t-xl"></div>
@@ -960,12 +1105,209 @@ export default function Home() {
             </Card>
           </div>
 
+          <div className="lg:col-span-5">
+            <Card className="border-none shadow-sm bg-white dark:bg-slate-900 relative flex flex-col rounded-xl h-full">
+              <div className="h-2 bg-primary w-full rounded-t-xl"></div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-slate-900 dark:text-slate-100 flex items-center gap-2 text-lg">
+                  <CalendarDays className="h-5 w-5 text-primary" />
+                  Meal Planner
+                </CardTitle>
+                <CardDescription>Plan your meals for the week</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col space-y-4">
+                <div className="space-y-1">
+                  <Label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Week Progress</Label>
+                  <div className="flex gap-1">
+                    {dayNames.map((d, i) => {
+                      const dayDate = format(addDays(currentWeekStart, i), "yyyy-MM-dd");
+                      const hasMeals = plannedMealsData.some(m => m.date === dayDate);
+                      const isPast = addDays(currentWeekStart, i) < new Date() && !isSameDay(addDays(currentWeekStart, i), new Date());
+                      const isTodayBar = isSameDay(addDays(currentWeekStart, i), new Date());
+                      return (
+                        <div key={d} className="flex-1 flex flex-col items-center gap-1" data-testid={`week-bar-${d.toLowerCase()}`}>
+                          <span className={`text-[9px] font-bold uppercase ${isTodayBar ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}`}>{d}</span>
+                          <div className={`w-full h-6 rounded-md transition-all ${
+                            hasMeals && isPast ? 'bg-primary' :
+                            hasMeals && isTodayBar ? 'bg-primary/70 ring-2 ring-primary/30' :
+                            hasMeals ? 'bg-primary/40' :
+                            'bg-slate-100 dark:bg-slate-800'
+                          }`}>
+                            {hasMeals && isPast && (
+                              <div className="flex items-center justify-center h-full">
+                                <Check className="h-3.5 w-3.5 text-white" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {todayPlannedMeals.length > 0 ? (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Today's Plan</Label>
+                    <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                      {todayPlannedMeals.map(meal => (
+                        <div key={meal.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-sm" data-testid={`planned-meal-${meal.id}`}>
+                          <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
+                            meal.mealType === 'breakfast' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
+                            meal.mealType === 'lunch' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
+                            meal.mealType === 'dinner' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' :
+                            'bg-green-100 dark:bg-green-900/30 text-green-600'
+                          }`}>
+                            {meal.mealType === 'breakfast' ? <Coffee className="h-3.5 w-3.5" /> :
+                             meal.mealType === 'lunch' ? <UtensilsCrossed className="h-3.5 w-3.5" /> :
+                             meal.mealType === 'dinner' ? <Utensils className="h-3.5 w-3.5" /> :
+                             <Cookie className="h-3.5 w-3.5" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-slate-700 dark:text-slate-300 truncate text-xs">{meal.title}</p>
+                          </div>
+                          <span className="text-xs font-semibold text-secondary whitespace-nowrap">{meal.calories} cal</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-center pt-1">
+                      <span className="text-xs text-muted-foreground">
+                        Total: <span className="font-semibold text-secondary">{todayPlannedMeals.reduce((s, m) => s + m.calories, 0)} kcal</span>
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center py-4">
+                    <p className="text-sm text-muted-foreground text-center">No meals planned yet. Generate a plan below.</p>
+                  </div>
+                )}
+
+                <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <Label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Include Meals</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: "Breakfast", checked: mpBreakfast, set: setMpBreakfast, icon: <Coffee className="h-3.5 w-3.5" /> },
+                      { label: "Lunch", checked: mpLunch, set: setMpLunch, icon: <UtensilsCrossed className="h-3.5 w-3.5" /> },
+                      { label: "Dinner", checked: mpDinner, set: setMpDinner, icon: <Utensils className="h-3.5 w-3.5" /> },
+                      { label: "Snacks", checked: mpSnacks, set: setMpSnacks, icon: <Cookie className="h-3.5 w-3.5" /> },
+                    ].map(item => (
+                      <label key={item.label} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${
+                        item.checked
+                          ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                      }`}>
+                        <Checkbox
+                          checked={item.checked}
+                          onCheckedChange={(v) => item.set(!!v)}
+                          data-testid={`checkbox-${item.label.toLowerCase()}`}
+                        />
+                        {item.icon}
+                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {mpSnacks && (
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-slate-600 dark:text-slate-400">Number of snacks:</Label>
+                      <Select value={String(mpSnackCount)} onValueChange={(v) => setMpSnackCount(Number(v))}>
+                        <SelectTrigger className="w-16 h-8 text-xs" data-testid="select-snack-count">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="2">2</SelectItem>
+                          <SelectItem value="3">3</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Meal Preference</Label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { value: "balanced", label: "Balanced" },
+                      { value: "high-protein", label: "High Protein" },
+                      { value: "keto", label: "Keto" },
+                      { value: "vegetarian", label: "Vegetarian" },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setMpPreference(opt.value)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          mpPreference === opt.value
+                            ? 'bg-primary text-white shadow-sm'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                        }`}
+                        data-testid={`button-pref-${opt.value}`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <label className={`flex items-center gap-2 p-2.5 rounded-lg border transition-all ${
+                  savedRecipesData.length === 0
+                    ? 'border-slate-100 dark:border-slate-800 opacity-50 cursor-not-allowed'
+                    : mpIncludeMyRecipes
+                      ? 'border-primary bg-primary/5 dark:bg-primary/10 cursor-pointer'
+                      : 'border-slate-200 dark:border-slate-700 cursor-pointer hover:border-slate-300 dark:hover:border-slate-600'
+                }`}>
+                  <Checkbox
+                    checked={mpIncludeMyRecipes}
+                    onCheckedChange={(v) => setMpIncludeMyRecipes(!!v)}
+                    disabled={savedRecipesData.length === 0}
+                    data-testid="checkbox-include-my-recipes"
+                  />
+                  <div className="flex-1">
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Include My Recipes</span>
+                    {savedRecipesData.length === 0 && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Save recipes first to enable this</p>
+                    )}
+                  </div>
+                  <Bookmark className="h-3.5 w-3.5 text-muted-foreground" />
+                </label>
+
+                <Button
+                  className="w-full bg-primary hover:bg-primary/90 text-white h-10 mt-auto"
+                  onClick={handleGenerateWeekPlan}
+                  disabled={mpGenerating || (!mpBreakfast && !mpLunch && !mpDinner && !mpSnacks)}
+                  data-testid="button-generate-meal-plan"
+                >
+                  {mpGenerating ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      Generating...
+                    </span>
+                  ) : plannedMealsData.length > 0 ? (
+                    "Regenerate Week Plan"
+                  ) : (
+                    "Generate Week Plan"
+                  )}
+                </Button>
+
+                {plannedMealsData.length > 0 && (
+                  <p className="text-[10px] text-center text-muted-foreground">
+                    Generated meals appear in the Recipes section below
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Right Column - Recipes & Meals */}
           <div className="lg:col-span-12 space-y-6">
             
-            <Tabs defaultValue="recommended" className="w-full">
+            <Tabs defaultValue={plannedMealsData.length > 0 ? "planned" : "recommended"} className="w-full">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <TabsList className="bg-white dark:bg-slate-900 p-1 border border-slate-100 dark:border-slate-800 shadow-sm rounded-xl">
+                  {plannedMealsData.length > 0 && (
+                    <TabsTrigger value="planned" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                      <CalendarDays className="h-3.5 w-3.5 mr-2" />
+                      Meal Plan
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger value="recommended" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                     Recommended
                   </TabsTrigger>
@@ -980,6 +1322,89 @@ export default function Home() {
                   Today's Plan
                 </div>
               </div>
+
+              {plannedMealsData.length > 0 && (
+                <TabsContent value="planned" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="mb-6">
+                    <h2 className="text-xl font-display font-semibold flex items-center gap-2">
+                      <CalendarDays className="h-5 w-5 text-primary" />
+                      Your Weekly Meal Plan
+                    </h2>
+                    <p className="text-muted-foreground text-sm mt-1">
+                      {targetCalories} kcal/day · {format(currentWeekStart, "MMM d")} – {format(currentWeekEnd, "MMM d, yyyy")}
+                    </p>
+                  </div>
+
+                  <div className="space-y-6">
+                    {Array.from({ length: 7 }, (_, i) => {
+                      const dayDate = addDays(currentWeekStart, i);
+                      const dayDateStr = format(dayDate, "yyyy-MM-dd");
+                      const dayMeals = plannedMealsData.filter(m => m.date === dayDateStr);
+                      const dayTotal = dayMeals.reduce((s, m) => s + m.calories, 0);
+                      const dayIsPast = dayDate < new Date() && !isSameDay(dayDate, new Date());
+                      const dayIsToday = isSameDay(dayDate, new Date());
+                      return (
+                        <div key={dayDateStr} className={`rounded-xl overflow-hidden border ${
+                          dayIsToday ? 'border-primary/40 ring-1 ring-primary/20' : 'border-slate-100 dark:border-slate-800'
+                        }`}>
+                          <div className={`px-4 py-2.5 flex items-center justify-between ${
+                            dayIsToday ? 'bg-primary/10 dark:bg-primary/20' :
+                            dayIsPast ? 'bg-slate-50 dark:bg-slate-800/50' :
+                            'bg-slate-50 dark:bg-slate-800/50'
+                          }`}>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-sm font-bold ${dayIsToday ? 'text-primary' : 'text-slate-700 dark:text-slate-300'}`}>
+                                {format(dayDate, "EEEE")}
+                              </span>
+                              <span className="text-xs text-muted-foreground">{format(dayDate, "MMM d")}</span>
+                              {dayIsToday && <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">TODAY</span>}
+                              {dayIsPast && <Check className="h-3.5 w-3.5 text-primary" />}
+                            </div>
+                            <span className="text-xs font-semibold text-secondary">{dayTotal} kcal</span>
+                          </div>
+                          <div className="p-4 bg-white dark:bg-slate-900">
+                            {dayMeals.length === 0 ? (
+                              <p className="text-sm text-muted-foreground text-center py-2">No meals planned</p>
+                            ) : (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                {dayMeals.map(meal => (
+                                  <div key={meal.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer"
+                                    onClick={() => setSelectedRecipe({
+                                      ...meal,
+                                      type: meal.mealType,
+                                      match: meal.mealType,
+                                      cuisine: "planned",
+                                      image: null,
+                                    })}
+                                    data-testid={`planned-recipe-${meal.id}`}
+                                  >
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                      meal.mealType === 'breakfast' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
+                                      meal.mealType === 'lunch' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
+                                      meal.mealType === 'dinner' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' :
+                                      'bg-green-100 dark:bg-green-900/30 text-green-600'
+                                    }`}>
+                                      {meal.mealType === 'breakfast' ? <Coffee className="h-4 w-4" /> :
+                                       meal.mealType === 'lunch' ? <UtensilsCrossed className="h-4 w-4" /> :
+                                       meal.mealType === 'dinner' ? <Utensils className="h-4 w-4" /> :
+                                       <Cookie className="h-4 w-4" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{meal.mealType}</p>
+                                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{meal.title}</p>
+                                      <p className="text-xs text-secondary font-semibold">{meal.calories} cal</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </TabsContent>
+              )}
 
               <TabsContent value="recommended" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">

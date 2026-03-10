@@ -2,7 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { type Server } from "http";
 import { storage } from "./storage";
-import { insertFoodEntrySchema, updateUserProfileSchema, insertSavedRecipeSchema } from "@shared/schema";
+import { insertFoodEntrySchema, updateUserProfileSchema, insertSavedRecipeSchema, insertPlannedMealSchema } from "@shared/schema";
 import OpenAI from "openai";
 
 export async function registerRoutes(
@@ -90,6 +90,38 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to remove saved recipe" });
+    }
+  });
+
+  app.get("/api/planned-meals/:profileId/:startDate/:endDate", async (req, res) => {
+    try {
+      const meals = await storage.getPlannedMeals(req.params.profileId, req.params.startDate, req.params.endDate);
+      res.json(meals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to load planned meals" });
+    }
+  });
+
+  app.post("/api/planned-meals", async (req, res) => {
+    try {
+      const { meals } = req.body;
+      if (!Array.isArray(meals)) {
+        return res.status(400).json({ message: "meals must be an array" });
+      }
+      const parsed = meals.map((m: any) => insertPlannedMealSchema.parse(m));
+      const created = await storage.addPlannedMeals(parsed);
+      res.json(created);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid planned meal data" });
+    }
+  });
+
+  app.delete("/api/planned-meals/:profileId/:startDate/:endDate", async (req, res) => {
+    try {
+      await storage.clearPlannedMealsForWeek(req.params.profileId, req.params.startDate, req.params.endDate);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to clear planned meals" });
     }
   });
 

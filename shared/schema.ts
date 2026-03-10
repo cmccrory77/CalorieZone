@@ -40,10 +40,26 @@ export const savedRecipes = pgTable("saved_recipes", {
   steps: jsonb("steps").notNull().default([]),
 });
 
+export const plannedMeals = pgTable("planned_meals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  profileId: varchar("profile_id").notNull(),
+  date: date("date").notNull(),
+  mealType: text("meal_type").notNull(),
+  title: text("title").notNull(),
+  calories: integer("calories").notNull(),
+  protein: text("protein").notNull(),
+  carbs: text("carbs").notNull(),
+  fat: text("fat").notNull(),
+  time: text("time").notNull(),
+  ingredients: jsonb("ingredients").notNull().default([]),
+  steps: jsonb("steps").notNull().default([]),
+});
+
 export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true });
 export const updateUserProfileSchema = insertUserProfileSchema.partial();
 export const insertFoodEntrySchema = createInsertSchema(foodEntries).omit({ id: true });
 export const insertSavedRecipeSchema = createInsertSchema(savedRecipes).omit({ id: true });
+export const insertPlannedMealSchema = createInsertSchema(plannedMeals).omit({ id: true });
 
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type UserProfile = typeof userProfiles.$inferSelect;
@@ -51,3 +67,5 @@ export type InsertFoodEntry = z.infer<typeof insertFoodEntrySchema>;
 export type FoodEntry = typeof foodEntries.$inferSelect;
 export type InsertSavedRecipe = z.infer<typeof insertSavedRecipeSchema>;
 export type SavedRecipe = typeof savedRecipes.$inferSelect;
+export type InsertPlannedMeal = z.infer<typeof insertPlannedMealSchema>;
+export type PlannedMeal = typeof plannedMeals.$inferSelect;
