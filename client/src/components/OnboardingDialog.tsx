@@ -3,10 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
-import { Activity, ChevronRight, CalendarDays, Moon, Sun, Armchair, Footprints, Bike, Flame } from "lucide-react";
-import { addWeeks, format } from "date-fns";
+import { Activity, ChevronRight, ChevronLeft, CalendarDays, Moon, Sun, Armchair, Footprints, Bike, Flame } from "lucide-react";
+import { addWeeks, addMonths, subMonths, format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isAfter, isBefore, startOfDay } from "date-fns";
 
 interface OnboardingDialogProps {
   open: boolean;
@@ -103,6 +102,9 @@ export default function OnboardingDialog({
     initialTargetDate ? new Date(initialTargetDate + "T00:00:00") : addWeeks(new Date(), initialTimeframe || 12)
   );
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState<Date>(
+    initialTargetDate ? new Date(initialTargetDate + "T00:00:00") : addWeeks(new Date(), initialTimeframe || 12)
+  );
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
   const [step, setStep] = useState<"profile" | "avatar">("profile");
 
@@ -115,9 +117,9 @@ export default function OnboardingDialog({
       setTargetWeight(initialTargetWeight || 165);
       setTimeframe(initialTimeframe || 12);
       setActivityLevel(initialActivityLevel || "moderate");
-      setTargetDate(
-        initialTargetDate ? new Date(initialTargetDate + "T00:00:00") : addWeeks(new Date(), initialTimeframe || 12)
-      );
+      const initDate = initialTargetDate ? new Date(initialTargetDate + "T00:00:00") : addWeeks(new Date(), initialTimeframe || 12);
+      setTargetDate(initDate);
+      setCalendarMonth(initDate);
       setCalendarOpen(false);
       setStep("profile");
     }
@@ -125,7 +127,9 @@ export default function OnboardingDialog({
 
   const handleTimeframeSlider = (weeks: number) => {
     setTimeframe(weeks);
-    setTargetDate(addWeeks(new Date(), weeks));
+    const newDate = addWeeks(new Date(), weeks);
+    setTargetDate(newDate);
+    setCalendarMonth(newDate);
   };
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -328,23 +332,92 @@ export default function OnboardingDialog({
                     <ChevronRight className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 ${calendarOpen ? 'rotate-90' : ''}`} />
                   </button>
                   {calendarOpen && (
-                    <div className="border-t border-slate-200 dark:border-slate-700 flex justify-center py-2 px-2">
-                      <Calendar
-                        mode="single"
-                        selected={targetDate}
-                        onSelect={handleDateSelect}
-                        disabled={(date) => date < new Date() || date > addWeeks(new Date(), 52)}
-                        className="rounded-lg !w-full [--cell-size:2.25rem]"
-                        classNames={{
-                          months: "w-full",
-                          month: "w-full",
-                          table: "w-full",
-                          weekdays: "w-full flex justify-between",
-                          weekday: "w-[--cell-size] text-center text-[0.75rem] font-medium text-muted-foreground",
-                          week: "w-full flex justify-between mt-1",
-                          day: "h-[--cell-size] w-[--cell-size] text-center p-0",
-                        }}
-                      />
+                    <div className="border-t border-slate-200 dark:border-slate-700 p-3">
+                      {(() => {
+                        const today = startOfDay(new Date());
+                        const maxDate = addWeeks(today, 52);
+                        const monthStart = startOfMonth(calendarMonth);
+                        const monthEnd = endOfMonth(calendarMonth);
+                        const calStart = startOfWeek(monthStart);
+                        const calEnd = endOfWeek(monthEnd);
+                        const days = eachDayOfInterval({ start: calStart, end: calEnd });
+                        const canGoPrev = isAfter(monthStart, startOfMonth(today));
+                        const canGoNext = isBefore(endOfMonth(calendarMonth), startOfMonth(maxDate));
+                        const weekdays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+                        return (
+                          <div className="select-none">
+                            <div className="flex items-center justify-between mb-3">
+                              <button
+                                onClick={() => canGoPrev && setCalendarMonth(subMonths(calendarMonth, 1))}
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                                  canGoPrev
+                                    ? "hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300"
+                                    : "text-slate-300 dark:text-slate-600 cursor-not-allowed"
+                                }`}
+                                disabled={!canGoPrev}
+                                data-testid="calendar-prev-month"
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                              </button>
+                              <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 tracking-wide">
+                                {format(calendarMonth, "MMMM yyyy")}
+                              </span>
+                              <button
+                                onClick={() => canGoNext && setCalendarMonth(addMonths(calendarMonth, 1))}
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                                  canGoNext
+                                    ? "hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300"
+                                    : "text-slate-300 dark:text-slate-600 cursor-not-allowed"
+                                }`}
+                                disabled={!canGoNext}
+                                data-testid="calendar-next-month"
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-7 mb-1">
+                              {weekdays.map(d => (
+                                <div key={d} className="text-center text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider py-1.5">
+                                  {d}
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="grid grid-cols-7 gap-y-0.5">
+                              {days.map(day => {
+                                const inMonth = isSameMonth(day, calendarMonth);
+                                const isSelected = isSameDay(day, targetDate);
+                                const isToday = isSameDay(day, today);
+                                const isDisabled = isBefore(day, today) || isAfter(day, maxDate);
+
+                                return (
+                                  <button
+                                    key={day.toISOString()}
+                                    onClick={() => !isDisabled && handleDateSelect(day)}
+                                    disabled={isDisabled}
+                                    className={`
+                                      relative h-9 w-full rounded-lg text-sm font-medium transition-all
+                                      ${!inMonth ? "text-slate-300 dark:text-slate-700" : ""}
+                                      ${inMonth && !isSelected && !isDisabled ? "text-slate-700 dark:text-slate-300 hover:bg-primary/10 hover:text-primary" : ""}
+                                      ${isDisabled && inMonth ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : ""}
+                                      ${isSelected ? "bg-primary text-white font-bold shadow-sm shadow-primary/30" : ""}
+                                      ${isToday && !isSelected ? "ring-1 ring-primary/40 text-primary font-semibold" : ""}
+                                    `}
+                                    data-testid={`calendar-day-${format(day, "yyyy-MM-dd")}`}
+                                  >
+                                    {day.getDate()}
+                                    {isToday && !isSelected && (
+                                      <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
