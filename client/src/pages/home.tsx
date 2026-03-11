@@ -965,6 +965,16 @@ export default function Home() {
     });
   };
 
+  const prevTargetCaloriesRef = useRef(targetCalories);
+  useEffect(() => {
+    if (prevTargetCaloriesRef.current !== targetCalories && plannedMealsData.length > 0 && profile?.id) {
+      prevTargetCaloriesRef.current = targetCalories;
+      handleGenerateWeekPlan();
+    } else {
+      prevTargetCaloriesRef.current = targetCalories;
+    }
+  }, [targetCalories]);
+
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const todayPlannedMeals = plannedMealsData.filter(m => m.date === todayStr);
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
