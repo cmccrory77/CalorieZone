@@ -29,7 +29,7 @@ import {
   ChevronUp,
   Dumbbell
 } from "lucide-react";
-import { Eye, AlertTriangle } from "lucide-react";
+import { Eye } from "lucide-react";
 import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
 import type { UserProfile, FoodEntry, SavedRecipe, PlannedMeal, ExerciseEntry } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -888,19 +888,101 @@ export default function Home() {
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const aggregatedGroceryList = useCallback(() => {
-    const itemMap: Record<string, { item: string; amounts: string[]; totalCal: number }> = {};
+    const canonicalNames: Record<string, string> = {
+      "carrot sticks": "carrots", "carrot": "carrots", "shredded carrot": "carrots",
+      "bell pepper strips": "bell pepper", "bell pepper sliced": "bell pepper", "bell peppers": "bell pepper", "red bell pepper": "bell pepper",
+      "cherry tomatoes": "tomatoes", "tomato": "tomatoes", "tomato slices": "tomatoes",
+      "celery sticks": "celery",
+      "garlic cloves": "garlic", "garlic clove": "garlic", "minced garlic": "garlic",
+      "baby potatoes": "potatoes", "potato": "potatoes",
+      "sweet potatoes": "sweet potato", "roasted sweet potato": "sweet potato",
+      "green beans": "green beans",
+      "mixed greens": "lettuce", "romaine": "lettuce", "mixed salad": "lettuce",
+      "cheddar cheese": "cheese", "shredded cheese": "cheese", "parmesan cheese": "parmesan", "feta cheese": "feta",
+      "cream cheese": "cream cheese", "cottage cheese": "cottage cheese",
+      "greek yogurt": "yogurt", "plain yogurt": "yogurt",
+      "chicken breast": "chicken", "chicken thighs": "chicken", "grilled chicken": "chicken",
+      "ground turkey": "turkey", "sliced turkey": "turkey", "turkey bacon": "turkey bacon",
+      "turkey sausage": "turkey sausage",
+      "lean beef strips": "beef", "ground beef": "beef", "beef strips": "beef",
+      "large shrimp": "shrimp",
+      "cod fillet": "cod", "salmon fillet": "salmon",
+      "whole grain bread": "bread", "whole wheat bread": "bread",
+      "whole wheat tortilla": "tortilla",
+      "brown rice": "rice", "cilantro lime rice": "rice", "white rice": "rice",
+      "rolled oats": "oats", "oat flour": "oats",
+      "soba noodles": "noodles", "zucchini noodles": "zucchini",
+      "whole wheat pasta": "pasta",
+      "olive oil": "olive oil", "cooking spray": "cooking spray", "sesame oil": "sesame oil",
+      "almond butter": "almond butter", "peanut butter": "peanut butter",
+      "sliced almonds": "almonds", "almond": "almonds",
+      "mixed berries": "berries", "frozen mixed berries": "berries", "blueberries": "berries",
+      "mini chocolate chips": "chocolate chips", "dark chocolate chips": "chocolate chips",
+      "dried cranberries": "cranberries",
+      "coconut flakes": "coconut", "coconut milk": "coconut milk",
+      "fresh rosemary": "rosemary", "fresh dill": "dill", "fresh parsley": "parsley", "fresh basil": "basil",
+      "italian seasoning": "italian seasoning", "garlic powder": "garlic powder",
+      "salt & pepper": "salt & pepper", "salt": "salt & pepper",
+      "red pepper flakes": "red pepper flakes",
+      "lemon juice": "lemon", "lemon zest": "lemon", "lemon sliced": "lemon",
+      "lime dressing": "lime",
+      "soy-ginger sauce": "soy sauce", "soy sauce": "soy sauce",
+      "maple syrup": "maple syrup",
+      "protein powder": "protein powder",
+      "rice cakes": "rice cakes", "rice cake": "rice cakes",
+    };
+
+    const normalize = (s: string) => s.toLowerCase().trim()
+      .replace(/\b(fresh|dried|frozen|chopped|diced|sliced|minced|shredded|grated|crushed|whole|raw|cooked|large|medium|small|plain)\b/g, '')
+      .replace(/\b(sticks?|strips?|pieces?|chunks?|cubes?|halved|florets?|spears?|cloves?|leaves?)\b/g, '')
+      .replace(/\s+/g, ' ').trim();
+    const singularize = (s: string) => s.replace(/ies$/, 'y').replace(/ves$/, 'f').replace(/([^s])s$/, '$1');
+
+    const getCanonicalKey = (name: string): string => {
+      const lower = name.toLowerCase().trim();
+      if (canonicalNames[lower]) return canonicalNames[lower];
+      const normalized = normalize(lower);
+      if (canonicalNames[normalized]) return canonicalNames[normalized];
+      const singular = singularize(normalized);
+      for (const [variant, canonical] of Object.entries(canonicalNames)) {
+        const normVariant = normalize(variant);
+        if (singular === singularize(normVariant) || singular.includes(singularize(normVariant)) || singularize(normVariant).includes(singular)) {
+          return canonical;
+        }
+      }
+      return lower;
+    };
+
+    const getDisplayName = (canonicalKey: string, originalNames: string[]): string => {
+      if (canonicalNames[canonicalKey]) {
+        return canonicalKey.charAt(0).toUpperCase() + canonicalKey.slice(1);
+      }
+      const shortest = originalNames.reduce((a, b) => a.length <= b.length ? a : b);
+      return shortest;
+    };
+
+    const itemMap: Record<string, { item: string; amounts: string[]; totalCal: number; originalNames: string[] }> = {};
     plannedMealsData.forEach(meal => {
       const ings = meal.ingredients as { item: string; amount: string; cal: number }[] | null;
       if (!ings || !Array.isArray(ings)) return;
       ings.forEach(ing => {
-        const key = ing.item.toLowerCase().trim();
+        const key = getCanonicalKey(ing.item);
         if (!itemMap[key]) {
-          itemMap[key] = { item: ing.item, amounts: [], totalCal: 0 };
+          itemMap[key] = { item: ing.item, amounts: [], totalCal: 0, originalNames: [] };
         }
         itemMap[key].amounts.push(ing.amount);
         itemMap[key].totalCal += ing.cal || 0;
+        if (!itemMap[key].originalNames.includes(ing.item)) {
+          itemMap[key].originalNames.push(ing.item);
+        }
       });
     });
+
+    Object.keys(itemMap).forEach(key => {
+      const entry = itemMap[key];
+      entry.item = getDisplayName(key, entry.originalNames);
+    });
+
     const categories: Record<string, string[]> = {
       "Proteins": ["chicken", "turkey", "beef", "salmon", "shrimp", "cod", "egg", "tofu", "bacon", "sausage", "ham", "pork", "jerky", "collagen"],
       "Dairy & Eggs": ["yogurt", "cheese", "cream cheese", "mozzarella", "feta", "parmesan", "cheddar", "butter", "milk", "cottage cheese", "sour cream"],
@@ -911,7 +993,7 @@ export default function Home() {
       "Pantry & Sauces": ["oil", "honey", "maple", "soy sauce", "vinaigrette", "salsa", "hummus", "tahini", "curry", "marinara", "cocoa", "chocolate", "protein powder", "pad thai", "teriyaki", "mustard", "dressing", "glaze", "mct"],
       "Spices & Herbs": ["cumin", "cinnamon", "rosemary", "thyme", "dill", "basil", "parsley", "chive", "ginger", "seasoning", "salt", "pepper", "flakes", "italian", "garlic powder", "stevia"],
     };
-    const categorized: Record<string, typeof itemMap[string][]> = {};
+    const categorized: Record<string, { item: string; amounts: string[]; totalCal: number; originalNames: string[] }[]> = {};
     const uncategorized: typeof itemMap[string][] = [];
     Object.values(itemMap).forEach(entry => {
       const key = entry.item.toLowerCase();
@@ -929,39 +1011,6 @@ export default function Home() {
     if (uncategorized.length > 0) categorized["Other"] = uncategorized;
     return categorized;
   }, [plannedMealsData]);
-
-  const findPotentialDuplicates = useCallback((items: { item: string }[]): Record<string, string[]> => {
-    const normalize = (s: string) => s.toLowerCase().trim()
-      .replace(/\b(fresh|dried|frozen|chopped|diced|sliced|minced|shredded|grated|crushed|ground|whole|raw|cooked|large|medium|small|plain|mixed)\b/g, '')
-      .replace(/\b(sticks?|strips?|pieces?|chunks?|cubes?|halved|florets?|spears?|cloves?|leaves?)\b/g, '')
-      .replace(/\s+/g, ' ').trim();
-    const singularize = (s: string) => s.replace(/ies$/, 'y').replace(/ves$/, 'f').replace(/([^s])s$/, '$1');
-    const rootWord = (s: string) => singularize(normalize(s));
-
-    const groups: Record<string, string[]> = {};
-    const keys = items.map(i => i.item);
-
-    for (let i = 0; i < keys.length; i++) {
-      for (let j = i + 1; j < keys.length; j++) {
-        const a = keys[i], b = keys[j];
-        const rootA = rootWord(a), rootB = rootWord(b);
-        const wordsA = rootA.split(' ').filter(Boolean);
-        const wordsB = rootB.split(' ').filter(Boolean);
-        const isRelated =
-          rootA.includes(rootB) || rootB.includes(rootA) ||
-          wordsA.some(w => w.length > 3 && wordsB.some(wb => wb.includes(w) || w.includes(wb)));
-        if (isRelated) {
-          const groupKey = a.toLowerCase().trim();
-          if (!groups[groupKey]) groups[groupKey] = [];
-          if (!groups[groupKey].includes(b)) groups[groupKey].push(b);
-          const groupKey2 = b.toLowerCase().trim();
-          if (!groups[groupKey2]) groups[groupKey2] = [];
-          if (!groups[groupKey2].includes(a)) groups[groupKey2].push(a);
-        }
-      }
-    }
-    return groups;
-  }, []);
 
   const handleOpenGroceryList = () => {
     const list = aggregatedGroceryList();
@@ -2494,9 +2543,6 @@ export default function Home() {
               const categoryOrder = ["Proteins", "Dairy & Eggs", "Grains & Bread", "Fruits", "Vegetables", "Nuts & Seeds", "Pantry & Sauces", "Spices & Herbs", "Other"];
               const totalItems = Object.values(list).flat().length;
               const selectedCount = Object.values(groceryChecked).filter(Boolean).length;
-              const allItems = Object.values(list).flat();
-              const duplicateMap = findPotentialDuplicates(allItems);
-              const duplicateCount = new Set(Object.keys(duplicateMap)).size;
               return (
                 <>
                   <div className="flex items-center justify-between">
@@ -2523,37 +2569,6 @@ export default function Home() {
                       </button>
                     </div>
                   </div>
-                  {duplicateCount > 0 && (
-                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
-                      <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Possible duplicates detected</p>
-                        <p className="text-[11px] text-amber-600/80 dark:text-amber-500/80 mt-0.5">Some items may be the same ingredient. You can merge them or uncheck extras manually.</p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          const visited = new Set<string>();
-                          const allFlat = Object.values(list).flat();
-                          allFlat.forEach(entry => {
-                            const key = entry.item.toLowerCase().trim();
-                            if (visited.has(key)) return;
-                            const dupes = duplicateMap[key];
-                            if (!dupes || dupes.length === 0) return;
-                            visited.add(key);
-                            dupes.forEach(d => {
-                              const dk = d.toLowerCase().trim();
-                              visited.add(dk);
-                              setGroceryChecked(prev => ({ ...prev, [dk]: false }));
-                            });
-                          });
-                        }}
-                        className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 bg-amber-100 dark:bg-amber-900/40 hover:bg-amber-200 dark:hover:bg-amber-900/60 px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap shrink-0"
-                        data-testid="button-merge-duplicates"
-                      >
-                        Merge All
-                      </button>
-                    </div>
-                  )}
                   {categoryOrder.map(cat => {
                     if (!list[cat] || list[cat].length === 0) return null;
                     return (
@@ -2567,17 +2582,13 @@ export default function Home() {
                           {list[cat].map(entry => {
                             const key = entry.item.toLowerCase().trim();
                             const isChecked = !!groceryChecked[key];
-                            const dupes = duplicateMap[key];
-                            const hasDupe = !!dupes && dupes.length > 0;
                             return (
                               <div key={key}>
                                 <label
                                   className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-all ${
-                                    hasDupe && isChecked
-                                      ? 'bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/40'
-                                      : isChecked
-                                        ? 'bg-primary/5 dark:bg-primary/10'
-                                        : 'bg-slate-50 dark:bg-slate-800/50 opacity-60'
+                                    isChecked
+                                      ? 'bg-primary/5 dark:bg-primary/10'
+                                      : 'bg-slate-50 dark:bg-slate-800/50 opacity-60'
                                   }`}
                                   data-testid={`grocery-item-${key}`}
                                 >
@@ -2589,34 +2600,18 @@ export default function Home() {
                                     <span className={`text-sm font-medium ${isChecked ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500 line-through'}`}>
                                       {entry.item}
                                     </span>
+                                    {entry.originalNames && entry.originalNames.length > 1 && (
+                                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                                        Includes: {entry.originalNames.join(", ")}
+                                      </p>
+                                    )}
                                   </div>
-                                  {hasDupe && (
-                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                                  )}
                                   <span className="text-xs text-muted-foreground whitespace-nowrap">
                                     {entry.amounts.length > 3
                                       ? `${entry.amounts.slice(0, 2).join(", ")} +${entry.amounts.length - 2} more`
                                       : entry.amounts.join(", ")}
                                   </span>
                                 </label>
-                                {hasDupe && isChecked && (
-                                  <div className="flex items-center gap-1.5 ml-9 mt-0.5 mb-1">
-                                    <p className="text-[10px] text-amber-600 dark:text-amber-500 flex-1">
-                                      Similar to: {dupes.join(", ")}
-                                    </p>
-                                    <button
-                                      onClick={() => {
-                                        dupes.forEach(d => {
-                                          setGroceryChecked(prev => ({ ...prev, [d.toLowerCase().trim()]: false }));
-                                        });
-                                      }}
-                                      className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 bg-amber-100/80 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-800/40 px-2 py-0.5 rounded-md transition-colors whitespace-nowrap"
-                                      data-testid={`button-remove-dupes-${key}`}
-                                    >
-                                      Keep this, remove others
-                                    </button>
-                                  </div>
-                                )}
                               </div>
                             );
                           })}
