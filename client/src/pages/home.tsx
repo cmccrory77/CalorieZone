@@ -1340,7 +1340,7 @@ export default function Home() {
         {/* Compact Header + Progress */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg sm:text-2xl font-display font-bold text-foreground leading-tight">Hi, {profile?.name || "there"}</h1>
+            <h1 className="text-sm sm:text-2xl font-display font-bold text-foreground leading-tight whitespace-nowrap">Hi, {profile?.name || "there"}</h1>
           </div>
           <div className="flex items-center gap-2 sm:hidden">
             <div className="flex items-center gap-1.5">
