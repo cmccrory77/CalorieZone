@@ -266,6 +266,33 @@ export default function Home() {
     });
   };
 
+  const [loggedDays, setLoggedDays] = useState<Record<string, boolean>>({});
+  const [loggingDay, setLoggingDay] = useState<string | null>(null);
+
+  const handleLogDayMeals = async (dateStr: string, meals: PlannedMeal[]) => {
+    if (!profile?.id || meals.length === 0) return;
+    setLoggingDay(dateStr);
+    try {
+      for (const meal of meals) {
+        await apiRequest("POST", "/api/food-entries", {
+          profileId: profile.id,
+          date: dateStr,
+          name: meal.title,
+          calories: meal.calories,
+          protein: parseInt(String(meal.protein)),
+          carbs: parseInt(String(meal.carbs)),
+          fat: parseInt(String(meal.fat)),
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/food-entries"] });
+      setLoggedDays(prev => ({ ...prev, [dateStr]: true }));
+    } catch (e) {
+      console.error("Failed to log meals", e);
+    } finally {
+      setLoggingDay(null);
+    }
+  };
+
 
   const maintenanceCalories = profile?.maintenanceCalories ?? 2450;
   const isGainingWeight = targetWeight > startingWeight;
@@ -1578,6 +1605,39 @@ export default function Home() {
                                     </div>
                                   </div>
                                 ))}
+                              </div>
+                            )}
+                            {dayMeals.length > 0 && (
+                              <div className="flex justify-end mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                                <Button
+                                  size="sm"
+                                  className={`text-xs h-8 ${
+                                    loggedDays[dayDateStr]
+                                      ? 'bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20'
+                                      : 'bg-secondary hover:bg-secondary/90 text-white'
+                                  }`}
+                                  variant={loggedDays[dayDateStr] ? "outline" : "default"}
+                                  disabled={loggingDay === dayDateStr}
+                                  onClick={() => handleLogDayMeals(dayDateStr, dayMeals)}
+                                  data-testid={`button-log-day-${dayDateStr}`}
+                                >
+                                  {loggingDay === dayDateStr ? (
+                                    <span className="flex items-center gap-1.5">
+                                      <span className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                      Logging...
+                                    </span>
+                                  ) : loggedDays[dayDateStr] ? (
+                                    <span className="flex items-center gap-1.5">
+                                      <Check className="h-3.5 w-3.5" />
+                                      Logged All Meals
+                                    </span>
+                                  ) : (
+                                    <span className="flex items-center gap-1.5">
+                                      <Plus className="h-3.5 w-3.5" />
+                                      Log All {dayMeals.length} Meals
+                                    </span>
+                                  )}
+                                </Button>
                               </div>
                             )}
                           </div>
