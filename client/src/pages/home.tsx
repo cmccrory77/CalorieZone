@@ -1927,7 +1927,7 @@ export default function Home() {
                                     <span className={`text-xs font-semibold ${dayIsPast ? 'text-slate-400 dark:text-slate-500' : 'text-secondary'}`}>{dayTotal} kcal</span>
                                     {canLog && dayMeals.length > 0 && unloggedMeals.length > 0 && (
                                       <button
-                                        className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                        className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-primary text-white hover:bg-primary/90 transition-colors"
                                         onClick={() => {
                                           unloggedMeals.forEach(m => {
                                             addRecipeToTracker(m);
