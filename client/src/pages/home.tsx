@@ -1234,8 +1234,9 @@ export default function Home() {
                   {isViewingToday ? "Today" : format(selectedDate, "EEEE")}, {format(selectedDate, "MMMM d, yyyy")}
                 </p>
               </CardHeader>
-              <CardContent className="relative z-10 flex-1 flex flex-col space-y-6">
+              <CardContent className="relative z-10 flex-1 flex flex-col">
                 
+                <div className="space-y-6">
                 <div className="flex justify-between items-end mb-2">
                   <div>
                     <div className="text-4xl font-display font-bold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -1406,6 +1407,7 @@ export default function Home() {
                   </div>
                 )}
                 
+                </div>
                 <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto">
                   <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
                     <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Maintenance</div>
