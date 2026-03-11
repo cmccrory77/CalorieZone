@@ -1391,15 +1391,15 @@ export default function Home() {
             <Tabs value={activeRecipesTab ?? (plannedMealsData.length > 0 ? "planned" : "recommended")} onValueChange={setActiveRecipesTab} className="w-full" ref={recipesTabRef}>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <TabsList className="bg-white dark:bg-slate-900 p-1 border border-slate-100 dark:border-slate-800 shadow-sm rounded-xl">
+                  <TabsTrigger value="recommended" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                    Recommended
+                  </TabsTrigger>
                   {plannedMealsData.length > 0 && (
                     <TabsTrigger value="planned" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                       <CalendarDays className="h-3.5 w-3.5 mr-2" />
                       Meal Plan
                     </TabsTrigger>
                   )}
-                  <TabsTrigger value="recommended" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                    Recommended
-                  </TabsTrigger>
                   <TabsTrigger value="ai" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white transition-all">
                     <Bookmark className="h-3.5 w-3.5 mr-2" />
                     My Recipes
