@@ -1265,6 +1265,105 @@ export default function Home() {
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Quick Add</h4>
                     <div className="flex gap-1.5">
+                      {frequentFoods.length > 0 && (
+                        <Popover open={quickAddOpen} onOpenChange={setQuickAddOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0 border-primary/30 text-primary hover:bg-primary/10"
+                              data-testid="button-quick-add-frequent"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
+                            <div className="p-3 border-b border-slate-100 dark:border-slate-800">
+                              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Recent &amp; Frequent</p>
+                              <p className="text-xs text-muted-foreground">Select items to add to today's log</p>
+                            </div>
+                            <div className="max-h-[260px] overflow-y-auto p-2 space-y-1">
+                              {frequentFoods.map((food, idx) => {
+                                const isChecked = quickAddSelected.has(idx);
+                                return (
+                                  <button
+                                    key={idx}
+                                    onClick={() => {
+                                      setQuickAddSelected(prev => {
+                                        const next = new Set(prev);
+                                        if (next.has(idx)) next.delete(idx);
+                                        else next.add(idx);
+                                        return next;
+                                      });
+                                    }}
+                                    className={`w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-all ${
+                                      isChecked
+                                        ? 'bg-primary/5 border border-primary/20 ring-1 ring-primary/10'
+                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent'
+                                    }`}
+                                    data-testid={`quick-add-item-${idx}`}
+                                  >
+                                    <Checkbox
+                                      checked={isChecked}
+                                      onCheckedChange={() => {
+                                        setQuickAddSelected(prev => {
+                                          const next = new Set(prev);
+                                          if (next.has(idx)) next.delete(idx);
+                                          else next.add(idx);
+                                          return next;
+                                        });
+                                      }}
+                                      className="h-4.5 w-4.5 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{food.name}</p>
+                                      <p className="text-[11px] text-muted-foreground">
+                                        {food.calories} cal · {food.frequency}x logged
+                                      </p>
+                                    </div>
+                                    <span className="text-xs font-semibold text-secondary shrink-0">{food.calories}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {quickAddSelected.size > 0 && (
+                              <div className="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <p className="text-xs text-muted-foreground">
+                                  {quickAddSelected.size} selected · <span className="font-semibold text-secondary">
+                                    {Array.from(quickAddSelected).reduce((sum, idx) => sum + frequentFoods[idx].calories, 0)} cal
+                                  </span>
+                                </p>
+                                <Button
+                                  size="sm"
+                                  className="h-8 text-xs bg-primary hover:bg-primary/90 text-white"
+                                  onClick={() => {
+                                    Array.from(quickAddSelected).forEach(idx => {
+                                      const f = frequentFoods[idx];
+                                      addFoodMutation.mutate({
+                                        name: f.name,
+                                        calories: f.calories,
+                                        protein: f.protein,
+                                        carbs: f.carbs,
+                                        fat: f.fat,
+                                      });
+                                    });
+                                    toast({
+                                      title: `Added ${quickAddSelected.size} item${quickAddSelected.size > 1 ? 's' : ''}`,
+                                      description: `Logged to ${isViewingToday ? "today's" : format(selectedDate, "MMM d") + "'s"} diary`,
+                                    });
+                                    setQuickAddSelected(new Set());
+                                    setQuickAddOpen(false);
+                                  }}
+                                  data-testid="button-quick-add-confirm"
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1" />
+                                  Add {quickAddSelected.size}
+                                </Button>
+                              </div>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                      )}
                       <BarcodeScanner onLog={(food) => {
                         addFoodMutation.mutate(food);
                       }} />
