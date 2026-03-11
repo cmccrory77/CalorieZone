@@ -1371,66 +1371,64 @@ export default function Home() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-0.5 pt-3 overflow-hidden" data-testid="date-navigator">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 shrink-0 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
-                    onClick={() => setSelectedDate(prev => subDays(prev, 7))}
-                    data-testid="button-prev-week"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <div className="flex flex-1 justify-between gap-0.5 min-w-0">
-                    {Array.from({ length: 7 }, (_, i) => {
-                      const weekStart = subDays(selectedDate, selectedDate.getDay());
-                      const day = addDays(weekStart, i);
-                      const isSelected = isSameDay(day, selectedDate);
-                      const isDayToday = isToday(day);
-                      const isFuture = day > new Date();
-                      return (
-                        <button
-                          key={i}
-                          disabled={isFuture}
-                          onClick={() => setSelectedDate(day)}
-                          className={`flex flex-col items-center py-2 sm:py-1.5 px-1 rounded-lg flex-1 transition-all min-h-[44px] ${
-                            isSelected
-                              ? "bg-secondary text-white shadow-sm"
-                              : isDayToday
-                              ? "bg-secondary/10 text-secondary hover:bg-secondary/20"
-                              : isFuture
-                              ? "text-slate-300 dark:text-slate-600 cursor-not-allowed"
-                              : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                          }`}
-                          data-testid={`day-button-${format(day, "yyyy-MM-dd")}`}
-                        >
-                          <span className={`text-[10px] font-medium uppercase leading-none ${isSelected ? "text-white/80" : ""}`}>
-                            {format(day, "EEE")}
-                          </span>
-                          <span className={`text-sm font-bold leading-none mt-1 ${isSelected ? "text-white" : ""}`}>
-                            {format(day, "d")}
-                          </span>
-                          {isDayToday && !isSelected && (
-                            <div className="w-1 h-1 rounded-full bg-secondary mt-0.5" />
-                          )}
-                        </button>
-                      );
-                    })}
+                <div className="pt-3" data-testid="date-navigator">
+                  <div className="flex items-center">
+                    <button
+                      className="h-7 w-7 shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full"
+                      onClick={() => setSelectedDate(prev => subDays(prev, 7))}
+                      data-testid="button-prev-week"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <div className="grid grid-cols-7 flex-1 gap-0.5">
+                      {Array.from({ length: 7 }, (_, i) => {
+                        const weekStart = subDays(selectedDate, selectedDate.getDay());
+                        const day = addDays(weekStart, i);
+                        const isSelected = isSameDay(day, selectedDate);
+                        const isDayToday = isToday(day);
+                        const isFuture = day > new Date();
+                        return (
+                          <button
+                            key={i}
+                            disabled={isFuture}
+                            onClick={() => setSelectedDate(day)}
+                            className={`flex flex-col items-center py-1.5 rounded-lg transition-all min-h-[44px] justify-center ${
+                              isSelected
+                                ? "bg-secondary text-white shadow-sm"
+                                : isDayToday
+                                ? "bg-secondary/10 text-secondary hover:bg-secondary/20"
+                                : isFuture
+                                ? "text-slate-300 dark:text-slate-600 cursor-not-allowed"
+                                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                            }`}
+                            data-testid={`day-button-${format(day, "yyyy-MM-dd")}`}
+                          >
+                            <span className={`text-[10px] font-medium uppercase leading-none ${isSelected ? "text-white/80" : ""}`}>
+                              {format(day, "EEE")}
+                            </span>
+                            <span className={`text-sm font-bold leading-none mt-1 ${isSelected ? "text-white" : ""}`}>
+                              {format(day, "d")}
+                            </span>
+                            {isDayToday && !isSelected && (
+                              <div className="w-1 h-1 rounded-full bg-secondary mt-0.5" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      className="h-7 w-7 shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full disabled:opacity-30"
+                      onClick={() => {
+                        const nextWeek = addDays(selectedDate, 7);
+                        if (nextWeek <= new Date()) setSelectedDate(nextWeek);
+                        else setSelectedDate(new Date());
+                      }}
+                      disabled={isViewingToday}
+                      data-testid="button-next-week"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 shrink-0 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
-                    onClick={() => {
-                      const nextWeek = addDays(selectedDate, 7);
-                      if (nextWeek <= new Date()) setSelectedDate(nextWeek);
-                      else setSelectedDate(new Date());
-                    }}
-                    disabled={isViewingToday}
-                    data-testid="button-next-week"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
                 </div>
                 <p className="text-xs text-muted-foreground pt-1.5">
                   {isViewingToday ? "Today" : format(selectedDate, "EEEE")}, {format(selectedDate, "MMMM d, yyyy")}
@@ -2079,43 +2077,28 @@ export default function Home() {
                                 dayIsPast ? 'border-slate-200/60 dark:border-slate-700/60' :
                                 'border-slate-100 dark:border-slate-800'
                               }`}>
-                                <div className={`px-4 py-2.5 flex items-center justify-between ${
+                                <div className={`px-4 py-3 ${
                                   dayIsToday ? 'bg-primary/10 dark:bg-primary/20' :
                                   dayIsPast ? 'bg-slate-100/70 dark:bg-slate-800/30' :
                                   'bg-slate-50 dark:bg-slate-800/50'
                                 }`}>
-                                  <div className="flex items-center gap-2">
-                                    <span className={`text-sm font-bold ${
-                                      dayIsToday ? 'text-primary' :
-                                      dayIsPast ? 'text-slate-400 dark:text-slate-500' :
-                                      'text-slate-700 dark:text-slate-300'
-                                    }`}>
-                                      {format(dayDate, "EEEE")}
-                                    </span>
-                                    <span className={`text-xs ${dayIsPast ? 'text-slate-400 dark:text-slate-500' : 'text-muted-foreground'}`}>{format(dayDate, "MMM d")}</span>
-                                    {dayIsToday && <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">TODAY</span>}
-                                    {allDayLogged && <span className="text-[10px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5"><Check className="h-3 w-3" /> Logged</span>}
-                                    {dayIsFuture && dayMeals.length > 0 && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">Upcoming</span>}
-                                  </div>
-                                  <div className="flex items-center gap-2">
+                                  {dayIsToday && (
+                                    <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold inline-block mb-1.5">TODAY</span>
+                                  )}
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span className={`text-sm font-bold ${
+                                        dayIsToday ? 'text-primary' :
+                                        dayIsPast ? 'text-slate-400 dark:text-slate-500' :
+                                        'text-slate-700 dark:text-slate-300'
+                                      }`}>
+                                        {format(dayDate, "EEEE")}
+                                      </span>
+                                      <span className={`text-xs ${dayIsPast ? 'text-slate-400 dark:text-slate-500' : 'text-muted-foreground'}`}>{format(dayDate, "MMM d")}</span>
+                                      {allDayLogged && <span className="text-[10px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5"><Check className="h-3 w-3" /> Logged</span>}
+                                      {dayIsFuture && dayMeals.length > 0 && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">Upcoming</span>}
+                                    </div>
                                     <span className={`text-xs font-semibold ${dayIsPast ? 'text-slate-400 dark:text-slate-500' : 'text-secondary'}`}>{dayTotal} kcal</span>
-                                    {canLog && dayMeals.length > 0 && unloggedMeals.length > 0 && (
-                                      <button
-                                        className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-primary text-white hover:bg-primary/90 transition-colors"
-                                        onClick={() => {
-                                          unloggedMeals.forEach(m => {
-                                            addRecipeToTracker(m);
-                                          });
-                                          toast({
-                                            title: `Logged ${unloggedMeals.length} meal${unloggedMeals.length > 1 ? 's' : ''}`,
-                                            description: `${unloggedMeals.reduce((s, m) => s + m.calories, 0)} cal added to diary`,
-                                          });
-                                        }}
-                                        data-testid={`log-all-${dayDateStr}`}
-                                      >
-                                        Log All
-                                      </button>
-                                    )}
                                   </div>
                                 </div>
                                 <div className={`p-4 ${dayIsPast ? 'bg-slate-50/50 dark:bg-slate-900/50' : 'bg-white dark:bg-slate-900'}`}>
