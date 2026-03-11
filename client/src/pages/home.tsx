@@ -1923,15 +1923,23 @@ export default function Home() {
                                     {allDayLogged && <span className="text-[10px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5"><Check className="h-3 w-3" /> Logged</span>}
                                     {dayIsFuture && dayMeals.length > 0 && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">Upcoming</span>}
                                   </div>
-                                  <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-2">
                                     <span className={`text-xs font-semibold ${dayIsPast ? 'text-slate-400 dark:text-slate-500' : 'text-secondary'}`}>{dayTotal} kcal</span>
                                     {canLog && dayMeals.length > 0 && unloggedMeals.length > 0 && (
                                       <button
-                                        className="text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
-                                        onClick={() => toggleAllMealsForDay(dayDateStr, dayMeals)}
-                                        data-testid={`toggle-all-${dayDateStr}`}
+                                        className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                        onClick={() => {
+                                          unloggedMeals.forEach(m => {
+                                            addRecipeToTracker(m);
+                                          });
+                                          toast({
+                                            title: `Logged ${unloggedMeals.length} meal${unloggedMeals.length > 1 ? 's' : ''}`,
+                                            description: `${unloggedMeals.reduce((s, m) => s + m.calories, 0)} cal added to diary`,
+                                          });
+                                        }}
+                                        data-testid={`log-all-${dayDateStr}`}
                                       >
-                                        {allUnloggedSelected ? 'Deselect All' : 'Select All'}
+                                        Log All
                                       </button>
                                     )}
                                   </div>
@@ -1940,43 +1948,20 @@ export default function Home() {
                                   {dayMeals.length === 0 ? (
                                     <p className="text-sm text-muted-foreground text-center py-2">No meals planned</p>
                                   ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                                       {dayMeals.map(meal => {
                                         const isLogged = loggedMealIds.has(meal.id);
-                                        const isSelected = daySelected.has(meal.id);
                                         return (
-                                          <div key={meal.id} className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                                          <div key={meal.id} className={`flex items-center gap-2 p-2 rounded-lg transition-all ${
                                             isLogged
                                               ? 'bg-primary/5 dark:bg-primary/10 border border-primary/15'
-                                              : isSelected
-                                              ? 'bg-secondary/5 dark:bg-secondary/10 border border-secondary/25 ring-1 ring-secondary/10'
                                               : dayIsPast
                                               ? 'bg-slate-50 dark:bg-slate-800/50 border border-transparent opacity-75'
-                                              : dayIsFuture
-                                              ? 'bg-slate-50 dark:bg-slate-800 border border-transparent'
-                                              : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent'
+                                              : 'bg-slate-50 dark:bg-slate-800 border border-transparent'
                                           }`}
                                             data-testid={`planned-recipe-${meal.id}`}
                                           >
-                                            <div className="flex-shrink-0">
-                                              {isLogged ? (
-                                                <div className="w-7 h-7 rounded-md bg-primary/15 flex items-center justify-center">
-                                                  <Check className="h-4 w-4 text-primary" />
-                                                </div>
-                                              ) : canLog ? (
-                                                <Checkbox
-                                                  checked={isSelected}
-                                                  onCheckedChange={() => toggleMealSelection(dayDateStr, meal.id)}
-                                                  className="h-5 w-5 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-secondary data-[state=checked]:border-secondary"
-                                                  data-testid={`checkbox-meal-${meal.id}`}
-                                                />
-                                              ) : (
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600`}>
-                                                  <Calendar className="h-3.5 w-3.5" />
-                                                </div>
-                                              )}
-                                            </div>
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
                                               dayIsFuture ? (
                                                 meal.mealType === 'breakfast' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-400' :
                                                 meal.mealType === 'lunch' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-400' :
@@ -1989,66 +1974,61 @@ export default function Home() {
                                                 'bg-green-100 dark:bg-green-900/30 text-green-600'
                                               )
                                             }`}>
-                                              {meal.mealType === 'breakfast' ? <Coffee className="h-4 w-4" /> :
-                                               meal.mealType === 'lunch' ? <UtensilsCrossed className="h-4 w-4" /> :
-                                               meal.mealType === 'dinner' ? <Utensils className="h-4 w-4" /> :
-                                               <Cookie className="h-4 w-4" />}
+                                              {meal.mealType === 'breakfast' ? <Coffee className="h-3.5 w-3.5" /> :
+                                               meal.mealType === 'lunch' ? <UtensilsCrossed className="h-3.5 w-3.5" /> :
+                                               meal.mealType === 'dinner' ? <Utensils className="h-3.5 w-3.5" /> :
+                                               <Cookie className="h-3.5 w-3.5" />}
                                             </div>
-                                            <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedRecipe({
-                                              ...meal,
-                                              type: meal.mealType,
-                                              match: meal.mealType,
-                                              cuisine: "planned",
-                                              image: null,
-                                            })}>
-                                              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{meal.mealType}</p>
-                                              <p className={`text-sm font-medium truncate ${
-                                                isLogged ? 'text-primary/70' :
+                                            <div className="flex-1 min-w-0">
+                                              <p className={`text-xs font-medium truncate ${
+                                                isLogged ? 'text-primary' :
                                                 dayIsPast ? 'text-slate-400 dark:text-slate-500' :
                                                 'text-slate-700 dark:text-slate-300'
                                               }`}>{meal.title}</p>
-                                              <p className={`text-xs font-semibold ${dayIsPast ? 'text-slate-400 dark:text-slate-500' : 'text-secondary'}`}>{meal.calories} cal</p>
+                                              <p className={`text-[10px] ${dayIsPast ? 'text-slate-400 dark:text-slate-500' : 'text-muted-foreground'}`}>{meal.calories} cal</p>
+                                            </div>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                              <button
+                                                className="p-1.5 rounded-md border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                                onClick={() => setSelectedRecipe({
+                                                  ...meal,
+                                                  type: meal.mealType,
+                                                  match: meal.mealType,
+                                                  cuisine: "planned",
+                                                  image: null,
+                                                })}
+                                                data-testid={`button-view-planned-${meal.id}`}
+                                              >
+                                                <Eye className="h-3 w-3 text-slate-500 dark:text-slate-400" />
+                                              </button>
+                                              {canLog && (
+                                                <button
+                                                  className={`p-1.5 rounded-md border transition-colors ${
+                                                    isLogged
+                                                      ? 'border-primary/30 bg-primary/10 cursor-default'
+                                                      : 'border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10'
+                                                  }`}
+                                                  disabled={isLogged}
+                                                  onClick={() => {
+                                                    addRecipeToTracker(meal);
+                                                    toast({
+                                                      title: `Logged ${meal.title}`,
+                                                      description: `${meal.calories} cal added to diary`,
+                                                    });
+                                                  }}
+                                                  data-testid={`button-log-planned-${meal.id}`}
+                                                >
+                                                  {isLogged ? (
+                                                    <Check className="h-3 w-3 text-primary" />
+                                                  ) : (
+                                                    <Plus className="h-3 w-3 text-slate-500 dark:text-slate-400" />
+                                                  )}
+                                                </button>
+                                              )}
                                             </div>
                                           </div>
                                         );
                                       })}
-                                    </div>
-                                  )}
-                                  {canLog && dayMeals.length > 0 && (selectedCount > 0 || allDayLogged) && (
-                                    <div className={`flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 ${
-                                      allDayLogged ? '' : 'animate-in fade-in slide-in-from-bottom-2 duration-300'
-                                    }`}>
-                                      {allDayLogged ? (
-                                        <p className="text-xs text-primary font-medium flex items-center gap-1.5">
-                                          <Check className="h-3.5 w-3.5" />
-                                          All meals logged to your diary
-                                        </p>
-                                      ) : (
-                                        <>
-                                          <p className="text-xs text-muted-foreground">
-                                            {selectedCount} of {dayMeals.length} selected · <span className="font-semibold text-secondary">{selectedCalories} cal</span>
-                                          </p>
-                                          <Button
-                                            size="sm"
-                                            className="text-xs h-8 bg-secondary hover:bg-secondary/90 text-white"
-                                            disabled={loggingDay === dayDateStr}
-                                            onClick={() => handleLogSelectedMeals(dayDateStr, dayMeals)}
-                                            data-testid={`button-log-selected-${dayDateStr}`}
-                                          >
-                                            {loggingDay === dayDateStr ? (
-                                              <span className="flex items-center gap-1.5">
-                                                <span className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                Logging...
-                                              </span>
-                                            ) : (
-                                              <span className="flex items-center gap-1.5">
-                                                <Plus className="h-3.5 w-3.5" />
-                                                Log {selectedCount === dayMeals.length ? 'All' : selectedCount} Meal{selectedCount > 1 ? 's' : ''}
-                                              </span>
-                                            )}
-                                          </Button>
-                                        </>
-                                      )}
                                     </div>
                                   )}
                                 </div>
