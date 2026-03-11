@@ -788,7 +788,12 @@ export default function Home() {
 
     if (mealTypes.length === 0) { setMpGenerating(false); return; }
 
-    const calPerMeal = Math.round(targetCalories / mealTypes.length);
+    const mealWeights: Record<string, number> = { breakfast: 25, lunch: 30, dinner: 35, snack: 10 };
+    const totalWeight = mealTypes.reduce((sum, mt) => sum + (mealWeights[mt] || 10), 0);
+    const calPerMealType: Record<string, number> = {};
+    mealTypes.forEach(mt => {
+      calPerMealType[mt] = Math.round((mealWeights[mt] || 10) / totalWeight * targetCalories);
+    });
 
     const macroRatios: Record<string, { p: number; c: number; f: number }> = {
       balanced: { p: 0.3, c: 0.4, f: 0.3 },
@@ -926,21 +931,29 @@ export default function Home() {
           const templates = currentTemplates[mt] || currentTemplates.dinner;
           const tplIdx = (day * (mtIdx + 1) + mtIdx) % templates.length;
           const tpl = templates[tplIdx];
-          const proteinG = Math.round((calPerMeal * ratios.p) / 4);
-          const carbsG = Math.round((calPerMeal * ratios.c) / 4);
-          const fatG = Math.round((calPerMeal * ratios.f) / 9);
+          const mealCal = calPerMealType[mt] || Math.round(targetCalories / mealTypes.length);
+          const proteinG = Math.round((mealCal * ratios.p) / 4);
+          const carbsG = Math.round((mealCal * ratios.c) / 4);
+          const fatG = Math.round((mealCal * ratios.f) / 9);
+
+          const templateTotalCal = tpl.ingredients.reduce((s, ing) => s + ing.cal, 0);
+          const scaleFactor = templateTotalCal > 0 ? mealCal / templateTotalCal : 1;
+          const scaledIngredients = tpl.ingredients.map(ing => ({
+            ...ing,
+            cal: Math.round(ing.cal * scaleFactor),
+          }));
 
           allMeals.push({
             profileId: profile!.id,
             date: dateStr,
             mealType: mt,
             title: tpl.title,
-            calories: calPerMeal,
+            calories: mealCal,
             protein: `${proteinG}g`,
             carbs: `${carbsG}g`,
             fat: `${fatG}g`,
             time: tpl.steps.length <= 3 ? "5 min" : `${15 + Math.floor(Math.random() * 4) * 5} min`,
-            ingredients: tpl.ingredients,
+            ingredients: scaledIngredients,
             steps: tpl.steps,
           });
         }
