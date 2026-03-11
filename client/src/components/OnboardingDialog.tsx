@@ -179,6 +179,24 @@ export default function OnboardingDialog({
         <div className="px-6 pb-6 space-y-5 max-h-[70vh] overflow-y-auto">
           {step === "profile" && (
             <>
+              {editMode && (
+                <button
+                  onClick={() => setStep("avatar")}
+                  className="flex items-center gap-3 w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
+                  data-testid="button-avatar-preview"
+                >
+                  <img
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedAvatar}`}
+                    alt="Current avatar"
+                    className="h-12 w-12 rounded-full bg-white border-2 border-primary/20 shadow-sm group-hover:border-primary/40 transition-colors"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{name || "Your Avatar"}</p>
+                    <p className="text-xs text-muted-foreground">Tap to change avatar</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </button>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="onboarding-name" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Your first name
@@ -350,15 +368,36 @@ export default function OnboardingDialog({
                 </div>
               )}
 
-              <Button
-                className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold gap-2"
-                onClick={handleNext}
-                disabled={!name.trim()}
-                data-testid="button-onboarding-next"
-              >
-                Continue
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              {editMode ? (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="h-11 px-5"
+                    onClick={() => setStep("avatar")}
+                    data-testid="button-change-avatar"
+                  >
+                    Change Avatar
+                  </Button>
+                  <Button
+                    className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-semibold"
+                    onClick={handleFinish}
+                    disabled={!name.trim()}
+                    data-testid="button-onboarding-update"
+                  >
+                    Update
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold gap-2"
+                  onClick={handleNext}
+                  disabled={!name.trim()}
+                  data-testid="button-onboarding-next"
+                >
+                  Continue
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )}
             </>
           )}
 
