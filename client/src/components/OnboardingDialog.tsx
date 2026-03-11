@@ -219,7 +219,6 @@ export default function OnboardingDialog({
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleNext()}
                   className="text-lg h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-medium"
-                  autoFocus
                   data-testid="input-onboarding-name"
                 />
               </div>
