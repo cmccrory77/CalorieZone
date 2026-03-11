@@ -31,9 +31,13 @@ import {
   Footprints,
   Home as HomeIcon,
   ScanLine,
-  User
+  User,
+  Moon,
+  Sun,
+  Pencil
 } from "lucide-react";
 import { Eye } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
 import type { UserProfile, FoodEntry, SavedRecipe, PlannedMeal, ExerciseEntry } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -193,6 +197,8 @@ export default function Home() {
   const trackerSectionRef = useRef<HTMLDivElement>(null);
   const recipesSectionRef = useRef<HTMLDivElement>(null);
   const mealPlannerRef = useRef<HTMLDivElement>(null);
+  const profileSectionRef = useRef<HTMLDivElement>(null);
+  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
   const [activeRecipesTab, setActiveRecipesTab] = useState<string | undefined>(undefined);
   const [mobileTab, setMobileTab] = useState<"track" | "plan" | "scan" | "recipes" | "profile">("track");
   const [mealScannerOpen, setMealScannerOpen] = useState(false);
@@ -258,7 +264,9 @@ export default function Home() {
       setActiveRecipesTab("recommended");
       recipesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else if (tab === "profile") {
-      setEditProfileOpen(true);
+      setTimeout(() => {
+        profileSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
     }
   }, []);
 
@@ -2549,6 +2557,108 @@ export default function Home() {
 
             </Tabs>
           </div>
+        </div>
+
+        {/* Inline Profile Section - Mobile */}
+        <div ref={profileSectionRef} className="sm:hidden space-y-4 pt-2">
+          <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-xl overflow-hidden">
+            <div className="h-2 bg-primary w-full"></div>
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.avatarSeed || "Felix"}`}
+                  alt="Avatar"
+                  className="h-14 w-14 rounded-full bg-white border-2 border-primary/20 shadow-sm"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-lg font-display font-bold text-slate-800 dark:text-slate-200">{profile?.name || "User"}</p>
+                  <p className="text-xs text-muted-foreground">{profile?.activityLevel ? profile.activityLevel.charAt(0).toUpperCase() + profile.activityLevel.slice(1) : "Moderate"} activity</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-3 gap-1.5"
+                  onClick={() => setEditProfileOpen(true)}
+                  data-testid="button-edit-profile-inline"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                <div className="text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Starting</p>
+                  <p className="text-sm font-bold text-slate-600 dark:text-slate-400">{startingWeight} lbs</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Current</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{currentWeight} lbs</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Goal</p>
+                  <p className="text-sm font-bold text-primary">{targetWeight} lbs</p>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Progress</p>
+                  <span className="text-xs font-bold text-primary">{Math.round(progressPercentage)}%</span>
+                </div>
+                <div className="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all" style={{ width: `${Math.min(100, progressPercentage)}%` }} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Daily Calories</p>
+                  <p className="text-lg font-bold text-secondary">{targetCalories}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Timeframe</p>
+                  <p className="text-lg font-bold text-slate-800 dark:text-slate-200">{timeframe} <span className="text-xs font-normal text-muted-foreground">weeks</span></p>
+                </div>
+              </div>
+
+              {profile?.targetDate && (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                  <CalendarDays className="h-4 w-4 text-secondary shrink-0" />
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Target Date</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{format(new Date(profile.targetDate + "T00:00:00"), "MMMM d, yyyy")}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                    {darkMode ? <Moon className="h-4 w-4 text-indigo-400" /> : <Sun className="h-4 w-4 text-amber-500" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Dark Mode</p>
+                    <p className="text-xs text-muted-foreground">Switch appearance</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={darkMode}
+                  onCheckedChange={(checked) => {
+                    setDarkMode(checked);
+                    if (checked) {
+                      document.documentElement.classList.add("dark");
+                      localStorage.setItem("caloriq-dark-mode", "true");
+                    } else {
+                      document.documentElement.classList.remove("dark");
+                      localStorage.setItem("caloriq-dark-mode", "false");
+                    }
+                  }}
+                  data-testid="switch-dark-mode-inline"
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
 
