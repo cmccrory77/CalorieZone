@@ -27,7 +27,8 @@ import {
   Share2,
   ChevronDown,
   ChevronUp,
-  Dumbbell
+  Dumbbell,
+  Footprints
 } from "lucide-react";
 import { Eye } from "lucide-react";
 import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
@@ -261,6 +262,72 @@ export default function Home() {
   });
 
   const trackedFoods = foodEntries;
+
+  const { data: exerciseEntries = [] } = useQuery<ExerciseEntry[]>({
+    queryKey: ["/api/exercise-entries", profile?.id, selectedDateStr],
+    enabled: !!profile?.id,
+    queryFn: async () => {
+      const res = await fetch(`/api/exercise-entries/${profile!.id}/${selectedDateStr}`);
+      if (!res.ok) throw new Error("Failed to load exercise entries");
+      return res.json();
+    },
+  });
+
+  const addExerciseMutation = useMutation({
+    mutationFn: async (entry: { name: string; duration: number; caloriesBurned: number }) => {
+      const res = await apiRequest("POST", "/api/exercise-entries", {
+        profileId: profile!.id,
+        name: entry.name,
+        duration: entry.duration,
+        caloriesBurned: entry.caloriesBurned,
+        date: selectedDateStr,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/exercise-entries"] });
+    },
+  });
+
+  const removeExerciseMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/exercise-entries/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/exercise-entries"] });
+    },
+  });
+
+  const [exerciseDialogOpen, setExerciseDialogOpen] = useState(false);
+  const [exerciseSearch, setExerciseSearch] = useState("");
+  const [selectedExercise, setSelectedExercise] = useState<{ name: string; calPerMin: number } | null>(null);
+  const [exerciseDuration, setExerciseDuration] = useState(30);
+
+  const commonExercises = [
+    { name: "Walking", calPerMin: 5 },
+    { name: "Running", calPerMin: 12 },
+    { name: "Cycling", calPerMin: 10 },
+    { name: "Swimming", calPerMin: 11 },
+    { name: "Weight Training", calPerMin: 8 },
+    { name: "Yoga", calPerMin: 4 },
+    { name: "HIIT", calPerMin: 14 },
+    { name: "Jump Rope", calPerMin: 13 },
+    { name: "Dancing", calPerMin: 7 },
+    { name: "Hiking", calPerMin: 7 },
+    { name: "Rowing", calPerMin: 10 },
+    { name: "Stair Climbing", calPerMin: 9 },
+    { name: "Elliptical", calPerMin: 8 },
+    { name: "Pilates", calPerMin: 5 },
+    { name: "Tennis", calPerMin: 9 },
+    { name: "Basketball", calPerMin: 10 },
+  ];
+
+  const filteredExercises = exerciseSearch.trim()
+    ? commonExercises.filter(e => e.name.toLowerCase().includes(exerciseSearch.toLowerCase()))
+    : commonExercises;
+
+  const totalExerciseCaloriesBurned = exerciseEntries.reduce((acc, e) => acc + e.caloriesBurned, 0);
+  const exerciseCaloriesBonus = Math.round(totalExerciseCaloriesBurned * 0.5);
 
   const handleRemoveFood = (id: string) => {
     removeFoodMutation.mutate(id);
@@ -1320,40 +1387,51 @@ export default function Home() {
               </CardHeader>
               <CardContent className="relative z-10 space-y-6">
                 
-                <div className="flex justify-between items-end mb-2">
-                  <div>
-                    <div className="text-4xl font-display font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                      {trackedFoods.reduce((acc, food) => acc + food.calories, 0)}
-                    </div>
-                    <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide font-medium mt-1">Consumed</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-display font-bold text-slate-400 dark:text-slate-500 tracking-tight">
-                      {targetCalories}
-                    </div>
-                    <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide font-medium mt-1">Target</div>
-                  </div>
-                </div>
+                {(() => {
+                  const consumed = trackedFoods.reduce((acc, food) => acc + food.calories, 0);
+                  const adjustedTarget = targetCalories + exerciseCaloriesBonus;
+                  const remaining = adjustedTarget - consumed;
+                  return (
+                    <>
+                      <div className="flex justify-between items-end mb-2">
+                        <div>
+                          <div className="text-4xl font-display font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                            {consumed}
+                          </div>
+                          <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide font-medium mt-1">Consumed</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-display font-bold text-slate-400 dark:text-slate-500 tracking-tight">
+                            {adjustedTarget}
+                          </div>
+                          <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide font-medium mt-1">
+                            Target{exerciseCaloriesBonus > 0 && <span className="text-primary ml-1">(+{exerciseCaloriesBonus})</span>}
+                          </div>
+                        </div>
+                      </div>
 
-                <Progress 
-                  value={Math.min(100, (trackedFoods.reduce((acc, food) => acc + food.calories, 0) / targetCalories) * 100)} 
-                  className="h-3 bg-slate-100 dark:bg-slate-800" 
-                  indicatorClassName={trackedFoods.reduce((acc, food) => acc + food.calories, 0) > targetCalories ? "bg-red-500" : "bg-secondary"}
-                />
+                      <Progress 
+                        value={Math.min(100, (consumed / adjustedTarget) * 100)} 
+                        className="h-3 bg-slate-100 dark:bg-slate-800" 
+                        indicatorClassName={consumed > adjustedTarget ? "bg-red-500" : "bg-secondary"}
+                      />
 
-                <div className="text-center py-3 px-4 rounded-xl bg-secondary/10 border border-secondary/20">
-                  {targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0) > 0 ? (
-                    <div>
-                      <span className="text-2xl font-display font-bold text-secondary">{targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0)}</span>
-                      <span className="text-sm font-medium text-secondary/80 ml-1.5">calories remaining</span>
-                    </div>
-                  ) : (
-                    <div>
-                      <span className="text-2xl font-display font-bold text-red-500">{Math.abs(targetCalories - trackedFoods.reduce((acc, food) => acc + food.calories, 0))}</span>
-                      <span className="text-sm font-medium text-red-400 ml-1.5">calories over goal</span>
-                    </div>
-                  )}
-                </div>
+                      <div className="text-center py-3 px-4 rounded-xl bg-secondary/10 border border-secondary/20">
+                        {remaining > 0 ? (
+                          <div>
+                            <span className="text-2xl font-display font-bold text-secondary">{remaining}</span>
+                            <span className="text-sm font-medium text-secondary/80 ml-1.5">calories remaining</span>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="text-2xl font-display font-bold text-red-500">{Math.abs(remaining)}</span>
+                            <span className="text-sm font-medium text-red-400 ml-1.5">calories over goal</span>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
 
                 {/* Add Custom Food */}
                 <div className="space-y-3">
@@ -1489,6 +1567,51 @@ export default function Home() {
                     </div>
                   </div>
                 )}
+
+                <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Dumbbell className="h-4 w-4 text-accent" />
+                      Exercise
+                      {exerciseCaloriesBonus > 0 && (
+                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full ml-1">+{exerciseCaloriesBonus} cal earned</span>
+                      )}
+                    </h4>
+                    <button
+                      onClick={() => { setExerciseDialogOpen(true); setSelectedExercise(null); setExerciseSearch(""); setExerciseDuration(30); }}
+                      className="flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent/80 bg-accent/10 hover:bg-accent/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                      data-testid="button-add-exercise"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add Exercise
+                    </button>
+                  </div>
+                  {exerciseEntries.length > 0 && (
+                    <div className="space-y-1.5">
+                      {exerciseEntries.map(entry => (
+                        <div key={entry.id} className="flex items-center gap-2.5 p-2 rounded-lg bg-accent/5 dark:bg-accent/10 border border-accent/10 dark:border-accent/20 group" data-testid={`exercise-entry-${entry.id}`}>
+                          <div className="w-7 h-7 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
+                            <Footprints className="h-3.5 w-3.5 text-accent" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-slate-700 dark:text-slate-300">{entry.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{entry.duration} min · {entry.caloriesBurned} cal burned · <span className="text-primary font-semibold">+{Math.round(entry.caloriesBurned * 0.5)} earned</span></p>
+                          </div>
+                          <button
+                            onClick={() => removeExerciseMutation.mutate(entry.id)}
+                            className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 opacity-0 group-hover:opacity-100"
+                            data-testid={`button-remove-exercise-${entry.id}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {exerciseEntries.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-2">No exercises logged. Add an exercise to earn extra calories.</p>
+                  )}
+                </div>
                 
                 <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
@@ -2635,6 +2758,122 @@ export default function Home() {
         initialActivityLevel={profile?.activityLevel || "moderate"}
         editMode
       />
+
+      <Dialog open={exerciseDialogOpen} onOpenChange={setExerciseDialogOpen}>
+        <DialogContent className="max-w-sm p-0 overflow-hidden">
+          <DialogHeader className="p-5 pb-3">
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <Dumbbell className="h-5 w-5 text-accent" />
+              Add Exercise
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              Log an exercise to earn extra calories (50% of calories burned)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-5 pb-5 space-y-4">
+            {!selectedExercise ? (
+              <>
+                <Input
+                  placeholder="Search exercises..."
+                  value={exerciseSearch}
+                  onChange={(e) => setExerciseSearch(e.target.value)}
+                  className="h-9 text-sm"
+                  data-testid="input-exercise-search"
+                />
+                <div className="grid grid-cols-2 gap-1.5 max-h-[280px] overflow-y-auto pr-1">
+                  {filteredExercises.map(ex => (
+                    <button
+                      key={ex.name}
+                      onClick={() => { setSelectedExercise(ex); setExerciseDuration(30); }}
+                      className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-accent hover:bg-accent/5 dark:hover:bg-accent/10 transition-all text-left"
+                      data-testid={`exercise-option-${ex.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                        <Dumbbell className="h-3.5 w-3.5 text-accent" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-slate-700 dark:text-slate-300">{ex.name}</p>
+                        <p className="text-[10px] text-muted-foreground">~{ex.calPerMin} cal/min</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-accent/5 dark:bg-accent/10 border border-accent/20">
+                  <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center shrink-0">
+                    <Dumbbell className="h-5 w-5 text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{selectedExercise.name}</p>
+                    <p className="text-xs text-muted-foreground">~{selectedExercise.calPerMin} cal/min</p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedExercise(null)}
+                    className="ml-auto text-xs text-accent hover:text-accent/80 font-medium"
+                  >
+                    Change
+                  </button>
+                </div>
+
+                <div>
+                  <Label className="text-xs text-slate-600 dark:text-slate-400 font-medium">Duration (minutes)</Label>
+                  <div className="flex items-center gap-3 mt-2">
+                    <input
+                      type="range"
+                      min={5}
+                      max={120}
+                      step={5}
+                      value={exerciseDuration}
+                      onChange={(e) => setExerciseDuration(Number(e.target.value))}
+                      className="flex-1 h-2 bg-slate-100 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-accent"
+                      data-testid="slider-exercise-duration"
+                    />
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 w-12 text-right">{exerciseDuration} min</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                    <span>5 min</span>
+                    <span>2 hrs</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-secondary/10 border border-secondary/20 text-center">
+                    <p className="text-lg font-bold text-secondary">{Math.round(selectedExercise.calPerMin * exerciseDuration)}</p>
+                    <p className="text-[10px] text-secondary/70 font-medium uppercase">Calories burned</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
+                    <p className="text-lg font-bold text-primary">+{Math.round(selectedExercise.calPerMin * exerciseDuration * 0.5)}</p>
+                    <p className="text-[10px] text-primary/70 font-medium uppercase">Calories earned</p>
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full bg-accent hover:bg-accent/90 text-white"
+                  onClick={() => {
+                    const burned = Math.round(selectedExercise.calPerMin * exerciseDuration);
+                    addExerciseMutation.mutate({
+                      name: selectedExercise.name,
+                      duration: exerciseDuration,
+                      caloriesBurned: burned,
+                    });
+                    toast({
+                      title: `Logged ${selectedExercise.name}`,
+                      description: `${burned} cal burned · +${Math.round(burned * 0.5)} calories earned`,
+                    });
+                    setExerciseDialogOpen(false);
+                  }}
+                  data-testid="button-confirm-exercise"
+                >
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Log Exercise
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
