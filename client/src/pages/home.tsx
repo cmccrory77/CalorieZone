@@ -215,6 +215,7 @@ export default function Home() {
     currentWeight: number;
     targetWeight: number;
     timeframe: number;
+    activityLevel: string;
   }) => {
     if (!profile?.id) return;
     updateProfileMutation.mutate({
@@ -224,6 +225,7 @@ export default function Home() {
       currentWeight: data.currentWeight,
       targetWeight: data.targetWeight,
       timeframe: data.timeframe,
+      activityLevel: data.activityLevel,
     } as any);
     setStartingWeight(data.startingWeight);
     setCurrentWeight(data.currentWeight);
@@ -2507,6 +2509,7 @@ export default function Home() {
         initialCurrentWeight={currentWeight}
         initialTargetWeight={targetWeight}
         initialTimeframe={timeframe}
+        initialActivityLevel={profile?.activityLevel || "moderate"}
         editMode
       />
     </div>
