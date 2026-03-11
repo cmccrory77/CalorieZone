@@ -249,7 +249,7 @@ export default function Home() {
   const handleMobileTab = useCallback((tab: "track" | "plan" | "scan" | "recipes" | "profile") => {
     setMobileTab(tab);
     if (tab === "track") {
-      trackerSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else if (tab === "plan") {
       mealPlannerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else if (tab === "scan") {
@@ -1973,7 +1973,13 @@ export default function Home() {
 
                 <Button
                   className="w-full bg-primary hover:bg-primary/90 text-white h-10"
-                  onClick={handleGenerateWeekPlan}
+                  onClick={() => {
+                    handleGenerateWeekPlan();
+                    setTimeout(() => {
+                      setActiveRecipesTab("planned");
+                      recipesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }, 500);
+                  }}
                   disabled={mpGenerating || (!mpBreakfast && !mpLunch && !mpDinner && !mpSnacks)}
                   data-testid="button-generate-meal-plan"
                 >
@@ -2032,10 +2038,12 @@ export default function Home() {
                   </TabsList>
                 </div>
                 
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm w-fit">
-                  <Calendar className="h-4 w-4" />
-                  Today's Plan
-                </div>
+                {(activeRecipesTab === "planned" || (!activeRecipesTab && plannedMealsData.length > 0)) && (
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm w-fit">
+                    <Calendar className="h-4 w-4" />
+                    Today's Plan
+                  </div>
+                )}
               </div>
 
               {plannedMealsData.length > 0 && (
