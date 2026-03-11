@@ -2526,10 +2526,32 @@ export default function Home() {
                   {duplicateCount > 0 && (
                     <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
                       <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                      <div>
+                      <div className="flex-1">
                         <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Possible duplicates detected</p>
-                        <p className="text-[11px] text-amber-600/80 dark:text-amber-500/80 mt-0.5">Some items may be the same ingredient — look for the amber highlight below and uncheck any extras.</p>
+                        <p className="text-[11px] text-amber-600/80 dark:text-amber-500/80 mt-0.5">Some items may be the same ingredient. You can merge them or uncheck extras manually.</p>
                       </div>
+                      <button
+                        onClick={() => {
+                          const visited = new Set<string>();
+                          const allFlat = Object.values(list).flat();
+                          allFlat.forEach(entry => {
+                            const key = entry.item.toLowerCase().trim();
+                            if (visited.has(key)) return;
+                            const dupes = duplicateMap[key];
+                            if (!dupes || dupes.length === 0) return;
+                            visited.add(key);
+                            dupes.forEach(d => {
+                              const dk = d.toLowerCase().trim();
+                              visited.add(dk);
+                              setGroceryChecked(prev => ({ ...prev, [dk]: false }));
+                            });
+                          });
+                        }}
+                        className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 bg-amber-100 dark:bg-amber-900/40 hover:bg-amber-200 dark:hover:bg-amber-900/60 px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap shrink-0"
+                        data-testid="button-merge-duplicates"
+                      >
+                        Merge All
+                      </button>
                     </div>
                   )}
                   {categoryOrder.map(cat => {
@@ -2578,9 +2600,22 @@ export default function Home() {
                                   </span>
                                 </label>
                                 {hasDupe && isChecked && (
-                                  <p className="text-[10px] text-amber-600 dark:text-amber-500 ml-9 mt-0.5 mb-1">
-                                    Similar to: {dupes.join(", ")}
-                                  </p>
+                                  <div className="flex items-center gap-1.5 ml-9 mt-0.5 mb-1">
+                                    <p className="text-[10px] text-amber-600 dark:text-amber-500 flex-1">
+                                      Similar to: {dupes.join(", ")}
+                                    </p>
+                                    <button
+                                      onClick={() => {
+                                        dupes.forEach(d => {
+                                          setGroceryChecked(prev => ({ ...prev, [d.toLowerCase().trim()]: false }));
+                                        });
+                                      }}
+                                      className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 bg-amber-100/80 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-800/40 px-2 py-0.5 rounded-md transition-colors whitespace-nowrap"
+                                      data-testid={`button-remove-dupes-${key}`}
+                                    >
+                                      Keep this, remove others
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             );
