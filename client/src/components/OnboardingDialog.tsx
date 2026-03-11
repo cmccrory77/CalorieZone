@@ -187,7 +187,7 @@ export default function OnboardingDialog({
           </DialogHeader>
         </div>
 
-        <div className="px-6 pb-6 space-y-5 max-h-[70vh] overflow-y-auto">
+        <div className="px-6 space-y-5 max-h-[60vh] overflow-y-auto">
           {step === "profile" && (
             <>
               {editMode && (
@@ -454,36 +454,6 @@ export default function OnboardingDialog({
                 </div>
               )}
 
-              {editMode ? (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="h-11 px-5"
-                    onClick={() => setStep("avatar")}
-                    data-testid="button-change-avatar"
-                  >
-                    Change Avatar
-                  </Button>
-                  <Button
-                    className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-semibold"
-                    onClick={handleFinish}
-                    disabled={!name.trim()}
-                    data-testid="button-onboarding-update"
-                  >
-                    Update
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold gap-2"
-                  onClick={handleNext}
-                  disabled={!name.trim()}
-                  data-testid="button-onboarding-next"
-                >
-                  Continue
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              )}
             </>
           )}
 
@@ -528,25 +498,61 @@ export default function OnboardingDialog({
                   </button>
                 ))}
               </div>
+            </>
+          )}
+        </div>
 
+        <div className="px-6 pb-6 pt-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
+          {step === "profile" && (
+            editMode ? (
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1 h-11"
-                  onClick={() => setStep("profile")}
-                  data-testid="button-onboarding-back"
+                  className="h-11 px-5"
+                  onClick={() => setStep("avatar")}
+                  data-testid="button-change-avatar"
                 >
-                  Back
+                  Change Avatar
                 </Button>
                 <Button
                   className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-semibold"
                   onClick={handleFinish}
-                  data-testid="button-onboarding-finish"
+                  disabled={!name.trim()}
+                  data-testid="button-onboarding-update"
                 >
-                  {editMode ? "Save Changes" : "Get Started"}
+                  Update
                 </Button>
               </div>
-            </>
+            ) : (
+              <Button
+                className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold gap-2"
+                onClick={handleNext}
+                disabled={!name.trim()}
+                data-testid="button-onboarding-next"
+              >
+                Continue
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )
+          )}
+          {step === "avatar" && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 h-11"
+                onClick={() => setStep("profile")}
+                data-testid="button-onboarding-back"
+              >
+                Back
+              </Button>
+              <Button
+                className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-semibold"
+                onClick={handleFinish}
+                data-testid="button-onboarding-finish"
+              >
+                {editMode ? "Save Changes" : "Get Started"}
+              </Button>
+            </div>
           )}
         </div>
       </DialogContent>
