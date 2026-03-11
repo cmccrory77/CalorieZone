@@ -1321,16 +1321,20 @@ export default function Home() {
                                 );
                               })}
                             </div>
-                            {quickAddSelected.size > 0 && (
                               <div className="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                                 <p className="text-xs text-muted-foreground">
-                                  {quickAddSelected.size} selected · <span className="font-semibold text-secondary">
-                                    {Array.from(quickAddSelected).reduce((sum, idx) => sum + frequentFoods[idx].calories, 0)} cal
-                                  </span>
+                                  {quickAddSelected.size > 0 ? (
+                                    <>{quickAddSelected.size} selected · <span className="font-semibold text-secondary">
+                                      {Array.from(quickAddSelected).reduce((sum, idx) => sum + frequentFoods[idx].calories, 0)} cal
+                                    </span></>
+                                  ) : (
+                                    <>Select items above</>
+                                  )}
                                 </p>
                                 <Button
                                   size="sm"
                                   className="h-8 text-xs bg-primary hover:bg-primary/90 text-white"
+                                  disabled={quickAddSelected.size === 0}
                                   onClick={() => {
                                     Array.from(quickAddSelected).forEach(idx => {
                                       const f = frequentFoods[idx];
@@ -1352,10 +1356,9 @@ export default function Home() {
                                   data-testid="button-quick-add-confirm"
                                 >
                                   <Plus className="h-3.5 w-3.5 mr-1" />
-                                  Add {quickAddSelected.size}
+                                  Add{quickAddSelected.size > 0 ? ` ${quickAddSelected.size}` : ''}
                                 </Button>
                               </div>
-                            )}
                           </PopoverContent>
                         </Popover>
                       )}
