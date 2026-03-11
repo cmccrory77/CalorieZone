@@ -1335,36 +1335,21 @@ export default function Home() {
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-24 sm:pb-8 space-y-6 sm:space-y-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-24 sm:pb-8 space-y-3 sm:space-y-8">
         
-        {/* Header Section */}
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Welcome back, {profile?.name || "there"}</h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Here's your progress and personalized plan for today.</p>
-        </div>
-
-        {/* Weight / Goal / Progress Summary - visible on mobile */}
-        <div className="sm:hidden flex items-center gap-3 bg-white dark:bg-slate-900 rounded-xl p-3 shadow-sm border border-slate-100 dark:border-slate-800">
-          <div className="flex-1 flex items-center gap-3">
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Weight</p>
-              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{currentWeight}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Goal</p>
-              <p className="text-sm font-bold text-primary">{targetWeight}</p>
-            </div>
-            <span className="text-[10px] text-muted-foreground self-end mb-0.5">lbs</span>
+        {/* Compact Header + Progress */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg sm:text-2xl font-display font-bold text-foreground leading-tight">Hi, {profile?.name || "there"}</h1>
+            <p className="text-muted-foreground text-xs sm:text-sm">{isViewingToday ? "Today" : format(selectedDate, "MMM d")} · {currentWeight} → {targetWeight} lbs</p>
           </div>
-          <div className="flex-1">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium text-center mb-1">Progress</p>
-            <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all"
-                style={{ width: `${Math.min(100, progressPercentage)}%` }}
-              />
+          <div className="flex items-center gap-2 sm:hidden">
+            <div className="flex flex-col items-end">
+              <span className="text-xs font-bold text-primary">{Math.round(progressPercentage)}%</span>
+              <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full" style={{ width: `${Math.min(100, progressPercentage)}%` }} />
+              </div>
             </div>
-            <p className="text-[10px] font-semibold text-primary text-center mt-0.5">{Math.round(progressPercentage)}%</p>
           </div>
         </div>
 
@@ -1377,7 +1362,7 @@ export default function Home() {
               <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
                 <Flame className="h-32 w-32 text-secondary" />
               </div>
-              <CardHeader className="pb-2 relative z-10">
+              <CardHeader className="pb-1 sm:pb-2 pt-4 sm:pt-6 px-4 sm:px-6 relative z-10">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-slate-900 dark:text-slate-100 flex items-center gap-2 text-lg">
                     <Activity className="h-5 w-5 text-secondary" />
@@ -1459,7 +1444,7 @@ export default function Home() {
                   {isViewingToday ? "Today" : format(selectedDate, "EEEE")}, {format(selectedDate, "MMMM d, yyyy")}
                 </p>
               </CardHeader>
-              <CardContent className="relative z-10 space-y-6">
+              <CardContent className="relative z-10 space-y-3 sm:space-y-6">
                 
                 {(() => {
                   const consumed = trackedFoods.reduce((acc, food) => acc + food.calories, 0);
@@ -1467,42 +1452,32 @@ export default function Home() {
                   const remaining = adjustedTarget - consumed;
                   return (
                     <>
-                      <div className="flex justify-between items-end mb-2">
+                      <div className="grid grid-cols-3 gap-2 text-center">
                         <div>
-                          <div className="text-4xl font-display font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                            {consumed}
-                          </div>
-                          <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide font-medium mt-1">Consumed</div>
+                          <div className="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-slate-100">{consumed}</div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide font-medium">Eaten</div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-display font-bold text-slate-400 dark:text-slate-500 tracking-tight">
-                            {adjustedTarget}
+                        <div className={`rounded-lg py-1 ${remaining > 0 ? 'bg-secondary/10' : 'bg-red-50 dark:bg-red-950/30'}`}>
+                          <div className={`text-xl sm:text-2xl font-display font-bold ${remaining > 0 ? 'text-secondary' : 'text-red-500'}`}>
+                            {remaining > 0 ? remaining : Math.abs(remaining)}
                           </div>
-                          <div className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide font-medium mt-1">
-                            Target{exerciseCaloriesBonus > 0 && <span className="text-primary ml-1">(+{exerciseCaloriesBonus})</span>}
+                          <div className={`text-[10px] uppercase tracking-wide font-medium ${remaining > 0 ? 'text-secondary/70' : 'text-red-400'}`}>
+                            {remaining > 0 ? 'Left' : 'Over'}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xl sm:text-2xl font-display font-bold text-slate-400 dark:text-slate-500">{adjustedTarget}</div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide font-medium">
+                            Target{exerciseCaloriesBonus > 0 && <span className="text-primary ml-0.5">(+{exerciseCaloriesBonus})</span>}
                           </div>
                         </div>
                       </div>
 
                       <Progress 
                         value={Math.min(100, (consumed / adjustedTarget) * 100)} 
-                        className="h-3 bg-slate-100 dark:bg-slate-800" 
+                        className="h-2 bg-slate-100 dark:bg-slate-800" 
                         indicatorClassName={consumed > adjustedTarget ? "bg-red-500" : "bg-secondary"}
                       />
-
-                      <div className="text-center py-3 px-4 rounded-xl bg-secondary/10 border border-secondary/20">
-                        {remaining > 0 ? (
-                          <div>
-                            <span className="text-2xl font-display font-bold text-secondary">{remaining}</span>
-                            <span className="text-sm font-medium text-secondary/80 ml-1.5">calories remaining</span>
-                          </div>
-                        ) : (
-                          <div>
-                            <span className="text-2xl font-display font-bold text-red-500">{Math.abs(remaining)}</span>
-                            <span className="text-sm font-medium text-red-400 ml-1.5">calories over goal</span>
-                          </div>
-                        )}
-                      </div>
                     </>
                   );
                 })()}
