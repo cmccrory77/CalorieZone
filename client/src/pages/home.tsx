@@ -1093,10 +1093,17 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-2.5 mr-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Now</span>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Weight</span>
                   <span className="text-sm font-bold text-slate-800 dark:text-slate-200" data-testid="text-current-weight">{currentWeight}</span>
                 </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Goal</span>
+                  <span className="text-sm font-bold text-primary" data-testid="text-target-weight">{targetWeight}</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground">lbs</span>
+                <div className="text-slate-200 dark:text-slate-700">|</div>
                 <div className="flex flex-col items-center gap-0.5 w-28">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Progress</span>
                   <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all"
@@ -1107,11 +1114,6 @@ export default function Home() {
                     {Math.round(progressPercentage)}%
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Goal</span>
-                  <span className="text-sm font-bold text-primary" data-testid="text-target-weight">{targetWeight}</span>
-                </div>
-                <span className="text-[10px] text-muted-foreground">lbs</span>
               </div>
               <div className="flex items-center gap-1">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.avatarSeed || "Felix"}`} alt="User avatar" className="h-8 w-8 rounded-full bg-muted" />
