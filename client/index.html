@@ -29,7 +29,8 @@
   </head>
   <body>
     <script>
-      if (localStorage.getItem("caloriq-dark-mode") === "true") {
+      var darkPref = localStorage.getItem("caloriq-dark-mode");
+      if (darkPref === "true" || (darkPref === null && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
         document.documentElement.classList.add("dark");
       }
       if ('serviceWorker' in navigator) {
