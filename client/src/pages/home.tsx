@@ -1371,7 +1371,7 @@ export default function Home() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 pt-3" data-testid="date-navigator">
+                <div className="flex items-center gap-0.5 pt-3 overflow-hidden" data-testid="date-navigator">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -1381,7 +1381,7 @@ export default function Home() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <div className="flex flex-1 justify-between gap-0.5">
+                  <div className="flex flex-1 justify-between gap-0.5 min-w-0">
                     {Array.from({ length: 7 }, (_, i) => {
                       const weekStart = subDays(selectedDate, selectedDate.getDay());
                       const day = addDays(weekStart, i);
@@ -1618,14 +1618,11 @@ export default function Home() {
                 )}
 
                 <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <Dumbbell className="h-4 w-4 text-accent" />
-                      Exercise
-                      {exerciseCaloriesBonus > 0 && (
-                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full ml-1">+{exerciseCaloriesBonus} cal earned</span>
-                      )}
-                    </h4>
+                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Dumbbell className="h-4 w-4 text-accent" />
+                    Exercise
+                  </h4>
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => { setExerciseDialogOpen(true); setSelectedExercise(null); setExerciseSearch(""); setExerciseDuration(30); }}
                       className="flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent/80 bg-accent/10 hover:bg-accent/20 px-2.5 py-1.5 rounded-lg transition-colors"
@@ -1634,6 +1631,9 @@ export default function Home() {
                       <Plus className="h-3 w-3" />
                       Add Exercise
                     </button>
+                    {exerciseCaloriesBonus > 0 && (
+                      <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">+{exerciseCaloriesBonus} cal earned</span>
+                    )}
                   </div>
                   {exerciseEntries.length > 0 && (
                     <div className="space-y-1.5">
@@ -1988,24 +1988,26 @@ export default function Home() {
           <div className="lg:col-span-12 space-y-6" ref={recipesSectionRef}>
             
             <Tabs value={activeRecipesTab ?? (plannedMealsData.length > 0 ? "planned" : "recommended")} onValueChange={setActiveRecipesTab} className="w-full" ref={recipesTabRef}>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <TabsList className="bg-white dark:bg-slate-900 p-1 border border-slate-100 dark:border-slate-800 shadow-sm rounded-xl">
-                  <TabsTrigger value="recommended" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                    Recommended
-                  </TabsTrigger>
-                  {plannedMealsData.length > 0 && (
-                    <TabsTrigger value="planned" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                      <CalendarDays className="h-3.5 w-3.5 mr-2" />
-                      Meal Plan
+              <div className="flex flex-col gap-3 mb-6">
+                <div className="overflow-x-auto -mx-1 px-1">
+                  <TabsList className="bg-white dark:bg-slate-900 p-1 border border-slate-100 dark:border-slate-800 shadow-sm rounded-xl w-full sm:w-auto">
+                    <TabsTrigger value="recommended" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs sm:text-sm px-2.5 sm:px-3">
+                      Recommended
                     </TabsTrigger>
-                  )}
-                  <TabsTrigger value="ai" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white transition-all">
-                    <Bookmark className="h-3.5 w-3.5 mr-2" />
-                    My Recipes
-                  </TabsTrigger>
-                </TabsList>
+                    {plannedMealsData.length > 0 && (
+                      <TabsTrigger value="planned" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs sm:text-sm px-2.5 sm:px-3">
+                        <CalendarDays className="h-3.5 w-3.5 mr-1 sm:mr-2" />
+                        Meal Plan
+                      </TabsTrigger>
+                    )}
+                    <TabsTrigger value="ai" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white transition-all text-xs sm:text-sm px-2.5 sm:px-3">
+                      <Bookmark className="h-3.5 w-3.5 mr-1 sm:mr-2" />
+                      My Recipes
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
                 
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm w-fit">
                   <Calendar className="h-4 w-4" />
                   Today's Plan
                 </div>
