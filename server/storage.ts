@@ -1,4 +1,4 @@
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
 import { db } from "./db";
 import {
   userProfiles,
@@ -31,6 +31,7 @@ export interface IStorage {
   updateProfile(id: string, data: Partial<InsertUserProfile>): Promise<UserProfile>;
 
   getFoodEntries(profileId: string, date: string): Promise<FoodEntry[]>;
+  getFoodEntriesForRange(profileId: string, startDate: string, endDate: string): Promise<FoodEntry[]>;
   addFoodEntry(entry: InsertFoodEntry): Promise<FoodEntry>;
   removeFoodEntry(id: string): Promise<void>;
   getFrequentFoods(profileId: string): Promise<FrequentFood[]>;
@@ -72,6 +73,17 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(foodEntries)
       .where(and(eq(foodEntries.profileId, profileId), eq(foodEntries.date, date)));
+  }
+
+  async getFoodEntriesForRange(profileId: string, startDate: string, endDate: string): Promise<FoodEntry[]> {
+    return db
+      .select()
+      .from(foodEntries)
+      .where(and(
+        eq(foodEntries.profileId, profileId),
+        gte(foodEntries.date, startDate),
+        lte(foodEntries.date, endDate)
+      ));
   }
 
   async addFoodEntry(entry: InsertFoodEntry): Promise<FoodEntry> {

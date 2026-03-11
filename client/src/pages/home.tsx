@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { 
@@ -38,6 +38,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import MealScanner from "@/components/MealScanner";
 import FoodSearch from "@/components/FoodSearch";
@@ -266,14 +267,68 @@ export default function Home() {
     });
   };
 
-  const [loggedDays, setLoggedDays] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
+  const [selectedMealIds, setSelectedMealIds] = useState<Record<string, Set<string>>>({});
   const [loggingDay, setLoggingDay] = useState<string | null>(null);
 
-  const handleLogDayMeals = async (dateStr: string, meals: PlannedMeal[]) => {
-    if (!profile?.id || meals.length === 0) return;
+  const { data: weekFoodEntries = [] } = useQuery<FoodEntry[]>({
+    queryKey: ["/api/food-entries/range", profile?.id, weekStartStr, weekEndStr],
+    enabled: !!profile?.id && plannedMealsData.length > 0,
+    queryFn: async () => {
+      const res = await fetch(`/api/food-entries/${profile!.id}/range/${weekStartStr}/${weekEndStr}`);
+      if (!res.ok) throw new Error("Failed to load week food entries");
+      return res.json();
+    },
+  });
+
+  const loggedMealIds = useMemo(() => {
+    const logged = new Set<string>();
+    for (const meal of plannedMealsData) {
+      const matchingEntry = weekFoodEntries.find(
+        e => e.name === meal.title && e.date === meal.date
+      );
+      if (matchingEntry) {
+        logged.add(meal.id);
+      }
+    }
+    return logged;
+  }, [plannedMealsData, weekFoodEntries]);
+
+  const toggleMealSelection = (dateStr: string, mealId: string) => {
+    setSelectedMealIds(prev => {
+      const daySet = new Set(prev[dateStr] || []);
+      if (daySet.has(mealId)) {
+        daySet.delete(mealId);
+      } else {
+        daySet.add(mealId);
+      }
+      return { ...prev, [dateStr]: daySet };
+    });
+  };
+
+  const toggleAllMealsForDay = (dateStr: string, meals: PlannedMeal[]) => {
+    setSelectedMealIds(prev => {
+      const daySet = new Set(prev[dateStr] || []);
+      const unloggedMeals = meals.filter(m => !loggedMealIds.has(m.id));
+      const allSelected = unloggedMeals.every(m => daySet.has(m.id));
+      if (allSelected) {
+        unloggedMeals.forEach(m => daySet.delete(m.id));
+      } else {
+        unloggedMeals.forEach(m => daySet.add(m.id));
+      }
+      return { ...prev, [dateStr]: daySet };
+    });
+  };
+
+  const handleLogSelectedMeals = async (dateStr: string, allMeals: PlannedMeal[]) => {
+    const selected = selectedMealIds[dateStr];
+    if (!profile?.id || !selected || selected.size === 0) return;
+    const mealsToLog = allMeals.filter(m => selected.has(m.id));
+    if (mealsToLog.length === 0) return;
+
     setLoggingDay(dateStr);
     try {
-      for (const meal of meals) {
+      for (const meal of mealsToLog) {
         await apiRequest("POST", "/api/food-entries", {
           profileId: profile.id,
           date: dateStr,
@@ -285,9 +340,20 @@ export default function Home() {
         });
       }
       queryClient.invalidateQueries({ queryKey: ["/api/food-entries"] });
-      setLoggedDays(prev => ({ ...prev, [dateStr]: true }));
+      queryClient.invalidateQueries({ queryKey: ["/api/food-entries/range"] });
+      setSelectedMealIds(prev => ({ ...prev, [dateStr]: new Set() }));
+      const dayLabel = format(new Date(dateStr + "T12:00:00"), "EEEE, MMM d");
+      toast({
+        title: `${mealsToLog.length} meal${mealsToLog.length > 1 ? 's' : ''} logged`,
+        description: `Added to your food diary for ${dayLabel}`,
+      });
     } catch (e) {
       console.error("Failed to log meals", e);
+      toast({
+        title: "Failed to log meals",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoggingDay(null);
     }
@@ -1552,6 +1618,12 @@ export default function Home() {
                       const dayTotal = dayMeals.reduce((s, m) => s + m.calories, 0);
                       const dayIsPast = dayDate < new Date() && !isSameDay(dayDate, new Date());
                       const dayIsToday = isSameDay(dayDate, new Date());
+                      const daySelected = selectedMealIds[dayDateStr] || new Set<string>();
+                      const unloggedMeals = dayMeals.filter(m => !loggedMealIds.has(m.id));
+                      const allDayLogged = dayMeals.length > 0 && unloggedMeals.length === 0;
+                      const allUnloggedSelected = unloggedMeals.length > 0 && unloggedMeals.every(m => daySelected.has(m.id));
+                      const selectedCount = dayMeals.filter(m => daySelected.has(m.id)).length;
+                      const selectedCalories = dayMeals.filter(m => daySelected.has(m.id)).reduce((s, m) => s + m.calories, 0);
                       return (
                         <div key={dayDateStr} className={`rounded-xl overflow-hidden border ${
                           dayIsToday ? 'border-primary/40 ring-1 ring-primary/20' : 'border-slate-100 dark:border-slate-800'
@@ -1567,77 +1639,115 @@ export default function Home() {
                               </span>
                               <span className="text-xs text-muted-foreground">{format(dayDate, "MMM d")}</span>
                               {dayIsToday && <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">TODAY</span>}
-                              {dayIsPast && <Check className="h-3.5 w-3.5 text-primary" />}
+                              {allDayLogged && <span className="text-[10px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5"><Check className="h-3 w-3" /> Logged</span>}
                             </div>
-                            <span className="text-xs font-semibold text-secondary">{dayTotal} kcal</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs font-semibold text-secondary">{dayTotal} kcal</span>
+                              {dayMeals.length > 0 && unloggedMeals.length > 0 && (
+                                <button
+                                  className="text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
+                                  onClick={() => toggleAllMealsForDay(dayDateStr, dayMeals)}
+                                  data-testid={`toggle-all-${dayDateStr}`}
+                                >
+                                  {allUnloggedSelected ? 'Deselect All' : 'Select All'}
+                                </button>
+                              )}
+                            </div>
                           </div>
                           <div className="p-4 bg-white dark:bg-slate-900">
                             {dayMeals.length === 0 ? (
                               <p className="text-sm text-muted-foreground text-center py-2">No meals planned</p>
                             ) : (
                               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                                {dayMeals.map(meal => (
-                                  <div key={meal.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer"
-                                    onClick={() => setSelectedRecipe({
-                                      ...meal,
-                                      type: meal.mealType,
-                                      match: meal.mealType,
-                                      cuisine: "planned",
-                                      image: null,
-                                    })}
-                                    data-testid={`planned-recipe-${meal.id}`}
-                                  >
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                      meal.mealType === 'breakfast' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
-                                      meal.mealType === 'lunch' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
-                                      meal.mealType === 'dinner' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' :
-                                      'bg-green-100 dark:bg-green-900/30 text-green-600'
-                                    }`}>
-                                      {meal.mealType === 'breakfast' ? <Coffee className="h-4 w-4" /> :
-                                       meal.mealType === 'lunch' ? <UtensilsCrossed className="h-4 w-4" /> :
-                                       meal.mealType === 'dinner' ? <Utensils className="h-4 w-4" /> :
-                                       <Cookie className="h-4 w-4" />}
+                                {dayMeals.map(meal => {
+                                  const isLogged = loggedMealIds.has(meal.id);
+                                  const isSelected = daySelected.has(meal.id);
+                                  return (
+                                    <div key={meal.id} className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                                      isLogged
+                                        ? 'bg-primary/5 dark:bg-primary/10 border border-primary/15'
+                                        : isSelected
+                                        ? 'bg-secondary/5 dark:bg-secondary/10 border border-secondary/25 ring-1 ring-secondary/10'
+                                        : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent'
+                                    }`}
+                                      data-testid={`planned-recipe-${meal.id}`}
+                                    >
+                                      <div className="flex-shrink-0">
+                                        {isLogged ? (
+                                          <div className="w-7 h-7 rounded-md bg-primary/15 flex items-center justify-center">
+                                            <Check className="h-4 w-4 text-primary" />
+                                          </div>
+                                        ) : (
+                                          <Checkbox
+                                            checked={isSelected}
+                                            onCheckedChange={() => toggleMealSelection(dayDateStr, meal.id)}
+                                            className="h-5 w-5 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-secondary data-[state=checked]:border-secondary"
+                                            data-testid={`checkbox-meal-${meal.id}`}
+                                          />
+                                        )}
+                                      </div>
+                                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                        meal.mealType === 'breakfast' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
+                                        meal.mealType === 'lunch' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
+                                        meal.mealType === 'dinner' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' :
+                                        'bg-green-100 dark:bg-green-900/30 text-green-600'
+                                      }`}>
+                                        {meal.mealType === 'breakfast' ? <Coffee className="h-4 w-4" /> :
+                                         meal.mealType === 'lunch' ? <UtensilsCrossed className="h-4 w-4" /> :
+                                         meal.mealType === 'dinner' ? <Utensils className="h-4 w-4" /> :
+                                         <Cookie className="h-4 w-4" />}
+                                      </div>
+                                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedRecipe({
+                                        ...meal,
+                                        type: meal.mealType,
+                                        match: meal.mealType,
+                                        cuisine: "planned",
+                                        image: null,
+                                      })}>
+                                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{meal.mealType}</p>
+                                        <p className={`text-sm font-medium truncate ${isLogged ? 'text-primary/70' : 'text-slate-700 dark:text-slate-300'}`}>{meal.title}</p>
+                                        <p className="text-xs text-secondary font-semibold">{meal.calories} cal</p>
+                                      </div>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{meal.mealType}</p>
-                                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{meal.title}</p>
-                                      <p className="text-xs text-secondary font-semibold">{meal.calories} cal</p>
-                                    </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             )}
-                            {dayMeals.length > 0 && (
-                              <div className="flex justify-end mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                                <Button
-                                  size="sm"
-                                  className={`text-xs h-8 ${
-                                    loggedDays[dayDateStr]
-                                      ? 'bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20'
-                                      : 'bg-secondary hover:bg-secondary/90 text-white'
-                                  }`}
-                                  variant={loggedDays[dayDateStr] ? "outline" : "default"}
-                                  disabled={loggingDay === dayDateStr}
-                                  onClick={() => handleLogDayMeals(dayDateStr, dayMeals)}
-                                  data-testid={`button-log-day-${dayDateStr}`}
-                                >
-                                  {loggingDay === dayDateStr ? (
-                                    <span className="flex items-center gap-1.5">
-                                      <span className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                      Logging...
-                                    </span>
-                                  ) : loggedDays[dayDateStr] ? (
-                                    <span className="flex items-center gap-1.5">
-                                      <Check className="h-3.5 w-3.5" />
-                                      Logged All Meals
-                                    </span>
-                                  ) : (
-                                    <span className="flex items-center gap-1.5">
-                                      <Plus className="h-3.5 w-3.5" />
-                                      Log All {dayMeals.length} Meals
-                                    </span>
-                                  )}
-                                </Button>
+                            {dayMeals.length > 0 && (selectedCount > 0 || allDayLogged) && (
+                              <div className={`flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 ${
+                                allDayLogged ? '' : 'animate-in fade-in slide-in-from-bottom-2 duration-300'
+                              }`}>
+                                {allDayLogged ? (
+                                  <p className="text-xs text-primary font-medium flex items-center gap-1.5">
+                                    <Check className="h-3.5 w-3.5" />
+                                    All meals logged to your diary
+                                  </p>
+                                ) : (
+                                  <>
+                                    <p className="text-xs text-muted-foreground">
+                                      {selectedCount} of {dayMeals.length} selected · <span className="font-semibold text-secondary">{selectedCalories} cal</span>
+                                    </p>
+                                    <Button
+                                      size="sm"
+                                      className="text-xs h-8 bg-secondary hover:bg-secondary/90 text-white"
+                                      disabled={loggingDay === dayDateStr}
+                                      onClick={() => handleLogSelectedMeals(dayDateStr, dayMeals)}
+                                      data-testid={`button-log-selected-${dayDateStr}`}
+                                    >
+                                      {loggingDay === dayDateStr ? (
+                                        <span className="flex items-center gap-1.5">
+                                          <span className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                          Logging...
+                                        </span>
+                                      ) : (
+                                        <span className="flex items-center gap-1.5">
+                                          <Plus className="h-3.5 w-3.5" />
+                                          Log {selectedCount === dayMeals.length ? 'All' : selectedCount} Meal{selectedCount > 1 ? 's' : ''}
+                                        </span>
+                                      )}
+                                    </Button>
+                                  </>
+                                )}
                               </div>
                             )}
                           </div>

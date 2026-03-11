@@ -26,6 +26,7 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - `GET /api/profile` - Get or create default user profile
 - `PATCH /api/profile/:id` - Update profile fields (debounced from frontend)
 - `GET /api/food-entries/:profileId/:date` - Get food entries for a date
+- `GET /api/food-entries/:profileId/range/:startDate/:endDate` - Get food entries for a date range
 - `POST /api/food-entries` - Add a food entry
 - `DELETE /api/food-entries/:id` - Remove a food entry
 - `GET /api/food-entries/:profileId/frequent` - Get aggregated frequent/recent foods for autocomplete

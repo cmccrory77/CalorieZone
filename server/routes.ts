@@ -37,6 +37,15 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/food-entries/:profileId/range/:startDate/:endDate", async (req, res) => {
+    try {
+      const entries = await storage.getFoodEntriesForRange(req.params.profileId, req.params.startDate, req.params.endDate);
+      res.json(entries);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to load food entries for range" });
+    }
+  });
+
   app.get("/api/food-entries/:profileId/:date", async (req, res) => {
     try {
       const entries = await storage.getFoodEntries(req.params.profileId, req.params.date);
