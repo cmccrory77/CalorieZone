@@ -1822,7 +1822,7 @@ export default function Home() {
                   </div>
                 )}
 
-                <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                   <Label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Include Meals</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {[
@@ -1911,7 +1911,7 @@ export default function Home() {
                 </label>
 
                 <Button
-                  className="w-full bg-primary hover:bg-primary/90 text-white h-10 mt-auto"
+                  className="w-full bg-primary hover:bg-primary/90 text-white h-10"
                   onClick={handleGenerateWeekPlan}
                   disabled={mpGenerating || (!mpBreakfast && !mpLunch && !mpDinner && !mpSnacks)}
                   data-testid="button-generate-meal-plan"
