@@ -1079,7 +1079,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-green-50/40 dark:bg-slate-950">
       {/* Navigation */}
-      <nav className="bg-white dark:bg-slate-900 border-b border-border sticky top-0 z-10">
+      <nav className="bg-white dark:bg-slate-900 border-b border-border sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-2 text-primary">
