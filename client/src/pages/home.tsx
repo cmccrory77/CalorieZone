@@ -21,7 +21,10 @@ import {
   Check,
   Coffee,
   UtensilsCrossed,
-  Cookie
+  Cookie,
+  ShoppingCart,
+  Copy,
+  Share2
 } from "lucide-react";
 import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
 import type { UserProfile, FoodEntry, SavedRecipe, PlannedMeal } from "@shared/schema";
@@ -145,6 +148,9 @@ export default function Home() {
   const [mpPreference, setMpPreference] = useState("balanced");
   const [mpIncludeMyRecipes, setMpIncludeMyRecipes] = useState(false);
   const [mpGenerating, setMpGenerating] = useState(false);
+  const [groceryListOpen, setGroceryListOpen] = useState(false);
+  const [groceryChecked, setGroceryChecked] = useState<Record<string, boolean>>({});
+  const [groceryCopied, setGroceryCopied] = useState(false);
 
   const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 0 });
   const currentWeekEnd = endOfWeek(new Date(), { weekStartsOn: 0 });
@@ -777,6 +783,82 @@ export default function Home() {
   const todayPlannedMeals = plannedMealsData.filter(m => m.date === todayStr);
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  const aggregatedGroceryList = useCallback(() => {
+    const itemMap: Record<string, { item: string; amounts: string[]; totalCal: number }> = {};
+    plannedMealsData.forEach(meal => {
+      const ings = meal.ingredients as { item: string; amount: string; cal: number }[] | null;
+      if (!ings || !Array.isArray(ings)) return;
+      ings.forEach(ing => {
+        const key = ing.item.toLowerCase().trim();
+        if (!itemMap[key]) {
+          itemMap[key] = { item: ing.item, amounts: [], totalCal: 0 };
+        }
+        itemMap[key].amounts.push(ing.amount);
+        itemMap[key].totalCal += ing.cal || 0;
+      });
+    });
+    const categories: Record<string, string[]> = {
+      "Proteins": ["chicken", "turkey", "beef", "salmon", "shrimp", "cod", "egg", "tofu", "bacon", "sausage", "ham", "pork", "jerky", "collagen"],
+      "Dairy & Eggs": ["yogurt", "cheese", "cream cheese", "mozzarella", "feta", "parmesan", "cheddar", "butter", "milk", "cottage cheese", "sour cream"],
+      "Grains & Bread": ["oat", "rice", "quinoa", "pasta", "noodle", "tortilla", "bread", "granola", "farro", "flour", "crouton", "breadcrumb", "rice cake", "pita"],
+      "Fruits": ["banana", "apple", "berr", "lemon", "lime", "pineapple", "cranberr", "avocado"],
+      "Vegetables": ["spinach", "broccoli", "pepper", "tomato", "cucumber", "carrot", "celery", "onion", "garlic", "zucchini", "asparagus", "potato", "corn", "kale", "lettuce", "bean sprout", "mushroom", "eggplant", "sweet potato", "green bean", "edamame", "olive"],
+      "Nuts & Seeds": ["almond", "peanut", "walnut", "chia", "pumpkin seed", "sesame", "coconut", "macadamia", "trail mix"],
+      "Pantry & Sauces": ["oil", "honey", "maple", "soy sauce", "vinaigrette", "salsa", "hummus", "tahini", "curry", "marinara", "cocoa", "chocolate", "protein powder", "pad thai", "teriyaki", "mustard", "dressing", "glaze", "mct"],
+      "Spices & Herbs": ["cumin", "cinnamon", "rosemary", "thyme", "dill", "basil", "parsley", "chive", "ginger", "seasoning", "salt", "pepper", "flakes", "italian", "garlic powder", "stevia"],
+    };
+    const categorized: Record<string, typeof itemMap[string][]> = {};
+    const uncategorized: typeof itemMap[string][] = [];
+    Object.values(itemMap).forEach(entry => {
+      const key = entry.item.toLowerCase();
+      let placed = false;
+      for (const [cat, keywords] of Object.entries(categories)) {
+        if (keywords.some(kw => key.includes(kw))) {
+          if (!categorized[cat]) categorized[cat] = [];
+          categorized[cat].push(entry);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) uncategorized.push(entry);
+    });
+    if (uncategorized.length > 0) categorized["Other"] = uncategorized;
+    return categorized;
+  }, [plannedMealsData]);
+
+  const handleOpenGroceryList = () => {
+    const list = aggregatedGroceryList();
+    const initialChecked: Record<string, boolean> = {};
+    Object.values(list).flat().forEach(entry => {
+      initialChecked[entry.item.toLowerCase().trim()] = true;
+    });
+    setGroceryChecked(initialChecked);
+    setGroceryCopied(false);
+    setGroceryListOpen(true);
+  };
+
+  const handleExportGroceryList = () => {
+    const list = aggregatedGroceryList();
+    const lines: string[] = [`${profile?.name || "My"}'s Grocery List`, ""];
+    const categoryOrder = ["Proteins", "Dairy & Eggs", "Grains & Bread", "Fruits", "Vegetables", "Nuts & Seeds", "Pantry & Sauces", "Spices & Herbs", "Other"];
+    categoryOrder.forEach(cat => {
+      if (!list[cat]) return;
+      const selected = list[cat].filter(e => groceryChecked[e.item.toLowerCase().trim()]);
+      if (selected.length === 0) return;
+      lines.push(`── ${cat} ──`);
+      selected.forEach(entry => {
+        const qty = entry.amounts.length > 1 ? `${entry.amounts.length}x needed` : entry.amounts[0];
+        lines.push(`☐ ${entry.item} (${qty})`);
+      });
+      lines.push("");
+    });
+    const text = lines.join("\n").trim();
+    navigator.clipboard.writeText(text).then(() => {
+      setGroceryCopied(true);
+      setTimeout(() => setGroceryCopied(false), 2000);
+    });
+  };
+
   const handleGenerateRecipe = () => {
     setIsGenerating(true);
     setGeneratedRecipe(null);
@@ -1377,9 +1459,20 @@ export default function Home() {
                 </Button>
 
                 {plannedMealsData.length > 0 && (
-                  <p className="text-[10px] text-center text-muted-foreground">
-                    Generated meals appear in the Recipes section below
-                  </p>
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full h-9 text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
+                      onClick={handleOpenGroceryList}
+                      data-testid="button-grocery-list"
+                    >
+                      <ShoppingCart className="h-3.5 w-3.5 mr-1.5" />
+                      Grocery List
+                    </Button>
+                    <p className="text-[10px] text-center text-muted-foreground">
+                      Generated meals appear in the Recipes section below
+                    </p>
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -1949,6 +2042,113 @@ export default function Home() {
             </div>
           </DialogContent>
         )}
+      </Dialog>
+
+      <Dialog open={groceryListOpen} onOpenChange={setGroceryListOpen}>
+        <DialogContent className="max-w-lg p-0 overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="bg-gradient-to-r from-primary/10 via-secondary/5 to-accent/10 p-5 border-b border-slate-100 dark:border-slate-800">
+            <DialogHeader>
+              <DialogTitle className="font-display text-lg flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-primary" />
+                Grocery List
+              </DialogTitle>
+              <DialogDescription>{profile?.name || "Your"}'s Meal Plan · {plannedMealsData.length} meals this week</DialogDescription>
+            </DialogHeader>
+          </div>
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            {(() => {
+              const list = aggregatedGroceryList();
+              const categoryOrder = ["Proteins", "Dairy & Eggs", "Grains & Bread", "Fruits", "Vegetables", "Nuts & Seeds", "Pantry & Sauces", "Spices & Herbs", "Other"];
+              const totalItems = Object.values(list).flat().length;
+              const selectedCount = Object.values(groceryChecked).filter(Boolean).length;
+              return (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">{selectedCount} of {totalItems} items selected</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          const all: Record<string, boolean> = {};
+                          Object.values(list).flat().forEach(e => { all[e.item.toLowerCase().trim()] = true; });
+                          setGroceryChecked(all);
+                        }}
+                        className="text-[10px] font-semibold text-primary hover:underline"
+                        data-testid="grocery-select-all"
+                      >
+                        Select All
+                      </button>
+                      <span className="text-slate-300 dark:text-slate-600">|</span>
+                      <button
+                        onClick={() => setGroceryChecked({})}
+                        className="text-[10px] font-semibold text-muted-foreground hover:underline"
+                        data-testid="grocery-deselect-all"
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+                  </div>
+                  {categoryOrder.map(cat => {
+                    if (!list[cat] || list[cat].length === 0) return null;
+                    return (
+                      <div key={cat} className="space-y-1.5">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-primary/40"></span>
+                          {cat}
+                          <span className="text-[10px] font-normal text-muted-foreground ml-auto">{list[cat].length} items</span>
+                        </h4>
+                        <div className="space-y-0.5">
+                          {list[cat].map(entry => {
+                            const key = entry.item.toLowerCase().trim();
+                            const isChecked = !!groceryChecked[key];
+                            return (
+                              <label
+                                key={key}
+                                className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-all ${
+                                  isChecked
+                                    ? 'bg-primary/5 dark:bg-primary/10'
+                                    : 'bg-slate-50 dark:bg-slate-800/50 opacity-60'
+                                }`}
+                                data-testid={`grocery-item-${key}`}
+                              >
+                                <Checkbox
+                                  checked={isChecked}
+                                  onCheckedChange={(v) => setGroceryChecked(prev => ({ ...prev, [key]: !!v }))}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <span className={`text-sm font-medium ${isChecked ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500 line-through'}`}>
+                                    {entry.item}
+                                  </span>
+                                </div>
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                  {entry.amounts.length > 3
+                                    ? `${entry.amounts.slice(0, 2).join(", ")} +${entry.amounts.length - 2} more`
+                                    : entry.amounts.join(", ")}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              );
+            })()}
+          </div>
+          <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex gap-3">
+            <Button
+              className="flex-1 bg-primary hover:bg-primary/90 text-white"
+              onClick={handleExportGroceryList}
+              data-testid="button-export-grocery"
+            >
+              {groceryCopied ? (
+                <><Check className="h-4 w-4 mr-1.5" /> Copied!</>
+              ) : (
+                <><Copy className="h-4 w-4 mr-1.5" /> Copy Selected to Clipboard</>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
       </Dialog>
 
       <OnboardingDialog
