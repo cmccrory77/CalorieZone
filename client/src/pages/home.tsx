@@ -29,7 +29,7 @@ import {
   ChevronUp,
   Dumbbell
 } from "lucide-react";
-import { Eye } from "lucide-react";
+import { Eye, AlertTriangle } from "lucide-react";
 import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
 import type { UserProfile, FoodEntry, SavedRecipe, PlannedMeal, ExerciseEntry } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -929,6 +929,39 @@ export default function Home() {
     if (uncategorized.length > 0) categorized["Other"] = uncategorized;
     return categorized;
   }, [plannedMealsData]);
+
+  const findPotentialDuplicates = useCallback((items: { item: string }[]): Record<string, string[]> => {
+    const normalize = (s: string) => s.toLowerCase().trim()
+      .replace(/\b(fresh|dried|frozen|chopped|diced|sliced|minced|shredded|grated|crushed|ground|whole|raw|cooked|large|medium|small|plain|mixed)\b/g, '')
+      .replace(/\b(sticks?|strips?|pieces?|chunks?|cubes?|halved|florets?|spears?|cloves?|leaves?)\b/g, '')
+      .replace(/\s+/g, ' ').trim();
+    const singularize = (s: string) => s.replace(/ies$/, 'y').replace(/ves$/, 'f').replace(/([^s])s$/, '$1');
+    const rootWord = (s: string) => singularize(normalize(s));
+
+    const groups: Record<string, string[]> = {};
+    const keys = items.map(i => i.item);
+
+    for (let i = 0; i < keys.length; i++) {
+      for (let j = i + 1; j < keys.length; j++) {
+        const a = keys[i], b = keys[j];
+        const rootA = rootWord(a), rootB = rootWord(b);
+        const wordsA = rootA.split(' ').filter(Boolean);
+        const wordsB = rootB.split(' ').filter(Boolean);
+        const isRelated =
+          rootA.includes(rootB) || rootB.includes(rootA) ||
+          wordsA.some(w => w.length > 3 && wordsB.some(wb => wb.includes(w) || w.includes(wb)));
+        if (isRelated) {
+          const groupKey = a.toLowerCase().trim();
+          if (!groups[groupKey]) groups[groupKey] = [];
+          if (!groups[groupKey].includes(b)) groups[groupKey].push(b);
+          const groupKey2 = b.toLowerCase().trim();
+          if (!groups[groupKey2]) groups[groupKey2] = [];
+          if (!groups[groupKey2].includes(a)) groups[groupKey2].push(a);
+        }
+      }
+    }
+    return groups;
+  }, []);
 
   const handleOpenGroceryList = () => {
     const list = aggregatedGroceryList();
@@ -2461,6 +2494,9 @@ export default function Home() {
               const categoryOrder = ["Proteins", "Dairy & Eggs", "Grains & Bread", "Fruits", "Vegetables", "Nuts & Seeds", "Pantry & Sauces", "Spices & Herbs", "Other"];
               const totalItems = Object.values(list).flat().length;
               const selectedCount = Object.values(groceryChecked).filter(Boolean).length;
+              const allItems = Object.values(list).flat();
+              const duplicateMap = findPotentialDuplicates(allItems);
+              const duplicateCount = new Set(Object.keys(duplicateMap)).size;
               return (
                 <>
                   <div className="flex items-center justify-between">
@@ -2487,6 +2523,15 @@ export default function Home() {
                       </button>
                     </div>
                   </div>
+                  {duplicateCount > 0 && (
+                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+                      <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Possible duplicates detected</p>
+                        <p className="text-[11px] text-amber-600/80 dark:text-amber-500/80 mt-0.5">Some items may be the same ingredient — look for the amber highlight below and uncheck any extras.</p>
+                      </div>
+                    </div>
+                  )}
                   {categoryOrder.map(cat => {
                     if (!list[cat] || list[cat].length === 0) return null;
                     return (
@@ -2500,31 +2545,44 @@ export default function Home() {
                           {list[cat].map(entry => {
                             const key = entry.item.toLowerCase().trim();
                             const isChecked = !!groceryChecked[key];
+                            const dupes = duplicateMap[key];
+                            const hasDupe = !!dupes && dupes.length > 0;
                             return (
-                              <label
-                                key={key}
-                                className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-all ${
-                                  isChecked
-                                    ? 'bg-primary/5 dark:bg-primary/10'
-                                    : 'bg-slate-50 dark:bg-slate-800/50 opacity-60'
-                                }`}
-                                data-testid={`grocery-item-${key}`}
-                              >
-                                <Checkbox
-                                  checked={isChecked}
-                                  onCheckedChange={(v) => setGroceryChecked(prev => ({ ...prev, [key]: !!v }))}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <span className={`text-sm font-medium ${isChecked ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500 line-through'}`}>
-                                    {entry.item}
+                              <div key={key}>
+                                <label
+                                  className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-all ${
+                                    hasDupe && isChecked
+                                      ? 'bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/40'
+                                      : isChecked
+                                        ? 'bg-primary/5 dark:bg-primary/10'
+                                        : 'bg-slate-50 dark:bg-slate-800/50 opacity-60'
+                                  }`}
+                                  data-testid={`grocery-item-${key}`}
+                                >
+                                  <Checkbox
+                                    checked={isChecked}
+                                    onCheckedChange={(v) => setGroceryChecked(prev => ({ ...prev, [key]: !!v }))}
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <span className={`text-sm font-medium ${isChecked ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500 line-through'}`}>
+                                      {entry.item}
+                                    </span>
+                                  </div>
+                                  {hasDupe && (
+                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                                  )}
+                                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                    {entry.amounts.length > 3
+                                      ? `${entry.amounts.slice(0, 2).join(", ")} +${entry.amounts.length - 2} more`
+                                      : entry.amounts.join(", ")}
                                   </span>
-                                </div>
-                                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                  {entry.amounts.length > 3
-                                    ? `${entry.amounts.slice(0, 2).join(", ")} +${entry.amounts.length - 2} more`
-                                    : entry.amounts.join(", ")}
-                                </span>
-                              </label>
+                                </label>
+                                {hasDupe && isChecked && (
+                                  <p className="text-[10px] text-amber-600 dark:text-amber-500 ml-9 mt-0.5 mb-1">
+                                    Similar to: {dupes.join(", ")}
+                                  </p>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
