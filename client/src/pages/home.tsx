@@ -24,7 +24,9 @@ import {
   Cookie,
   ShoppingCart,
   Copy,
-  Share2
+  Share2,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
 import type { UserProfile, FoodEntry, SavedRecipe, PlannedMeal } from "@shared/schema";
@@ -170,7 +172,8 @@ export default function Home() {
 
   const generateMealPlanMutation = useMutation({
     mutationFn: async (meals: any[]) => {
-      await apiRequest("DELETE", `/api/planned-meals/${profile!.id}/${weekStartStr}/${weekEndStr}`);
+      const todayStr = format(new Date(), "yyyy-MM-dd");
+      await apiRequest("DELETE", `/api/planned-meals/${profile!.id}/${todayStr}/${weekEndStr}`);
       const res = await apiRequest("POST", "/api/planned-meals", { meals });
       return res.json();
     },
@@ -270,6 +273,7 @@ export default function Home() {
   const { toast } = useToast();
   const [selectedMealIds, setSelectedMealIds] = useState<Record<string, Set<string>>>({});
   const [loggingDay, setLoggingDay] = useState<string | null>(null);
+  const [showPastDays, setShowPastDays] = useState(false);
 
   const { data: weekFoodEntries = [] } = useQuery<FoodEntry[]>({
     queryKey: ["/api/food-entries/range", profile?.id, weekStartStr, weekEndStr],
@@ -820,7 +824,8 @@ export default function Home() {
     }
 
     const allMeals: any[] = [];
-    for (let day = 0; day < 7; day++) {
+    const todayDayIndex = new Date().getDay();
+    for (let day = todayDayIndex; day < 7; day++) {
       const dateStr = format(addDays(currentWeekStart, day), "yyyy-MM-dd");
 
       mealTypes.forEach((mt, mtIdx) => {
@@ -1611,149 +1616,212 @@ export default function Home() {
                   </div>
 
                   <div className="space-y-6">
-                    {Array.from({ length: 7 }, (_, i) => {
-                      const dayDate = addDays(currentWeekStart, i);
-                      const dayDateStr = format(dayDate, "yyyy-MM-dd");
-                      const dayMeals = plannedMealsData.filter(m => m.date === dayDateStr);
-                      const dayTotal = dayMeals.reduce((s, m) => s + m.calories, 0);
-                      const dayIsPast = dayDate < new Date() && !isSameDay(dayDate, new Date());
-                      const dayIsToday = isSameDay(dayDate, new Date());
-                      const daySelected = selectedMealIds[dayDateStr] || new Set<string>();
-                      const unloggedMeals = dayMeals.filter(m => !loggedMealIds.has(m.id));
-                      const allDayLogged = dayMeals.length > 0 && unloggedMeals.length === 0;
-                      const allUnloggedSelected = unloggedMeals.length > 0 && unloggedMeals.every(m => daySelected.has(m.id));
-                      const selectedCount = dayMeals.filter(m => daySelected.has(m.id)).length;
-                      const selectedCalories = dayMeals.filter(m => daySelected.has(m.id)).reduce((s, m) => s + m.calories, 0);
+                    {(() => {
+                      const allDayEntries = Array.from({ length: 7 }, (_, i) => {
+                        const dayDate = addDays(currentWeekStart, i);
+                        const dayDateStr = format(dayDate, "yyyy-MM-dd");
+                        const dayMeals = plannedMealsData.filter(m => m.date === dayDateStr);
+                        const dayIsPast = dayDate < new Date() && !isSameDay(dayDate, new Date());
+                        const dayIsToday = isSameDay(dayDate, new Date());
+                        const dayIsFuture = dayDate > new Date() && !dayIsToday;
+                        const hasMeals = dayMeals.length > 0;
+                        return { dayDate, dayDateStr, dayMeals, dayIsPast, dayIsToday, dayIsFuture, hasMeals, index: i };
+                      });
+
+                      const pastDaysWithMeals = allDayEntries.filter(d => d.dayIsPast && d.hasMeals);
+                      const currentAndFutureDays = allDayEntries.filter(d => !d.dayIsPast);
+                      const daysToRender = showPastDays ? allDayEntries : currentAndFutureDays;
+
                       return (
-                        <div key={dayDateStr} className={`rounded-xl overflow-hidden border ${
-                          dayIsToday ? 'border-primary/40 ring-1 ring-primary/20' : 'border-slate-100 dark:border-slate-800'
-                        }`}>
-                          <div className={`px-4 py-2.5 flex items-center justify-between ${
-                            dayIsToday ? 'bg-primary/10 dark:bg-primary/20' :
-                            dayIsPast ? 'bg-slate-50 dark:bg-slate-800/50' :
-                            'bg-slate-50 dark:bg-slate-800/50'
-                          }`}>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-sm font-bold ${dayIsToday ? 'text-primary' : 'text-slate-700 dark:text-slate-300'}`}>
-                                {format(dayDate, "EEEE")}
-                              </span>
-                              <span className="text-xs text-muted-foreground">{format(dayDate, "MMM d")}</span>
-                              {dayIsToday && <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">TODAY</span>}
-                              {allDayLogged && <span className="text-[10px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5"><Check className="h-3 w-3" /> Logged</span>}
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs font-semibold text-secondary">{dayTotal} kcal</span>
-                              {dayMeals.length > 0 && unloggedMeals.length > 0 && (
-                                <button
-                                  className="text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
-                                  onClick={() => toggleAllMealsForDay(dayDateStr, dayMeals)}
-                                  data-testid={`toggle-all-${dayDateStr}`}
-                                >
-                                  {allUnloggedSelected ? 'Deselect All' : 'Select All'}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                          <div className="p-4 bg-white dark:bg-slate-900">
-                            {dayMeals.length === 0 ? (
-                              <p className="text-sm text-muted-foreground text-center py-2">No meals planned</p>
-                            ) : (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                                {dayMeals.map(meal => {
-                                  const isLogged = loggedMealIds.has(meal.id);
-                                  const isSelected = daySelected.has(meal.id);
-                                  return (
-                                    <div key={meal.id} className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
-                                      isLogged
-                                        ? 'bg-primary/5 dark:bg-primary/10 border border-primary/15'
-                                        : isSelected
-                                        ? 'bg-secondary/5 dark:bg-secondary/10 border border-secondary/25 ring-1 ring-secondary/10'
-                                        : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent'
-                                    }`}
-                                      data-testid={`planned-recipe-${meal.id}`}
-                                    >
-                                      <div className="flex-shrink-0">
-                                        {isLogged ? (
-                                          <div className="w-7 h-7 rounded-md bg-primary/15 flex items-center justify-center">
-                                            <Check className="h-4 w-4 text-primary" />
-                                          </div>
-                                        ) : (
-                                          <Checkbox
-                                            checked={isSelected}
-                                            onCheckedChange={() => toggleMealSelection(dayDateStr, meal.id)}
-                                            className="h-5 w-5 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-secondary data-[state=checked]:border-secondary"
-                                            data-testid={`checkbox-meal-${meal.id}`}
-                                          />
-                                        )}
-                                      </div>
-                                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                        meal.mealType === 'breakfast' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
-                                        meal.mealType === 'lunch' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
-                                        meal.mealType === 'dinner' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' :
-                                        'bg-green-100 dark:bg-green-900/30 text-green-600'
-                                      }`}>
-                                        {meal.mealType === 'breakfast' ? <Coffee className="h-4 w-4" /> :
-                                         meal.mealType === 'lunch' ? <UtensilsCrossed className="h-4 w-4" /> :
-                                         meal.mealType === 'dinner' ? <Utensils className="h-4 w-4" /> :
-                                         <Cookie className="h-4 w-4" />}
-                                      </div>
-                                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedRecipe({
-                                        ...meal,
-                                        type: meal.mealType,
-                                        match: meal.mealType,
-                                        cuisine: "planned",
-                                        image: null,
-                                      })}>
-                                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{meal.mealType}</p>
-                                        <p className={`text-sm font-medium truncate ${isLogged ? 'text-primary/70' : 'text-slate-700 dark:text-slate-300'}`}>{meal.title}</p>
-                                        <p className="text-xs text-secondary font-semibold">{meal.calories} cal</p>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                            {dayMeals.length > 0 && (selectedCount > 0 || allDayLogged) && (
-                              <div className={`flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 ${
-                                allDayLogged ? '' : 'animate-in fade-in slide-in-from-bottom-2 duration-300'
+                        <>
+                          {pastDaysWithMeals.length > 0 && !showPastDays && (
+                            <button
+                              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-sm text-muted-foreground hover:text-slate-600 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                              onClick={() => setShowPastDays(true)}
+                              data-testid="button-show-past-days"
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                              Show {pastDaysWithMeals.length} previous day{pastDaysWithMeals.length > 1 ? 's' : ''}
+                            </button>
+                          )}
+                          {showPastDays && pastDaysWithMeals.length > 0 && (
+                            <button
+                              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-sm text-muted-foreground hover:text-slate-600 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                              onClick={() => setShowPastDays(false)}
+                              data-testid="button-hide-past-days"
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                              Hide previous days
+                            </button>
+                          )}
+                          {daysToRender.map(({ dayDate, dayDateStr, dayMeals, dayIsPast, dayIsToday, dayIsFuture }) => {
+                            const dayTotal = dayMeals.reduce((s, m) => s + m.calories, 0);
+                            const daySelected = selectedMealIds[dayDateStr] || new Set<string>();
+                            const unloggedMeals = dayMeals.filter(m => !loggedMealIds.has(m.id));
+                            const allDayLogged = dayMeals.length > 0 && unloggedMeals.length === 0;
+                            const allUnloggedSelected = unloggedMeals.length > 0 && unloggedMeals.every(m => daySelected.has(m.id));
+                            const selectedCount = dayMeals.filter(m => daySelected.has(m.id)).length;
+                            const selectedCalories = dayMeals.filter(m => daySelected.has(m.id)).reduce((s, m) => s + m.calories, 0);
+                            const canLog = dayIsToday || dayIsPast;
+                            return (
+                              <div key={dayDateStr} className={`rounded-xl overflow-hidden border ${
+                                dayIsToday ? 'border-primary/40 ring-1 ring-primary/20' :
+                                dayIsPast ? 'border-slate-200/60 dark:border-slate-700/60' :
+                                'border-slate-100 dark:border-slate-800'
                               }`}>
-                                {allDayLogged ? (
-                                  <p className="text-xs text-primary font-medium flex items-center gap-1.5">
-                                    <Check className="h-3.5 w-3.5" />
-                                    All meals logged to your diary
-                                  </p>
-                                ) : (
-                                  <>
-                                    <p className="text-xs text-muted-foreground">
-                                      {selectedCount} of {dayMeals.length} selected · <span className="font-semibold text-secondary">{selectedCalories} cal</span>
-                                    </p>
-                                    <Button
-                                      size="sm"
-                                      className="text-xs h-8 bg-secondary hover:bg-secondary/90 text-white"
-                                      disabled={loggingDay === dayDateStr}
-                                      onClick={() => handleLogSelectedMeals(dayDateStr, dayMeals)}
-                                      data-testid={`button-log-selected-${dayDateStr}`}
-                                    >
-                                      {loggingDay === dayDateStr ? (
-                                        <span className="flex items-center gap-1.5">
-                                          <span className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                          Logging...
-                                        </span>
+                                <div className={`px-4 py-2.5 flex items-center justify-between ${
+                                  dayIsToday ? 'bg-primary/10 dark:bg-primary/20' :
+                                  dayIsPast ? 'bg-slate-100/70 dark:bg-slate-800/30' :
+                                  'bg-slate-50 dark:bg-slate-800/50'
+                                }`}>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-bold ${
+                                      dayIsToday ? 'text-primary' :
+                                      dayIsPast ? 'text-slate-400 dark:text-slate-500' :
+                                      'text-slate-700 dark:text-slate-300'
+                                    }`}>
+                                      {format(dayDate, "EEEE")}
+                                    </span>
+                                    <span className={`text-xs ${dayIsPast ? 'text-slate-400 dark:text-slate-500' : 'text-muted-foreground'}`}>{format(dayDate, "MMM d")}</span>
+                                    {dayIsToday && <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">TODAY</span>}
+                                    {allDayLogged && <span className="text-[10px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5"><Check className="h-3 w-3" /> Logged</span>}
+                                    {dayIsFuture && dayMeals.length > 0 && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">Upcoming</span>}
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <span className={`text-xs font-semibold ${dayIsPast ? 'text-slate-400 dark:text-slate-500' : 'text-secondary'}`}>{dayTotal} kcal</span>
+                                    {canLog && dayMeals.length > 0 && unloggedMeals.length > 0 && (
+                                      <button
+                                        className="text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
+                                        onClick={() => toggleAllMealsForDay(dayDateStr, dayMeals)}
+                                        data-testid={`toggle-all-${dayDateStr}`}
+                                      >
+                                        {allUnloggedSelected ? 'Deselect All' : 'Select All'}
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className={`p-4 ${dayIsPast ? 'bg-slate-50/50 dark:bg-slate-900/50' : 'bg-white dark:bg-slate-900'}`}>
+                                  {dayMeals.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-2">No meals planned</p>
+                                  ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                      {dayMeals.map(meal => {
+                                        const isLogged = loggedMealIds.has(meal.id);
+                                        const isSelected = daySelected.has(meal.id);
+                                        return (
+                                          <div key={meal.id} className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                                            isLogged
+                                              ? 'bg-primary/5 dark:bg-primary/10 border border-primary/15'
+                                              : isSelected
+                                              ? 'bg-secondary/5 dark:bg-secondary/10 border border-secondary/25 ring-1 ring-secondary/10'
+                                              : dayIsPast
+                                              ? 'bg-slate-50 dark:bg-slate-800/50 border border-transparent opacity-75'
+                                              : dayIsFuture
+                                              ? 'bg-slate-50 dark:bg-slate-800 border border-transparent'
+                                              : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent'
+                                          }`}
+                                            data-testid={`planned-recipe-${meal.id}`}
+                                          >
+                                            <div className="flex-shrink-0">
+                                              {isLogged ? (
+                                                <div className="w-7 h-7 rounded-md bg-primary/15 flex items-center justify-center">
+                                                  <Check className="h-4 w-4 text-primary" />
+                                                </div>
+                                              ) : canLog ? (
+                                                <Checkbox
+                                                  checked={isSelected}
+                                                  onCheckedChange={() => toggleMealSelection(dayDateStr, meal.id)}
+                                                  className="h-5 w-5 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-secondary data-[state=checked]:border-secondary"
+                                                  data-testid={`checkbox-meal-${meal.id}`}
+                                                />
+                                              ) : (
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600`}>
+                                                  <Calendar className="h-3.5 w-3.5" />
+                                                </div>
+                                              )}
+                                            </div>
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                              dayIsFuture ? (
+                                                meal.mealType === 'breakfast' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-400' :
+                                                meal.mealType === 'lunch' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-400' :
+                                                meal.mealType === 'dinner' ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-400' :
+                                                'bg-green-50 dark:bg-green-900/20 text-green-400'
+                                              ) : (
+                                                meal.mealType === 'breakfast' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
+                                                meal.mealType === 'lunch' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
+                                                meal.mealType === 'dinner' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' :
+                                                'bg-green-100 dark:bg-green-900/30 text-green-600'
+                                              )
+                                            }`}>
+                                              {meal.mealType === 'breakfast' ? <Coffee className="h-4 w-4" /> :
+                                               meal.mealType === 'lunch' ? <UtensilsCrossed className="h-4 w-4" /> :
+                                               meal.mealType === 'dinner' ? <Utensils className="h-4 w-4" /> :
+                                               <Cookie className="h-4 w-4" />}
+                                            </div>
+                                            <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedRecipe({
+                                              ...meal,
+                                              type: meal.mealType,
+                                              match: meal.mealType,
+                                              cuisine: "planned",
+                                              image: null,
+                                            })}>
+                                              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{meal.mealType}</p>
+                                              <p className={`text-sm font-medium truncate ${
+                                                isLogged ? 'text-primary/70' :
+                                                dayIsPast ? 'text-slate-400 dark:text-slate-500' :
+                                                'text-slate-700 dark:text-slate-300'
+                                              }`}>{meal.title}</p>
+                                              <p className={`text-xs font-semibold ${dayIsPast ? 'text-slate-400 dark:text-slate-500' : 'text-secondary'}`}>{meal.calories} cal</p>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                  {canLog && dayMeals.length > 0 && (selectedCount > 0 || allDayLogged) && (
+                                    <div className={`flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 ${
+                                      allDayLogged ? '' : 'animate-in fade-in slide-in-from-bottom-2 duration-300'
+                                    }`}>
+                                      {allDayLogged ? (
+                                        <p className="text-xs text-primary font-medium flex items-center gap-1.5">
+                                          <Check className="h-3.5 w-3.5" />
+                                          All meals logged to your diary
+                                        </p>
                                       ) : (
-                                        <span className="flex items-center gap-1.5">
-                                          <Plus className="h-3.5 w-3.5" />
-                                          Log {selectedCount === dayMeals.length ? 'All' : selectedCount} Meal{selectedCount > 1 ? 's' : ''}
-                                        </span>
+                                        <>
+                                          <p className="text-xs text-muted-foreground">
+                                            {selectedCount} of {dayMeals.length} selected · <span className="font-semibold text-secondary">{selectedCalories} cal</span>
+                                          </p>
+                                          <Button
+                                            size="sm"
+                                            className="text-xs h-8 bg-secondary hover:bg-secondary/90 text-white"
+                                            disabled={loggingDay === dayDateStr}
+                                            onClick={() => handleLogSelectedMeals(dayDateStr, dayMeals)}
+                                            data-testid={`button-log-selected-${dayDateStr}`}
+                                          >
+                                            {loggingDay === dayDateStr ? (
+                                              <span className="flex items-center gap-1.5">
+                                                <span className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                Logging...
+                                              </span>
+                                            ) : (
+                                              <span className="flex items-center gap-1.5">
+                                                <Plus className="h-3.5 w-3.5" />
+                                                Log {selectedCount === dayMeals.length ? 'All' : selectedCount} Meal{selectedCount > 1 ? 's' : ''}
+                                              </span>
+                                            )}
+                                          </Button>
+                                        </>
                                       )}
-                                    </Button>
-                                  </>
-                                )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        </div>
+                            );
+                          })}
+                        </>
                       );
-                    })}
+                    })()}
                   </div>
                 </TabsContent>
               )}
