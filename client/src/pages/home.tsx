@@ -1307,15 +1307,8 @@ export default function Home() {
                                   >
                                     <Checkbox
                                       checked={isChecked}
-                                      onCheckedChange={() => {
-                                        setQuickAddSelected(prev => {
-                                          const next = new Set(prev);
-                                          if (next.has(idx)) next.delete(idx);
-                                          else next.add(idx);
-                                          return next;
-                                        });
-                                      }}
-                                      className="h-4.5 w-4.5 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                      className="h-4.5 w-4.5 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none"
+                                      tabIndex={-1}
                                     />
                                     <div className="flex-1 min-w-0">
                                       <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{food.name}</p>
