@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
 import { Activity, ChevronRight, CalendarDays, Moon, Sun, Armchair, Footprints, Bike, Flame } from "lucide-react";
@@ -19,6 +18,7 @@ interface OnboardingDialogProps {
     targetWeight: number;
     timeframe: number;
     activityLevel: string;
+    targetDate: string;
   }) => void;
   onClose?: () => void;
   initialName?: string;
@@ -27,6 +27,7 @@ interface OnboardingDialogProps {
   initialCurrentWeight?: number;
   initialTargetWeight?: number;
   initialTimeframe?: number;
+  initialTargetDate?: string;
   initialActivityLevel?: string;
   editMode?: boolean;
 }
@@ -87,6 +88,7 @@ export default function OnboardingDialog({
   initialCurrentWeight,
   initialTargetWeight,
   initialTimeframe,
+  initialTargetDate,
   initialActivityLevel,
   editMode
 }: OnboardingDialogProps) {
@@ -97,7 +99,9 @@ export default function OnboardingDialog({
   const [targetWeight, setTargetWeight] = useState(initialTargetWeight || 165);
   const [timeframe, setTimeframe] = useState(initialTimeframe || 12);
   const [activityLevel, setActivityLevel] = useState(initialActivityLevel || "moderate");
-  const [targetDate, setTargetDate] = useState<Date>(addWeeks(new Date(), initialTimeframe || 12));
+  const [targetDate, setTargetDate] = useState<Date>(
+    initialTargetDate ? new Date(initialTargetDate + "T00:00:00") : addWeeks(new Date(), initialTimeframe || 12)
+  );
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
   const [step, setStep] = useState<"profile" | "avatar">("profile");
@@ -111,11 +115,13 @@ export default function OnboardingDialog({
       setTargetWeight(initialTargetWeight || 165);
       setTimeframe(initialTimeframe || 12);
       setActivityLevel(initialActivityLevel || "moderate");
-      setTargetDate(addWeeks(new Date(), initialTimeframe || 12));
+      setTargetDate(
+        initialTargetDate ? new Date(initialTargetDate + "T00:00:00") : addWeeks(new Date(), initialTimeframe || 12)
+      );
       setCalendarOpen(false);
       setStep("profile");
     }
-  }, [open, initialName, initialAvatar, initialStartingWeight, initialCurrentWeight, initialTargetWeight, initialTimeframe, initialActivityLevel]);
+  }, [open, initialName, initialAvatar, initialStartingWeight, initialCurrentWeight, initialTargetWeight, initialTimeframe, initialTargetDate, initialActivityLevel]);
 
   const handleTimeframeSlider = (weeks: number) => {
     setTimeframe(weeks);
@@ -148,6 +154,7 @@ export default function OnboardingDialog({
         targetWeight,
         timeframe,
         activityLevel,
+        targetDate: format(targetDate, "yyyy-MM-dd"),
       });
     }
   };
@@ -305,35 +312,42 @@ export default function OnboardingDialog({
                   <span>Steady</span>
                 </div>
 
-                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <button
-                      className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
-                      data-testid="button-target-date-picker"
-                    >
-                      <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
-                        <CalendarDays className="h-4.5 w-4.5 text-secondary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground">Target Date</p>
-                        <p className="text-sm font-semibold text-slate-800">{format(targetDate, "MMMM d, yyyy")}</p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 border-slate-200 dark:border-slate-700 shadow-lg" align="center" sideOffset={8}>
-                    <div className="p-1">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 overflow-hidden">
+                  <button
+                    onClick={() => setCalendarOpen(!calendarOpen)}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-primary/5 transition-all text-left group"
+                    data-testid="button-target-date-picker"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
+                      <CalendarDays className="h-4.5 w-4.5 text-secondary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground">Target Date</p>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{format(targetDate, "MMMM d, yyyy")}</p>
+                    </div>
+                    <ChevronRight className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 ${calendarOpen ? 'rotate-90' : ''}`} />
+                  </button>
+                  {calendarOpen && (
+                    <div className="border-t border-slate-200 dark:border-slate-700 flex justify-center py-2 px-2">
                       <Calendar
                         mode="single"
                         selected={targetDate}
                         onSelect={handleDateSelect}
                         disabled={(date) => date < new Date() || date > addWeeks(new Date(), 52)}
-                        initialFocus
-                        className="rounded-lg"
+                        className="rounded-lg !w-full [--cell-size:2.25rem]"
+                        classNames={{
+                          months: "w-full",
+                          month: "w-full",
+                          table: "w-full",
+                          weekdays: "w-full flex justify-between",
+                          weekday: "w-[--cell-size] text-center text-[0.75rem] font-medium text-muted-foreground",
+                          week: "w-full flex justify-between mt-1",
+                          day: "h-[--cell-size] w-[--cell-size] text-center p-0",
+                        }}
                       />
                     </div>
-                  </PopoverContent>
-                </Popover>
+                  )}
+                </div>
               </div>
 
               {editMode && (

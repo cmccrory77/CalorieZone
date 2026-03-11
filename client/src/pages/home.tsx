@@ -217,6 +217,7 @@ export default function Home() {
     targetWeight: number;
     timeframe: number;
     activityLevel: string;
+    targetDate: string;
   }) => {
     if (!profile?.id) return;
     updateProfileMutation.mutate({
@@ -227,6 +228,7 @@ export default function Home() {
       targetWeight: data.targetWeight,
       timeframe: data.timeframe,
       activityLevel: data.activityLevel,
+      targetDate: data.targetDate,
     } as any);
     setStartingWeight(data.startingWeight);
     setCurrentWeight(data.currentWeight);
@@ -2649,6 +2651,7 @@ export default function Home() {
         initialCurrentWeight={currentWeight}
         initialTargetWeight={targetWeight}
         initialTimeframe={timeframe}
+        initialTargetDate={profile?.targetDate || undefined}
       />
 
       <OnboardingDialog
@@ -2661,6 +2664,7 @@ export default function Home() {
         initialCurrentWeight={currentWeight}
         initialTargetWeight={targetWeight}
         initialTimeframe={timeframe}
+        initialTargetDate={profile?.targetDate || undefined}
         initialActivityLevel={profile?.activityLevel || "moderate"}
         editMode
       />

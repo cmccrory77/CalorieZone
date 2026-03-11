@@ -11,6 +11,7 @@ export const userProfiles = pgTable("user_profiles", {
   currentWeight: real("current_weight").notNull().default(185),
   targetWeight: real("target_weight").notNull().default(165),
   timeframe: integer("timeframe").notNull().default(12),
+  targetDate: text("target_date"),
   maintenanceCalories: integer("maintenance_calories").notNull().default(2450),
   activityLevel: text("activity_level").notNull().default("moderate"),
 });
