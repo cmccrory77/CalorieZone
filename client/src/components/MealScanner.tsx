@@ -168,7 +168,7 @@ export default function MealScanner({ onLog }: MealScannerProps) {
       <Button
         variant="outline"
         size="sm"
-        className="h-9 gap-1.5 text-xs border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-600"
+        className="h-9 gap-1.5 text-xs border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-600 dark:text-purple-400"
         onClick={() => { reset(); setOpen(true); }}
         data-testid="button-meal-scanner"
       >
