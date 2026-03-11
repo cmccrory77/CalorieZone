@@ -1486,9 +1486,8 @@ export default function Home() {
 
                 {/* Add Custom Food */}
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Quick Add</h4>
-                    <div className="flex gap-1.5">
+                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Quick Add</h4>
+                  <div className="flex flex-wrap gap-2">
                       {frequentFoods.length > 0 && (
                         <Popover open={quickAddOpen} onOpenChange={setQuickAddOpen}>
                           <PopoverTrigger asChild>
@@ -1590,7 +1589,6 @@ export default function Home() {
                       <MealScanner onLog={(food) => {
                         addFoodMutation.mutate(food);
                       }} />
-                    </div>
                   </div>
                   <FoodSearch onAdd={(food) => addFoodMutation.mutate(food)} frequentFoods={frequentFoods} />
                 </div>
