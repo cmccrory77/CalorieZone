@@ -1598,12 +1598,12 @@ export default function Home() {
                           recipesTabRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                         }, 100);
                       }}
-                      className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 bg-primary/5 hover:bg-primary/10 dark:bg-primary/10 dark:hover:bg-primary/15 py-2 rounded-lg transition-all"
+                      className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-primary hover:bg-primary/90 active:bg-primary/80 py-3 rounded-xl shadow-sm transition-all"
                       data-testid="view-full-plan-button"
                     >
-                      <CalendarDays className="h-3.5 w-3.5" />
+                      <CalendarDays className="h-4 w-4" />
                       View Full Week Plan
-                      <ChevronRight className="h-3.5 w-3.5" />
+                      <ChevronRight className="h-4 w-4" />
                     </button>
                   </div>
                 ) : (
