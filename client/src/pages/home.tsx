@@ -1750,10 +1750,10 @@ export default function Home() {
                       <button
                         key={opt.value}
                         onClick={() => setMpPreference(opt.value)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
                           mpPreference === opt.value
-                            ? 'bg-primary text-white shadow-sm'
-                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                            ? 'border-primary bg-primary/5 dark:bg-primary/10 text-primary'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                         data-testid={`button-pref-${opt.value}`}
                       >
