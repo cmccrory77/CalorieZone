@@ -192,6 +192,7 @@ export default function Home() {
   const recipesTabRef = useRef<HTMLDivElement>(null);
   const trackerSectionRef = useRef<HTMLDivElement>(null);
   const recipesSectionRef = useRef<HTMLDivElement>(null);
+  const mealPlannerRef = useRef<HTMLDivElement>(null);
   const [activeRecipesTab, setActiveRecipesTab] = useState<string | undefined>(undefined);
   const [mobileTab, setMobileTab] = useState<"track" | "plan" | "scan" | "recipes" | "profile">("track");
   const [mealScannerOpen, setMealScannerOpen] = useState(false);
@@ -250,8 +251,7 @@ export default function Home() {
     if (tab === "track") {
       trackerSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else if (tab === "plan") {
-      setActiveRecipesTab("planned");
-      recipesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      mealPlannerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else if (tab === "scan") {
       setMealScannerOpen(true);
     } else if (tab === "recipes") {
@@ -1290,11 +1290,6 @@ export default function Home() {
               <span className="font-display font-bold text-xl tracking-tight">Caloriq</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex sm:hidden items-center gap-2">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{currentWeight}</span>
-                <span className="text-[10px] text-muted-foreground">/</span>
-                <span className="text-xs font-bold text-primary">{targetWeight} lbs</span>
-              </div>
               <div className="hidden sm:flex items-center gap-2.5 mr-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Weight</span>
@@ -1319,18 +1314,22 @@ export default function Home() {
                   </span>
                 </div>
               </div>
-              <div className="hidden sm:flex items-center gap-1">
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.avatarSeed || "Felix"}`} alt="User avatar" className="h-8 w-8 rounded-full bg-muted" />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full h-9 w-9 text-muted-foreground hover:text-foreground"
-                  onClick={() => setEditProfileOpen(true)}
-                  data-testid="button-edit-profile"
-                >
-                  <Settings className="h-5 w-5" />
-                </Button>
-              </div>
+              <img
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.avatarSeed || "Felix"}`}
+                alt="User avatar"
+                className="h-8 w-8 rounded-full bg-muted cursor-pointer"
+                onClick={() => setEditProfileOpen(true)}
+                data-testid="button-avatar"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden sm:flex rounded-full h-9 w-9 text-muted-foreground hover:text-foreground"
+                onClick={() => setEditProfileOpen(true)}
+                data-testid="button-edit-profile"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
             </div>
           </div>
         </div>
@@ -1342,6 +1341,31 @@ export default function Home() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Welcome back, {profile?.name || "there"}</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">Here's your progress and personalized plan for today.</p>
+        </div>
+
+        {/* Weight / Goal / Progress Summary - visible on mobile */}
+        <div className="sm:hidden flex items-center gap-3 bg-white dark:bg-slate-900 rounded-xl p-3 shadow-sm border border-slate-100 dark:border-slate-800">
+          <div className="flex-1 flex items-center gap-3">
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Weight</p>
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{currentWeight}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Goal</p>
+              <p className="text-sm font-bold text-primary">{targetWeight}</p>
+            </div>
+            <span className="text-[10px] text-muted-foreground self-end mb-0.5">lbs</span>
+          </div>
+          <div className="flex-1">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium text-center mb-1">Progress</p>
+            <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all"
+                style={{ width: `${Math.min(100, progressPercentage)}%` }}
+              />
+            </div>
+            <p className="text-[10px] font-semibold text-primary text-center mt-0.5">{Math.round(progressPercentage)}%</p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
@@ -1727,7 +1751,7 @@ export default function Home() {
             </Card>
           </div>
 
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5" ref={mealPlannerRef}>
             <Card className="border-none shadow-sm bg-white dark:bg-slate-900 relative flex flex-col rounded-xl h-full">
               <div className="h-2 bg-primary w-full rounded-t-xl"></div>
               <CardHeader className="pb-2">
