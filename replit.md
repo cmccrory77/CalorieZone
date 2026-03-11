@@ -62,6 +62,15 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - **PWA / Mobile**: Installable on home screen (standalone mode), service worker for offline caching, mobile bottom navigation (Home/Recipes/Scan/Plan/Profile), touch-friendly 44px minimum tap targets, safe area insets for notched devices, responsive typography and spacing
 - **Auto Meal Plan Regeneration**: When user changes profile parameters that affect daily calorie target (weight, timeframe, activity level), the meal plan auto-regenerates with updated calorie distribution
 
+## iOS Native App (Capacitor)
+- **Capacitor** configured for iOS native build (`capacitor.config.ts`)
+- **Apple Health (HealthKit)** integration via `client/src/services/healthkit.ts` — reads steps, active calories, body weight; writes food entries (calories, protein, carbs, fat) and weight
+- **HealthKit toggle** in inline profile section (mobile) — only visible when running as native iOS app
+- **Build flow**: `npm run build` → `npx cap sync ios` → open in Xcode → archive & submit
+- **Setup guide**: `IOS_BUILD_GUIDE.md` — full instructions for Xcode config, HealthKit entitlements, App Store submission
+- **Key packages**: `@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`
+- **Native plugin** (installed on Mac): `@nicepicks/capacitor-healthkit` — dynamic import avoids build errors in web mode
+
 ## Database Tables
 - `user_profiles`: id, name, avatar_seed, starting_weight, current_weight, target_weight, timeframe, maintenance_calories
 - `food_entries`: id, profile_id, name, calories, protein, carbs, fat, date

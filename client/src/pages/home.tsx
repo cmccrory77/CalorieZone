@@ -55,6 +55,8 @@ import BarcodeScanner from "@/components/BarcodeScanner";
 import MealScanner from "@/components/MealScanner";
 import FoodSearch from "@/components/FoodSearch";
 import OnboardingDialog from "@/components/OnboardingDialog";
+import { isHealthKitAvailable, requestHealthKitPermissions, getTodaySteps, getTodayActiveCalories, writeFoodEntry } from "@/services/healthkit";
+import { Heart } from "lucide-react";
 
 import breakfast1 from "@/assets/images/breakfast_meals_1.png";
 import breakfast2 from "@/assets/images/breakfast_meals_2.png";
@@ -199,6 +201,22 @@ export default function Home() {
   const mealPlannerRef = useRef<HTMLDivElement>(null);
   const profileSectionRef = useRef<HTMLDivElement>(null);
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
+  const [healthKitEnabled, setHealthKitEnabled] = useState(() => localStorage.getItem("caloriq-healthkit") === "true");
+  const [healthKitSteps, setHealthKitSteps] = useState(0);
+  const [healthKitCalories, setHealthKitCalories] = useState(0);
+
+  useEffect(() => {
+    if (healthKitEnabled && isHealthKitAvailable()) {
+      const fetchHealthData = async () => {
+        const [steps, calories] = await Promise.all([getTodaySteps(), getTodayActiveCalories()]);
+        setHealthKitSteps(steps);
+        setHealthKitCalories(calories);
+      };
+      fetchHealthData();
+      const interval = setInterval(fetchHealthData, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [healthKitEnabled]);
   const [activeRecipesTab, setActiveRecipesTab] = useState<string | undefined>(undefined);
   const [mobileTab, setMobileTab] = useState<"track" | "plan" | "scan" | "recipes" | "profile">("track");
   const [mealScannerOpen, setMealScannerOpen] = useState(false);
@@ -277,6 +295,9 @@ export default function Home() {
         date: selectedDateStr,
         ...entry,
       });
+      if (healthKitEnabled && isHealthKitAvailable()) {
+        writeFoodEntry(entry.calories, entry.protein, entry.carbs, entry.fat).catch(() => {});
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -2657,6 +2678,49 @@ export default function Home() {
                   data-testid="switch-dark-mode-inline"
                 />
               </div>
+
+              {isHealthKitAvailable() && (
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                      <Heart className="h-4 w-4 text-red-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Apple Health</p>
+                      <p className="text-xs text-muted-foreground">Sync steps & calories</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={healthKitEnabled}
+                    onCheckedChange={async (checked) => {
+                      if (checked) {
+                        const granted = await requestHealthKitPermissions();
+                        if (granted) {
+                          setHealthKitEnabled(true);
+                          localStorage.setItem("caloriq-healthkit", "true");
+                        }
+                      } else {
+                        setHealthKitEnabled(false);
+                        localStorage.setItem("caloriq-healthkit", "false");
+                      }
+                    }}
+                    data-testid="switch-healthkit"
+                  />
+                </div>
+              )}
+
+              {healthKitEnabled && isHealthKitAvailable() && (healthKitSteps > 0 || healthKitCalories > 0) && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30">
+                    <p className="text-[10px] uppercase tracking-wider text-red-400 font-medium mb-1">Steps Today</p>
+                    <p className="text-lg font-bold text-red-500">{healthKitSteps.toLocaleString()}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30">
+                    <p className="text-[10px] uppercase tracking-wider text-red-400 font-medium mb-1">Active Cal</p>
+                    <p className="text-lg font-bold text-red-500">{healthKitCalories}</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
