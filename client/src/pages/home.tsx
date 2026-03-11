@@ -1385,7 +1385,8 @@ export default function Home() {
                             <span className="text-sm text-slate-500 dark:text-slate-400 font-semibold">{food.calories} kcal</span>
                             <button 
                               onClick={() => handleRemoveFood(food.id)}
-                              className="text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                              className="text-slate-400 hover:text-red-500 active:text-red-600 transition-colors p-1 -mr-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30"
+                              data-testid={`button-remove-food-${food.id}`}
                             >
                               <X className="h-4 w-4" />
                             </button>
