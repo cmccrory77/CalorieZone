@@ -26,10 +26,11 @@ import {
   Copy,
   Share2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Dumbbell
 } from "lucide-react";
 import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
-import type { UserProfile, FoodEntry, SavedRecipe, PlannedMeal } from "@shared/schema";
+import type { UserProfile, FoodEntry, SavedRecipe, PlannedMeal, ExerciseEntry } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

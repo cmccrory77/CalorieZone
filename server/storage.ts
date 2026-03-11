@@ -5,6 +5,7 @@ import {
   foodEntries,
   savedRecipes,
   plannedMeals,
+  exerciseEntries,
   type UserProfile,
   type InsertUserProfile,
   type FoodEntry,
@@ -13,6 +14,8 @@ import {
   type InsertSavedRecipe,
   type PlannedMeal,
   type InsertPlannedMeal,
+  type ExerciseEntry,
+  type InsertExerciseEntry,
 } from "@shared/schema";
 
 export interface FrequentFood {
@@ -43,6 +46,10 @@ export interface IStorage {
   getPlannedMeals(profileId: string, startDate: string, endDate: string): Promise<PlannedMeal[]>;
   addPlannedMeals(meals: InsertPlannedMeal[]): Promise<PlannedMeal[]>;
   clearPlannedMealsForWeek(profileId: string, startDate: string, endDate: string): Promise<void>;
+
+  getExerciseEntries(profileId: string, date: string): Promise<ExerciseEntry[]>;
+  addExerciseEntry(entry: InsertExerciseEntry): Promise<ExerciseEntry>;
+  removeExerciseEntry(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -158,6 +165,22 @@ export class DatabaseStorage implements IStorage {
           sql`${plannedMeals.date} <= ${endDate}`
         )
       );
+  }
+
+  async getExerciseEntries(profileId: string, date: string): Promise<ExerciseEntry[]> {
+    return db
+      .select()
+      .from(exerciseEntries)
+      .where(and(eq(exerciseEntries.profileId, profileId), eq(exerciseEntries.date, date)));
+  }
+
+  async addExerciseEntry(entry: InsertExerciseEntry): Promise<ExerciseEntry> {
+    const [created] = await db.insert(exerciseEntries).values(entry).returning();
+    return created;
+  }
+
+  async removeExerciseEntry(id: string): Promise<void> {
+    await db.delete(exerciseEntries).where(eq(exerciseEntries.id, id));
   }
 }
 

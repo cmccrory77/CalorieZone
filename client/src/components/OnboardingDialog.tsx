@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
-import { Activity, ChevronRight, CalendarDays, Moon, Sun } from "lucide-react";
+import { Activity, ChevronRight, CalendarDays, Moon, Sun, Armchair, Footprints, Bike, Flame } from "lucide-react";
 import { addWeeks, format } from "date-fns";
 
 interface OnboardingDialogProps {
@@ -18,6 +18,7 @@ interface OnboardingDialogProps {
     currentWeight: number;
     targetWeight: number;
     timeframe: number;
+    activityLevel: string;
   }) => void;
   onClose?: () => void;
   initialName?: string;
@@ -26,6 +27,7 @@ interface OnboardingDialogProps {
   initialCurrentWeight?: number;
   initialTargetWeight?: number;
   initialTimeframe?: number;
+  initialActivityLevel?: string;
   editMode?: boolean;
 }
 
@@ -68,6 +70,13 @@ const avatarOptions = [
   { seed: "Ingrid", label: "Ingrid" },
 ];
 
+const activityLevels = [
+  { value: "sedentary", label: "Sedentary", description: "Little to no exercise, desk job", icon: Armchair, color: "text-slate-500" },
+  { value: "moderate", label: "Moderate", description: "Light exercise 1–3 days/week", icon: Footprints, color: "text-blue-500" },
+  { value: "active", label: "Active", description: "Exercise 3–5 days/week", icon: Bike, color: "text-green-500" },
+  { value: "very_active", label: "Very Active", description: "Hard exercise 6–7 days/week", icon: Flame, color: "text-orange-500" },
+];
+
 export default function OnboardingDialog({
   open,
   onComplete,
@@ -78,6 +87,7 @@ export default function OnboardingDialog({
   initialCurrentWeight,
   initialTargetWeight,
   initialTimeframe,
+  initialActivityLevel,
   editMode
 }: OnboardingDialogProps) {
   const [name, setName] = useState(initialName || "");
@@ -86,6 +96,7 @@ export default function OnboardingDialog({
   const [currentWeight, setCurrentWeight] = useState(initialCurrentWeight || 185);
   const [targetWeight, setTargetWeight] = useState(initialTargetWeight || 165);
   const [timeframe, setTimeframe] = useState(initialTimeframe || 12);
+  const [activityLevel, setActivityLevel] = useState(initialActivityLevel || "moderate");
   const [targetDate, setTargetDate] = useState<Date>(addWeeks(new Date(), initialTimeframe || 12));
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
@@ -99,11 +110,12 @@ export default function OnboardingDialog({
       setCurrentWeight(initialCurrentWeight || 185);
       setTargetWeight(initialTargetWeight || 165);
       setTimeframe(initialTimeframe || 12);
+      setActivityLevel(initialActivityLevel || "moderate");
       setTargetDate(addWeeks(new Date(), initialTimeframe || 12));
       setCalendarOpen(false);
       setStep("profile");
     }
-  }, [open, initialName, initialAvatar, initialStartingWeight, initialCurrentWeight, initialTargetWeight, initialTimeframe]);
+  }, [open, initialName, initialAvatar, initialStartingWeight, initialCurrentWeight, initialTargetWeight, initialTimeframe, initialActivityLevel]);
 
   const handleTimeframeSlider = (weeks: number) => {
     setTimeframe(weeks);
@@ -135,6 +147,7 @@ export default function OnboardingDialog({
         currentWeight,
         targetWeight,
         timeframe,
+        activityLevel,
       });
     }
   };
@@ -218,6 +231,38 @@ export default function OnboardingDialog({
                       data-testid="input-onboard-target-weight"
                     />
                   </div>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 dark:border-slate-700 pt-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Daily Activity Level</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {activityLevels.map((level) => {
+                    const Icon = level.icon;
+                    const isSelected = activityLevel === level.value;
+                    return (
+                      <button
+                        key={level.value}
+                        onClick={() => setActivityLevel(level.value)}
+                        className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left ${
+                          isSelected
+                            ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                            : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600"
+                        }`}
+                        data-testid={`activity-level-${level.value}`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          isSelected ? "bg-primary/10" : "bg-slate-100 dark:bg-slate-700"
+                        }`}>
+                          <Icon className={`h-4 w-4 ${isSelected ? "text-primary" : level.color}`} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className={`text-sm font-semibold ${isSelected ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>{level.label}</p>
+                          <p className="text-[10px] text-muted-foreground leading-tight">{level.description}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

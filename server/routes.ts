@@ -2,7 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { type Server } from "http";
 import { storage } from "./storage";
-import { insertFoodEntrySchema, updateUserProfileSchema, insertSavedRecipeSchema, insertPlannedMealSchema } from "@shared/schema";
+import { insertFoodEntrySchema, updateUserProfileSchema, insertSavedRecipeSchema, insertPlannedMealSchema, insertExerciseEntrySchema } from "@shared/schema";
 import OpenAI from "openai";
 
 export async function registerRoutes(
@@ -131,6 +131,34 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to clear planned meals" });
+    }
+  });
+
+  app.get("/api/exercise-entries/:profileId/:date", async (req, res) => {
+    try {
+      const entries = await storage.getExerciseEntries(req.params.profileId, req.params.date);
+      res.json(entries);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to load exercise entries" });
+    }
+  });
+
+  app.post("/api/exercise-entries", async (req, res) => {
+    try {
+      const parsed = insertExerciseEntrySchema.parse(req.body);
+      const entry = await storage.addExerciseEntry(parsed);
+      res.json(entry);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid exercise entry data" });
+    }
+  });
+
+  app.delete("/api/exercise-entries/:id", async (req, res) => {
+    try {
+      await storage.removeExerciseEntry(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove exercise entry" });
     }
   });
 
