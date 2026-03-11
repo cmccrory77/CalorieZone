@@ -193,7 +193,8 @@ export default function Home() {
   const trackerSectionRef = useRef<HTMLDivElement>(null);
   const recipesSectionRef = useRef<HTMLDivElement>(null);
   const [activeRecipesTab, setActiveRecipesTab] = useState<string | undefined>(undefined);
-  const [mobileTab, setMobileTab] = useState<"home" | "recipes" | "scan" | "plan" | "profile">("home");
+  const [mobileTab, setMobileTab] = useState<"track" | "plan" | "scan" | "recipes" | "profile">("track");
+  const [mealScannerOpen, setMealScannerOpen] = useState(false);
   useEffect(() => {
     if (profile && !profileSynced.current) {
       setStartingWeight(profile.startingWeight);
@@ -244,17 +245,17 @@ export default function Home() {
     setEditProfileOpen(false);
   }, [profile?.id]);
 
-  const handleMobileTab = useCallback((tab: "home" | "recipes" | "scan" | "plan" | "profile") => {
+  const handleMobileTab = useCallback((tab: "track" | "plan" | "scan" | "recipes" | "profile") => {
     setMobileTab(tab);
-    if (tab === "home") {
-      trackerSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else if (tab === "recipes") {
-      setActiveRecipesTab("recommended");
-      recipesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else if (tab === "scan") {
+    if (tab === "track") {
       trackerSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else if (tab === "plan") {
       setActiveRecipesTab("planned");
+      recipesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (tab === "scan") {
+      setMealScannerOpen(true);
+    } else if (tab === "recipes") {
+      setActiveRecipesTab("recommended");
       recipesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else if (tab === "profile") {
       setEditProfileOpen(true);
@@ -1584,9 +1585,11 @@ export default function Home() {
                       <BarcodeScanner onLog={(food) => {
                         addFoodMutation.mutate(food);
                       }} />
-                      <MealScanner onLog={(food) => {
-                        addFoodMutation.mutate(food);
-                      }} />
+                      <MealScanner
+                        onLog={(food) => { addFoodMutation.mutate(food); }}
+                        externalOpen={mealScannerOpen}
+                        onExternalOpenChange={setMealScannerOpen}
+                      />
                   </div>
                   <FoodSearch onAdd={(food) => addFoodMutation.mutate(food)} frequentFoods={frequentFoods} />
                 </div>
@@ -1662,7 +1665,7 @@ export default function Home() {
                 
                 <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
-                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Maintenance</div>
+                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Maintain</div>
                     <div className="font-bold text-slate-700 dark:text-slate-300 text-sm">{maintenanceCalories}</div>
                     <div className="text-[10px] text-muted-foreground">kcal/day</div>
                   </div>
@@ -2913,10 +2916,10 @@ export default function Home() {
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 sm:hidden safe-bottom" data-testid="mobile-bottom-nav">
         <div className="flex justify-around items-center h-16 px-2">
           {[
-            { id: "home" as const, icon: HomeIcon, label: "Home" },
-            { id: "recipes" as const, icon: ChefHat, label: "Recipes" },
-            { id: "scan" as const, icon: ScanLine, label: "Scan" },
+            { id: "track" as const, icon: Activity, label: "Track" },
             { id: "plan" as const, icon: CalendarDays, label: "Plan" },
+            { id: "scan" as const, icon: ScanLine, label: "AI Scan" },
+            { id: "recipes" as const, icon: ChefHat, label: "Recipes" },
             { id: "profile" as const, icon: User, label: "Profile" },
           ].map((item) => (
             <button

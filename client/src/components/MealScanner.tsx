@@ -20,10 +20,17 @@ interface AnalysisResult {
 
 interface MealScannerProps {
   onLog: (food: { name: string; calories: number; protein: number; carbs: number; fat: number }) => void;
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
 }
 
-export default function MealScanner({ onLog }: MealScannerProps) {
-  const [open, setOpen] = useState(false);
+export default function MealScanner({ onLog, externalOpen, onExternalOpenChange }: MealScannerProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = (v: boolean) => {
+    setInternalOpen(v);
+    onExternalOpenChange?.(v);
+  };
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
