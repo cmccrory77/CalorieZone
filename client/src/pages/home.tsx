@@ -1341,14 +1341,23 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg sm:text-2xl font-display font-bold text-foreground leading-tight">Hi, {profile?.name || "there"}</h1>
-            <p className="text-muted-foreground text-xs sm:text-sm">{isViewingToday ? "Today" : format(selectedDate, "MMM d")} · {currentWeight} → {targetWeight} lbs</p>
           </div>
           <div className="flex items-center gap-2 sm:hidden">
-            <div className="flex flex-col items-end">
-              <span className="text-xs font-bold text-primary">{Math.round(progressPercentage)}%</span>
-              <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Weight</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{currentWeight}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Goal</span>
+              <span className="text-xs font-bold text-primary">{targetWeight}</span>
+            </div>
+            <span className="text-[10px] text-muted-foreground">lbs</span>
+            <div className="text-slate-200 dark:text-slate-700">|</div>
+            <div className="flex items-center gap-1">
+              <div className="w-12 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full" style={{ width: `${Math.min(100, progressPercentage)}%` }} />
               </div>
+              <span className="text-[10px] font-bold text-primary">{Math.round(progressPercentage)}%</span>
             </div>
           </div>
         </div>
@@ -1455,7 +1464,7 @@ export default function Home() {
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div>
                           <div className="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-slate-100">{consumed}</div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide font-medium">Eaten</div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide font-medium">Added</div>
                         </div>
                         <div className={`rounded-lg py-1 ${remaining > 0 ? 'bg-secondary/10' : 'bg-red-50 dark:bg-red-950/30'}`}>
                           <div className={`text-xl sm:text-2xl font-display font-bold ${remaining > 0 ? 'text-secondary' : 'text-red-500'}`}>
