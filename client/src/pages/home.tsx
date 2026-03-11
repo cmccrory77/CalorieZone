@@ -27,9 +27,9 @@ import {
   Share2,
   ChevronDown,
   ChevronUp,
-  Dumbbell,
-  Eye
+  Dumbbell
 } from "lucide-react";
+import { Eye } from "lucide-react";
 import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
 import type { UserProfile, FoodEntry, SavedRecipe, PlannedMeal, ExerciseEntry } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1145,7 +1145,7 @@ export default function Home() {
 
           <div className="lg:col-span-7 space-y-8">
             {/* Calories Tracker Card */}
-            <Card className="border-none shadow-sm bg-white dark:bg-slate-900 relative h-full flex flex-col rounded-xl">
+            <Card className="border-none shadow-sm bg-white dark:bg-slate-900 relative flex flex-col rounded-xl">
               <div className="h-2 bg-secondary w-full rounded-t-xl"></div>
               <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
                 <Flame className="h-32 w-32 text-secondary" />
@@ -1234,9 +1234,8 @@ export default function Home() {
                   {isViewingToday ? "Today" : format(selectedDate, "EEEE")}, {format(selectedDate, "MMMM d, yyyy")}
                 </p>
               </CardHeader>
-              <CardContent className="relative z-10 flex-1 flex flex-col">
+              <CardContent className="relative z-10 space-y-6">
                 
-                <div className="space-y-6">
                 <div className="flex justify-between items-end mb-2">
                   <div>
                     <div className="text-4xl font-display font-bold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -1407,8 +1406,7 @@ export default function Home() {
                   </div>
                 )}
                 
-                </div>
-                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto">
+                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
                     <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Maintenance</div>
                     <div className="font-bold text-slate-700 dark:text-slate-300 text-sm">{maintenanceCalories}</div>
