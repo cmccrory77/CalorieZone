@@ -27,7 +27,8 @@ import {
   Share2,
   ChevronDown,
   ChevronUp,
-  Dumbbell
+  Dumbbell,
+  Eye
 } from "lucide-react";
 import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
 import type { UserProfile, FoodEntry, SavedRecipe, PlannedMeal, ExerciseEntry } from "@shared/schema";
@@ -1512,29 +1513,83 @@ export default function Home() {
                 {todayPlannedMeals.length > 0 ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Today's Preview</Label>
+                      <Label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Today's Meals</Label>
                       <span className="text-[10px] text-muted-foreground bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">{todayPlannedMeals.length} meals</span>
                     </div>
-                    <div className="space-y-1.5 max-h-[120px] overflow-y-auto pr-1">
-                      {todayPlannedMeals.map(meal => (
-                        <div key={meal.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-sm" data-testid={`planned-meal-${meal.id}`}>
-                          <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
-                            meal.mealType === 'breakfast' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
-                            meal.mealType === 'lunch' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
-                            meal.mealType === 'dinner' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' :
-                            'bg-green-100 dark:bg-green-900/30 text-green-600'
-                          }`}>
-                            {meal.mealType === 'breakfast' ? <Coffee className="h-3.5 w-3.5" /> :
-                             meal.mealType === 'lunch' ? <UtensilsCrossed className="h-3.5 w-3.5" /> :
-                             meal.mealType === 'dinner' ? <Utensils className="h-3.5 w-3.5" /> :
-                             <Cookie className="h-3.5 w-3.5" />}
+                    <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                      {todayPlannedMeals.map(meal => {
+                        const isLogged = loggedMealIds.has(meal.id);
+                        return (
+                          <div key={meal.id} className={`p-2.5 rounded-xl border transition-all ${
+                            isLogged
+                              ? 'border-primary/20 bg-primary/5 dark:bg-primary/10'
+                              : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50'
+                          }`} data-testid={`planned-meal-${meal.id}`}>
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                meal.mealType === 'breakfast' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
+                                meal.mealType === 'lunch' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
+                                meal.mealType === 'dinner' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' :
+                                'bg-green-100 dark:bg-green-900/30 text-green-600'
+                              }`}>
+                                {meal.mealType === 'breakfast' ? <Coffee className="h-4 w-4" /> :
+                                 meal.mealType === 'lunch' ? <UtensilsCrossed className="h-4 w-4" /> :
+                                 meal.mealType === 'dinner' ? <Utensils className="h-4 w-4" /> :
+                                 <Cookie className="h-4 w-4" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{meal.mealType}</p>
+                                <p className={`text-sm font-medium truncate ${isLogged ? 'text-primary' : 'text-slate-700 dark:text-slate-300'}`}>{meal.title}</p>
+                              </div>
+                              <div className="flex flex-col items-end gap-0.5 shrink-0">
+                                <span className="text-xs font-semibold text-secondary">{meal.calories} cal</span>
+                                {isLogged && (
+                                  <span className="text-[10px] font-semibold text-primary flex items-center gap-0.5">
+                                    <Check className="h-3 w-3" /> Logged
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-1.5 mt-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 h-7 text-xs"
+                                onClick={() => setSelectedRecipe({
+                                  ...meal,
+                                  type: meal.mealType,
+                                  match: meal.mealType,
+                                  cuisine: "planned",
+                                  image: null,
+                                })}
+                                data-testid={`button-view-meal-${meal.id}`}
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                View
+                              </Button>
+                              <Button
+                                size="sm"
+                                className={`flex-1 h-7 text-xs ${isLogged ? 'bg-primary/20 text-primary hover:bg-primary/30' : 'bg-primary hover:bg-primary/90 text-white'}`}
+                                disabled={isLogged}
+                                onClick={() => {
+                                  addRecipeToTracker(meal);
+                                  toast({
+                                    title: `Logged ${meal.title}`,
+                                    description: `${meal.calories} cal added to today's diary`,
+                                  });
+                                }}
+                                data-testid={`button-log-meal-${meal.id}`}
+                              >
+                                {isLogged ? (
+                                  <><Check className="h-3 w-3 mr-1" /> Logged</>
+                                ) : (
+                                  <><Plus className="h-3 w-3 mr-1" /> Log</>
+                                )}
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-slate-700 dark:text-slate-300 truncate text-xs">{meal.title}</p>
-                          </div>
-                          <span className="text-xs font-semibold text-secondary whitespace-nowrap">{meal.calories} cal</span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                     <button
                       onClick={() => {
