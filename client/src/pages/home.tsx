@@ -1273,10 +1273,10 @@ export default function Home() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-8 w-8 p-0 border-primary/30 text-primary hover:bg-primary/10"
+                              className="h-9 gap-1.5 text-xs border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
                               data-testid="button-quick-add-frequent"
                             >
-                              <Plus className="h-4 w-4" />
+                              Add Recent
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
