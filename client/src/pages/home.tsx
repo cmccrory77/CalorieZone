@@ -275,6 +275,8 @@ export default function Home() {
   const [selectedMealIds, setSelectedMealIds] = useState<Record<string, Set<string>>>({});
   const [loggingDay, setLoggingDay] = useState<string | null>(null);
   const [showPastDays, setShowPastDays] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddSelected, setQuickAddSelected] = useState<Set<number>>(new Set());
 
   const { data: weekFoodEntries = [] } = useQuery<FoodEntry[]>({
     queryKey: ["/api/food-entries/range", profile?.id, weekStartStr, weekEndStr],
