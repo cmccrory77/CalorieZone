@@ -1649,9 +1649,12 @@ export default function Home() {
                                 <Eye className="h-3 w-3 mr-1" />
                                 View
                               </Button>
-                              <Button
-                                size="sm"
-                                className={`flex-1 h-7 text-xs ${isLogged ? 'bg-primary/20 text-primary hover:bg-primary/30' : 'bg-primary hover:bg-primary/90 text-white'}`}
+                              <button
+                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+                                  isLogged
+                                    ? 'border-primary bg-primary/5 dark:bg-primary/10 text-primary cursor-default'
+                                    : 'border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10 text-slate-700 dark:text-slate-300'
+                                }`}
                                 disabled={isLogged}
                                 onClick={() => {
                                   addRecipeToTracker(meal);
@@ -1663,11 +1666,11 @@ export default function Home() {
                                 data-testid={`button-log-meal-${meal.id}`}
                               >
                                 {isLogged ? (
-                                  <><Check className="h-3 w-3 mr-1" /> Logged</>
+                                  <><Check className="h-3 w-3" /> Logged</>
                                 ) : (
-                                  <><Plus className="h-3 w-3 mr-1" /> Log</>
+                                  <><Plus className="h-3 w-3" /> Log</>
                                 )}
-                              </Button>
+                              </button>
                             </div>
                           </div>
                         );
