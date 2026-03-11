@@ -28,7 +28,10 @@ import {
   ChevronDown,
   ChevronUp,
   Dumbbell,
-  Footprints
+  Footprints,
+  Home as HomeIcon,
+  ScanLine,
+  User
 } from "lucide-react";
 import { Eye } from "lucide-react";
 import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
@@ -187,7 +190,10 @@ export default function Home() {
 
   const profileSynced = useRef(false);
   const recipesTabRef = useRef<HTMLDivElement>(null);
+  const trackerSectionRef = useRef<HTMLDivElement>(null);
+  const recipesSectionRef = useRef<HTMLDivElement>(null);
   const [activeRecipesTab, setActiveRecipesTab] = useState<string | undefined>(undefined);
+  const [mobileTab, setMobileTab] = useState<"home" | "recipes" | "scan" | "plan" | "profile">("home");
   useEffect(() => {
     if (profile && !profileSynced.current) {
       setStartingWeight(profile.startingWeight);
@@ -237,6 +243,23 @@ export default function Home() {
     setTimeframe(data.timeframe);
     setEditProfileOpen(false);
   }, [profile?.id]);
+
+  const handleMobileTab = useCallback((tab: "home" | "recipes" | "scan" | "plan" | "profile") => {
+    setMobileTab(tab);
+    if (tab === "home") {
+      trackerSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (tab === "recipes") {
+      setActiveRecipesTab("recommended");
+      recipesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (tab === "scan") {
+      trackerSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (tab === "plan") {
+      setActiveRecipesTab("planned");
+      recipesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (tab === "profile") {
+      setEditProfileOpen(true);
+    }
+  }, []);
 
   const addFoodMutation = useMutation({
     mutationFn: async (entry: { name: string; calories: number; protein: number; carbs: number; fat: number }) => {
@@ -1260,12 +1283,17 @@ export default function Home() {
       {/* Navigation */}
       <nav className="bg-white dark:bg-slate-900 border-b border-border sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
+          <div className="flex justify-between h-14 sm:h-16 items-center">
             <div className="flex items-center gap-2 text-primary">
               <Activity className="h-6 w-6" />
               <span className="font-display font-bold text-xl tracking-tight">Caloriq</span>
             </div>
             <div className="flex items-center gap-3">
+              <div className="flex sm:hidden items-center gap-2">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{currentWeight}</span>
+                <span className="text-[10px] text-muted-foreground">/</span>
+                <span className="text-xs font-bold text-primary">{targetWeight} lbs</span>
+              </div>
               <div className="hidden sm:flex items-center gap-2.5 mr-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Weight</span>
@@ -1290,7 +1318,7 @@ export default function Home() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="hidden sm:flex items-center gap-1">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.avatarSeed || "Felix"}`} alt="User avatar" className="h-8 w-8 rounded-full bg-muted" />
                 <Button
                   variant="ghost"
@@ -1307,17 +1335,17 @@ export default function Home() {
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-24 sm:pb-8 space-y-6 sm:space-y-8">
         
         {/* Header Section */}
         <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">Welcome back, {profile?.name || "there"}</h1>
-          <p className="text-muted-foreground mt-1">Here's your progress and personalized plan for today.</p>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Welcome back, {profile?.name || "there"}</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Here's your progress and personalized plan for today.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
 
-          <div className="lg:col-span-7 space-y-8">
+          <div className="lg:col-span-7 space-y-6 sm:space-y-8" ref={trackerSectionRef}>
             {/* Calories Tracker Card */}
             <Card className="border-none shadow-sm bg-white dark:bg-slate-900 relative flex flex-col rounded-xl">
               <div className="h-2 bg-secondary w-full rounded-t-xl"></div>
@@ -1365,7 +1393,7 @@ export default function Home() {
                           key={i}
                           disabled={isFuture}
                           onClick={() => setSelectedDate(day)}
-                          className={`flex flex-col items-center py-1.5 px-1 rounded-lg flex-1 transition-all ${
+                          className={`flex flex-col items-center py-2 sm:py-1.5 px-1 rounded-lg flex-1 transition-all min-h-[44px] ${
                             isSelected
                               ? "bg-secondary text-white shadow-sm"
                               : isDayToday
@@ -1959,7 +1987,7 @@ export default function Home() {
           </div>
 
           {/* Right Column - Recipes & Meals */}
-          <div className="lg:col-span-12 space-y-6">
+          <div className="lg:col-span-12 space-y-6" ref={recipesSectionRef}>
             
             <Tabs value={activeRecipesTab ?? (plannedMealsData.length > 0 ? "planned" : "recommended")} onValueChange={setActiveRecipesTab} className="w-full" ref={recipesTabRef}>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -2897,6 +2925,39 @@ export default function Home() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 sm:hidden safe-bottom" data-testid="mobile-bottom-nav">
+        <div className="flex justify-around items-center h-16 px-2">
+          {[
+            { id: "home" as const, icon: HomeIcon, label: "Home" },
+            { id: "recipes" as const, icon: ChefHat, label: "Recipes" },
+            { id: "scan" as const, icon: ScanLine, label: "Scan" },
+            { id: "plan" as const, icon: CalendarDays, label: "Plan" },
+            { id: "profile" as const, icon: User, label: "Profile" },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleMobileTab(item.id)}
+              className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-1 rounded-lg transition-colors ${
+                mobileTab === item.id
+                  ? "text-primary"
+                  : "text-slate-400 dark:text-slate-500"
+              }`}
+              data-testid={`mobile-nav-${item.id}`}
+            >
+              {item.id === "scan" ? (
+                <div className="bg-primary text-white rounded-full p-2.5 -mt-5 shadow-lg shadow-primary/30">
+                  <item.icon className="h-5 w-5" />
+                </div>
+              ) : (
+                <item.icon className={`h-5 w-5 ${mobileTab === item.id ? "stroke-[2.5]" : ""}`} />
+              )}
+              <span className={`text-[10px] font-medium ${item.id === "scan" ? "mt-0.5" : ""}`}>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }

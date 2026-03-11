@@ -8,6 +8,7 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - **Backend**: Express.js with REST API
 - **Database**: PostgreSQL via Drizzle ORM
 - **State Management**: TanStack React Query for server state, local React state for UI
+- **PWA**: Service worker (`client/public/sw.js`), web app manifest (`client/public/manifest.json`), mobile bottom navigation, safe area insets, standalone display mode
 
 ## Key Files
 - `shared/schema.ts` - Drizzle schema: `userProfiles`, `foodEntries`, `savedRecipes` tables
@@ -58,6 +59,8 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - **Recent/Frequent Foods**: Search prioritizes previously logged items; shows recent foods on focus
 - **Onboarding/Settings**: 2-step dialog (profile/weight goals + avatar) shown on first use; accessible later via Settings gear icon in navbar to edit name, avatar, weight goals, and dark mode toggle
 - **Dark Mode**: Full dark theme with toggle in Settings; persists across sessions via localStorage
+- **PWA / Mobile**: Installable on home screen (standalone mode), service worker for offline caching, mobile bottom navigation (Home/Recipes/Scan/Plan/Profile), touch-friendly 44px minimum tap targets, safe area insets for notched devices, responsive typography and spacing
+- **Auto Meal Plan Regeneration**: When user changes profile parameters that affect daily calorie target (weight, timeframe, activity level), the meal plan auto-regenerates with updated calorie distribution
 
 ## Database Tables
 - `user_profiles`: id, name, avatar_seed, starting_weight, current_weight, target_weight, timeframe, maintenance_calories
