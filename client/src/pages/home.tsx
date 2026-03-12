@@ -1212,23 +1212,36 @@ export default function Home() {
 
   const handleExportGroceryList = () => {
     const list = aggregatedGroceryList();
-    const lines: string[] = [`${profile?.name || "My"}'s Grocery List`, ""];
+    const plainLines: string[] = [`${profile?.name || "My"}'s Grocery List`, ""];
+    let html = `<h3>${profile?.name || "My"}'s Grocery List</h3>`;
     const categoryOrder = ["Proteins", "Dairy & Eggs", "Grains & Bread", "Fruits", "Vegetables", "Nuts & Seeds", "Pantry & Sauces", "Spices & Herbs", "Other"];
     categoryOrder.forEach(cat => {
       if (!list[cat]) return;
       const selected = list[cat].filter(e => groceryChecked[e.item.toLowerCase().trim()]);
       if (selected.length === 0) return;
-      lines.push(`── ${cat} ──`);
+      plainLines.push(`── ${cat} ──`);
+      html += `<p><b>${cat}</b></p><ul>`;
       selected.forEach(entry => {
         const qty = entry.amounts.length > 1 ? `${entry.amounts.length}x needed` : entry.amounts[0];
-        lines.push(`- [ ] ${entry.item} (${qty})`);
+        plainLines.push(`☐ ${entry.item} (${qty})`);
+        html += `<li><input type="checkbox"> ${entry.item} (${qty})</li>`;
       });
-      lines.push("");
+      html += `</ul>`;
+      plainLines.push("");
     });
-    const text = lines.join("\n").trim();
-    navigator.clipboard.writeText(text).then(() => {
+    const plainText = plainLines.join("\n").trim();
+    const blob = new Blob([html], { type: "text/html" });
+    const textBlob = new Blob([plainText], { type: "text/plain" });
+    navigator.clipboard.write([
+      new ClipboardItem({ "text/html": blob, "text/plain": textBlob })
+    ]).then(() => {
       setGroceryCopied(true);
       setTimeout(() => setGroceryCopied(false), 2000);
+    }).catch(() => {
+      navigator.clipboard.writeText(plainText).then(() => {
+        setGroceryCopied(true);
+        setTimeout(() => setGroceryCopied(false), 2000);
+      });
     });
   };
 
