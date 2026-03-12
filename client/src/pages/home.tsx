@@ -1361,12 +1361,15 @@ export default function Home() {
                   {editingWeight ? (
                     <input
                       ref={weightInputRef}
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*\.?[0-9]*"
                       value={weightInput}
                       onChange={(e) => setWeightInput(e.target.value)}
                       onBlur={handleWeightSave}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleWeightSave(); if (e.key === "Escape") setEditingWeight(false); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { handleWeightSave(); (e.target as HTMLInputElement).blur(); } if (e.key === "Escape") setEditingWeight(false); }}
                       className="w-14 text-sm font-bold text-slate-800 dark:text-slate-200 bg-primary/10 border border-primary/30 rounded px-1 text-center outline-none"
+                      autoFocus
                       data-testid="input-quick-weight-desktop"
                     />
                   ) : (
@@ -1380,12 +1383,15 @@ export default function Home() {
                   {editingGoal ? (
                     <input
                       ref={goalInputRef}
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*\.?[0-9]*"
                       value={goalInput}
                       onChange={(e) => setGoalInput(e.target.value)}
                       onBlur={handleGoalSave}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleGoalSave(); if (e.key === "Escape") setEditingGoal(false); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { handleGoalSave(); (e.target as HTMLInputElement).blur(); } if (e.key === "Escape") setEditingGoal(false); }}
                       className="w-14 text-sm font-bold text-primary bg-primary/10 border border-primary/30 rounded px-1 text-center outline-none"
+                      autoFocus
                       data-testid="input-quick-goal-desktop"
                     />
                   ) : (
@@ -1443,12 +1449,15 @@ export default function Home() {
               {editingWeight ? (
                 <input
                   ref={weightInputRef}
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*\.?[0-9]*"
                   value={weightInput}
                   onChange={(e) => setWeightInput(e.target.value)}
                   onBlur={handleWeightSave}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleWeightSave(); if (e.key === "Escape") setEditingWeight(false); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") { handleWeightSave(); (e.target as HTMLInputElement).blur(); } if (e.key === "Escape") setEditingWeight(false); }}
                   className="w-10 text-[11px] font-bold text-slate-800 dark:text-slate-200 bg-primary/10 border border-primary/30 rounded px-0.5 text-center outline-none"
+                  autoFocus
                   data-testid="input-quick-weight"
                 />
               ) : (
@@ -1462,12 +1471,15 @@ export default function Home() {
               {editingGoal ? (
                 <input
                   ref={goalInputRef}
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*\.?[0-9]*"
                   value={goalInput}
                   onChange={(e) => setGoalInput(e.target.value)}
                   onBlur={handleGoalSave}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleGoalSave(); if (e.key === "Escape") setEditingGoal(false); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") { handleGoalSave(); (e.target as HTMLInputElement).blur(); } if (e.key === "Escape") setEditingGoal(false); }}
                   className="w-10 text-[11px] font-bold text-primary bg-primary/10 border border-primary/30 rounded px-0.5 text-center outline-none"
+                  autoFocus
                   data-testid="input-quick-goal"
                 />
               ) : (
