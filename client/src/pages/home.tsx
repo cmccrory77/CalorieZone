@@ -1221,7 +1221,7 @@ export default function Home() {
       lines.push(`── ${cat} ──`);
       selected.forEach(entry => {
         const qty = entry.amounts.length > 1 ? `${entry.amounts.length}x needed` : entry.amounts[0];
-        lines.push(`☐ ${entry.item} (${qty})`);
+        lines.push(`- [ ] ${entry.item} (${qty})`);
       });
       lines.push("");
     });
