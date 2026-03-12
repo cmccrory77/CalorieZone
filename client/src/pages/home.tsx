@@ -1210,39 +1210,41 @@ export default function Home() {
     setGroceryListOpen(true);
   };
 
-  const handleExportGroceryList = () => {
+  const buildGroceryText = () => {
     const list = aggregatedGroceryList();
-    const plainLines: string[] = [`${profile?.name || "My"}'s Grocery List`, ""];
-    let html = `<h3>${profile?.name || "My"}'s Grocery List</h3>`;
+    const lines: string[] = [`${profile?.name || "My"}'s Grocery List`, ""];
     const categoryOrder = ["Proteins", "Dairy & Eggs", "Grains & Bread", "Fruits", "Vegetables", "Nuts & Seeds", "Pantry & Sauces", "Spices & Herbs", "Other"];
     categoryOrder.forEach(cat => {
       if (!list[cat]) return;
       const selected = list[cat].filter(e => groceryChecked[e.item.toLowerCase().trim()]);
       if (selected.length === 0) return;
-      plainLines.push(`── ${cat} ──`);
-      html += `<p><b>${cat}</b></p><ul>`;
+      lines.push(`── ${cat} ──`);
       selected.forEach(entry => {
         const qty = entry.amounts.length > 1 ? `${entry.amounts.length}x needed` : entry.amounts[0];
-        plainLines.push(`☐ ${entry.item} (${qty})`);
-        html += `<li><input type="checkbox"> ${entry.item} (${qty})</li>`;
+        lines.push(`☐ ${entry.item} (${qty})`);
       });
-      html += `</ul>`;
-      plainLines.push("");
+      lines.push("");
     });
-    const plainText = plainLines.join("\n").trim();
-    const blob = new Blob([html], { type: "text/html" });
-    const textBlob = new Blob([plainText], { type: "text/plain" });
-    navigator.clipboard.write([
-      new ClipboardItem({ "text/html": blob, "text/plain": textBlob })
-    ]).then(() => {
+    return lines.join("\n").trim();
+  };
+
+  const handleExportGroceryList = () => {
+    const text = buildGroceryText();
+    navigator.clipboard.writeText(text).then(() => {
       setGroceryCopied(true);
       setTimeout(() => setGroceryCopied(false), 2000);
-    }).catch(() => {
-      navigator.clipboard.writeText(plainText).then(() => {
-        setGroceryCopied(true);
-        setTimeout(() => setGroceryCopied(false), 2000);
-      });
     });
+  };
+
+  const handleShareGroceryList = async () => {
+    const text = buildGroceryText();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${profile?.name || "My"}'s Grocery List`, text });
+      } catch (_) {}
+    } else {
+      handleExportGroceryList();
+    }
   };
 
   const handleGenerateRecipe = () => {
@@ -3072,7 +3074,7 @@ export default function Home() {
               );
             })()}
           </div>
-          <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex gap-3">
+          <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex gap-2">
             <Button
               className="flex-1 bg-primary hover:bg-primary/90 text-white"
               onClick={handleExportGroceryList}
@@ -3081,8 +3083,15 @@ export default function Home() {
               {groceryCopied ? (
                 <><Check className="h-4 w-4 mr-1.5" /> Copied!</>
               ) : (
-                <><Copy className="h-4 w-4 mr-1.5" /> Copy Selected to Clipboard</>
+                <><Copy className="h-4 w-4 mr-1.5" /> Copy</>
               )}
+            </Button>
+            <Button
+              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+              onClick={handleShareGroceryList}
+              data-testid="button-share-grocery"
+            >
+              <Share2 className="h-4 w-4 mr-1.5" /> Share
             </Button>
           </div>
         </DialogContent>
