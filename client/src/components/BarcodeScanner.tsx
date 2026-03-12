@@ -30,21 +30,29 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
   const [servings, setServings] = useState(1);
   const [manualCode, setManualCode] = useState("");
   const [showManual, setShowManual] = useState(false);
-  const [containerId, setContainerId] = useState(() => "bcr-" + Math.random().toString(36).slice(2));
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const processingRef = useRef(false);
+  const mountedRef = useRef(true);
+  const containerIdRef = useRef("bcr-" + Math.random().toString(36).slice(2));
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const stopScanner = useCallback(async () => {
-    if (scannerRef.current) {
+    const scanner = scannerRef.current;
+    scannerRef.current = null;
+    if (scanner) {
       try {
-        const state = scannerRef.current.getState();
+        const state = scanner.getState();
         if (state === 2) {
-          await scannerRef.current.stop();
+          await scanner.stop();
         }
-        scannerRef.current.clear();
       } catch {}
-      scannerRef.current = null;
+      try { scanner.clear(); } catch {}
     }
-    setScanning(false);
+    if (mountedRef.current) setScanning(false);
   }, []);
 
   const lookupBarcode = useCallback(async (code: string) => {
@@ -56,34 +64,21 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
 
       if (data.status === 1 && data.product) {
         const p = data.product;
-        const nutriments = p.nutriments || {};
+        const n = p.nutriments || {};
         const servingSize = p.serving_size || p.quantity || "1 serving";
-        const servingGrams = p.serving_quantity;
 
-        const perServing = (key: string): number => {
-          const per100g = nutriments[`${key}_100g`];
-          if (per100g != null && servingGrams) {
-            return (per100g * servingGrams) / 100;
-          }
-          const srv = nutriments[`${key}_serving`];
-          if (srv != null) return srv;
-          if (per100g != null) return per100g;
-          return 0;
-        };
-
-        let calories = perServing("energy-kcal");
-        if (calories === 0) {
-          const energyKj = perServing("energy");
-          if (energyKj > 0) calories = energyKj / 4.184;
-        }
+        const cal = n["energy-kcal_serving"] ?? n["energy-kcal_100g"] ?? 0;
+        const protein = n["proteins_serving"] ?? n["proteins_100g"] ?? 0;
+        const carbs = n["carbohydrates_serving"] ?? n["carbohydrates_100g"] ?? 0;
+        const fat = n["fat_serving"] ?? n["fat_100g"] ?? 0;
 
         setProduct({
           name: p.product_name || p.product_name_en || "Unknown Product",
           brand: p.brands || "",
-          calories: Math.round(calories),
-          protein: Math.round(perServing("proteins")),
-          carbs: Math.round(perServing("carbohydrates")),
-          fat: Math.round(perServing("fat")),
+          calories: Math.round(cal),
+          protein: Math.round(protein),
+          carbs: Math.round(carbs),
+          fat: Math.round(fat),
           servingSize,
           imageUrl: p.image_front_small_url || p.image_url
         });
@@ -99,15 +94,18 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
   }, []);
 
   const startScanner = useCallback(async () => {
+    await stopScanner();
     setProduct(null);
     setError(null);
     setLogged(false);
     setShowManual(false);
+    processingRef.current = false;
+
     const newId = "bcr-" + Math.random().toString(36).slice(2);
-    setContainerId(newId);
+    containerIdRef.current = newId;
     setScanning(true);
 
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 600));
 
     const el = document.getElementById(newId);
     if (!el) {
@@ -122,19 +120,33 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
 
       await scanner.start(
         { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 280, height: 160 },
-          aspectRatio: 1.6,
-        },
+        { fps: 10, qrbox: { width: 280, height: 160 }, aspectRatio: 1.6 },
         async (decodedText) => {
-          await stopScanner();
-          lookupBarcode(decodedText);
+          if (processingRef.current) return;
+          processingRef.current = true;
+
+          try {
+            const s = scannerRef.current;
+            scannerRef.current = null;
+            if (s) {
+              try {
+                const state = s.getState();
+                if (state === 2) await s.stop();
+              } catch {}
+              try { s.clear(); } catch {}
+            }
+          } catch {}
+
+          if (mountedRef.current) {
+            setScanning(false);
+            lookupBarcode(decodedText);
+          }
         },
         () => {}
       );
     } catch (err: any) {
       setScanning(false);
+      processingRef.current = false;
       if (err?.toString?.().includes("NotAllowedError") || err?.toString?.().includes("Permission")) {
         setError("Camera access was denied. Please allow camera permissions in your browser settings and try again.");
       } else {
@@ -146,6 +158,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
   useEffect(() => {
     if (!open) {
       stopScanner();
+      processingRef.current = false;
       setProduct(null);
       setError(null);
       setLogged(false);
@@ -273,8 +286,8 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
             {scanning && (
               <div className="space-y-3">
                 <div
-                  id={containerId}
-                  key={containerId}
+                  id={containerIdRef.current}
+                  key={containerIdRef.current}
                   className="rounded-xl overflow-hidden bg-black aspect-[16/10]"
                 ></div>
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -313,9 +326,9 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
 
             {error && (
               <div className="space-y-3">
-                <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100">
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/50">
                   <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-700">{error}</p>
+                  <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -399,15 +412,15 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                     <div className="text-lg font-bold text-secondary" data-testid="text-scanned-calories">{displayCalories}</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">kcal</div>
                   </div>
-                  <div className="text-center p-3 rounded-xl bg-blue-50">
+                  <div className="text-center p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30">
                     <div className="text-lg font-bold text-blue-600">{displayProtein}g</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Protein</div>
                   </div>
-                  <div className="text-center p-3 rounded-xl bg-emerald-50">
+                  <div className="text-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30">
                     <div className="text-lg font-bold text-emerald-600">{displayCarbs}g</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Carbs</div>
                   </div>
-                  <div className="text-center p-3 rounded-xl bg-amber-50">
+                  <div className="text-center p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30">
                     <div className="text-lg font-bold text-amber-600">{displayFat}g</div>
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Fat</div>
                   </div>
@@ -427,7 +440,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                       <Button
                         variant="outline"
                         className="shrink-0"
-                        onClick={() => { setProduct(null); setLogged(false); setServings(1); }}
+                        onClick={() => { setProduct(null); setLogged(false); setServings(1); processingRef.current = false; }}
                         data-testid="button-scan-another"
                       >
                         Scan Another
@@ -435,7 +448,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                     </>
                   ) : (
                     <>
-                      <div className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md bg-green-50 border border-green-200 text-green-700 text-sm font-medium" data-testid="text-logged-confirmation">
+                      <div className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-sm font-medium" data-testid="text-logged-confirmation">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
@@ -444,7 +457,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
                       <Button
                         variant="outline"
                         className="shrink-0"
-                        onClick={() => { setProduct(null); setLogged(false); setServings(1); }}
+                        onClick={() => { setProduct(null); setLogged(false); setServings(1); processingRef.current = false; }}
                         data-testid="button-scan-another-after-log"
                       >
                         Scan Another
