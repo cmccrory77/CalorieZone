@@ -201,6 +201,24 @@ export default function Home() {
   const mealPlannerRef = useRef<HTMLDivElement>(null);
   const profileSectionRef = useRef<HTMLDivElement>(null);
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
+  const [editingWeight, setEditingWeight] = useState(false);
+  const [weightInput, setWeightInput] = useState("");
+  const weightInputRef = useRef<HTMLInputElement>(null);
+
+  const handleWeightSave = useCallback(() => {
+    const newWeight = Number(weightInput);
+    if (newWeight > 0 && newWeight !== currentWeight && profile?.id) {
+      setCurrentWeight(newWeight);
+      updateProfileMutation.mutate({ currentWeight: newWeight } as any);
+    }
+    setEditingWeight(false);
+  }, [weightInput, currentWeight, profile?.id]);
+
+  const handleWeightEdit = useCallback(() => {
+    setWeightInput(String(currentWeight));
+    setEditingWeight(true);
+    setTimeout(() => weightInputRef.current?.select(), 50);
+  }, [currentWeight]);
   const [healthKitEnabled, setHealthKitEnabled] = useState(() => localStorage.getItem("caloriq-healthkit") === "true");
   const [healthKitSteps, setHealthKitSteps] = useState(0);
   const [healthKitCalories, setHealthKitCalories] = useState(0);
@@ -1322,7 +1340,22 @@ export default function Home() {
               <div className="hidden sm:flex items-center gap-2.5 mr-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Weight</span>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200" data-testid="text-current-weight">{currentWeight}</span>
+                  {editingWeight ? (
+                    <input
+                      ref={weightInputRef}
+                      type="number"
+                      value={weightInput}
+                      onChange={(e) => setWeightInput(e.target.value)}
+                      onBlur={handleWeightSave}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleWeightSave(); if (e.key === "Escape") setEditingWeight(false); }}
+                      className="w-14 text-sm font-bold text-slate-800 dark:text-slate-200 bg-primary/10 border border-primary/30 rounded px-1 text-center outline-none"
+                      data-testid="input-quick-weight-desktop"
+                    />
+                  ) : (
+                    <button onClick={handleWeightEdit} className="text-sm font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors border-b border-dashed border-slate-300 dark:border-slate-600" data-testid="text-current-weight">
+                      {currentWeight}
+                    </button>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Goal</span>
@@ -1374,7 +1407,22 @@ export default function Home() {
           <div className="flex items-center gap-1 sm:hidden">
             <div className="flex items-center gap-0.5">
               <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Wt</span>
-              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{currentWeight}</span>
+              {editingWeight ? (
+                <input
+                  ref={weightInputRef}
+                  type="number"
+                  value={weightInput}
+                  onChange={(e) => setWeightInput(e.target.value)}
+                  onBlur={handleWeightSave}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleWeightSave(); if (e.key === "Escape") setEditingWeight(false); }}
+                  className="w-10 text-[11px] font-bold text-slate-800 dark:text-slate-200 bg-primary/10 border border-primary/30 rounded px-0.5 text-center outline-none"
+                  data-testid="input-quick-weight"
+                />
+              ) : (
+                <button onClick={handleWeightEdit} className="text-[11px] font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors border-b border-dashed border-slate-300 dark:border-slate-600" data-testid="button-quick-weight">
+                  {currentWeight}
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-0.5">
               <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Goal</span>
