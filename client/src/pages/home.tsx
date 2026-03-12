@@ -1212,7 +1212,7 @@ export default function Home() {
 
   const buildGroceryText = () => {
     const list = aggregatedGroceryList();
-    const lines: string[] = [`${profile?.name || "My"}'s Grocery List`, ""];
+    const lines: string[] = [`${profile?.name || "My"}'s Grocery List`, "", "Tip: In Apple Notes, select all items → tap Aa → Checklist to make them tappable checkboxes.", ""];
     const categoryOrder = ["Proteins", "Dairy & Eggs", "Grains & Bread", "Fruits", "Vegetables", "Nuts & Seeds", "Pantry & Sauces", "Spices & Herbs", "Other"];
     categoryOrder.forEach(cat => {
       if (!list[cat]) return;
@@ -1225,7 +1225,6 @@ export default function Home() {
       });
       lines.push("");
     });
-    lines.push("Tip: In Apple Notes, select all items → tap Aa → Checklist to make them tappable checkboxes.");
     return lines.join("\n").trim();
   };
 
