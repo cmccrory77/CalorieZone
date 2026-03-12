@@ -165,7 +165,7 @@ export default function OnboardingDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen && onClose) onClose(); }}>
-      <DialogContent className={`max-w-md p-0 overflow-hidden ${!editMode ? "[&>button]:hidden" : ""}`}>
+      <DialogContent className={`max-w-md p-0 overflow-hidden max-h-[95vh] ${!editMode ? "[&>button]:hidden" : ""}`}>
         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
@@ -187,7 +187,7 @@ export default function OnboardingDialog({
           </DialogHeader>
         </div>
 
-        <div className="px-6 space-y-5 max-h-[60vh] overflow-y-auto">
+        <div className="px-6 space-y-5 max-h-[70vh] overflow-y-auto pb-2">
           {step === "profile" && (
             <>
               {editMode && (
