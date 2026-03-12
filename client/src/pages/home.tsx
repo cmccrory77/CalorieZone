@@ -204,6 +204,9 @@ export default function Home() {
   const [editingWeight, setEditingWeight] = useState(false);
   const [weightInput, setWeightInput] = useState("");
   const weightInputRef = useRef<HTMLInputElement>(null);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalInput, setGoalInput] = useState("");
+  const goalInputRef = useRef<HTMLInputElement>(null);
 
   const handleWeightSave = useCallback(() => {
     const newWeight = Number(weightInput);
@@ -219,6 +222,21 @@ export default function Home() {
     setEditingWeight(true);
     setTimeout(() => weightInputRef.current?.select(), 50);
   }, [currentWeight]);
+
+  const handleGoalSave = useCallback(() => {
+    const newGoal = Number(goalInput);
+    if (newGoal > 0 && newGoal !== targetWeight && profile?.id) {
+      setTargetWeight(newGoal);
+      updateProfileMutation.mutate({ targetWeight: newGoal } as any);
+    }
+    setEditingGoal(false);
+  }, [goalInput, targetWeight, profile?.id]);
+
+  const handleGoalEdit = useCallback(() => {
+    setGoalInput(String(targetWeight));
+    setEditingGoal(true);
+    setTimeout(() => goalInputRef.current?.select(), 50);
+  }, [targetWeight]);
   const [healthKitEnabled, setHealthKitEnabled] = useState(() => localStorage.getItem("caloriq-healthkit") === "true");
   const [healthKitSteps, setHealthKitSteps] = useState(0);
   const [healthKitCalories, setHealthKitCalories] = useState(0);
@@ -1352,14 +1370,29 @@ export default function Home() {
                       data-testid="input-quick-weight-desktop"
                     />
                   ) : (
-                    <button onClick={handleWeightEdit} className="text-sm font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors border-b border-dashed border-slate-300 dark:border-slate-600" data-testid="text-current-weight">
+                    <button onClick={handleWeightEdit} className="text-sm font-bold text-slate-800 dark:text-slate-200 rounded border border-slate-200 dark:border-slate-600 px-1.5 py-0.5 hover:border-primary/50 hover:bg-primary/5 transition-colors" data-testid="text-current-weight">
                       {currentWeight}
                     </button>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Goal</span>
-                  <span className="text-sm font-bold text-primary" data-testid="text-target-weight">{targetWeight}</span>
+                  {editingGoal ? (
+                    <input
+                      ref={goalInputRef}
+                      type="number"
+                      value={goalInput}
+                      onChange={(e) => setGoalInput(e.target.value)}
+                      onBlur={handleGoalSave}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleGoalSave(); if (e.key === "Escape") setEditingGoal(false); }}
+                      className="w-14 text-sm font-bold text-primary bg-primary/10 border border-primary/30 rounded px-1 text-center outline-none"
+                      data-testid="input-quick-goal-desktop"
+                    />
+                  ) : (
+                    <button onClick={handleGoalEdit} className="text-sm font-bold text-primary rounded border border-primary/20 px-1.5 py-0.5 hover:border-primary/50 hover:bg-primary/5 transition-colors" data-testid="text-target-weight">
+                      {targetWeight}
+                    </button>
+                  )}
                 </div>
                 <span className="text-[10px] text-muted-foreground">lbs</span>
                 <div className="text-slate-200 dark:text-slate-700">|</div>
@@ -1406,7 +1439,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-1 sm:hidden">
             <div className="flex items-center gap-0.5">
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Wt</span>
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Weight</span>
               {editingWeight ? (
                 <input
                   ref={weightInputRef}
@@ -1419,14 +1452,29 @@ export default function Home() {
                   data-testid="input-quick-weight"
                 />
               ) : (
-                <button onClick={handleWeightEdit} className="text-[11px] font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors border-b border-dashed border-slate-300 dark:border-slate-600" data-testid="button-quick-weight">
+                <button onClick={handleWeightEdit} className="text-[11px] font-bold text-slate-800 dark:text-slate-200 rounded border border-slate-200 dark:border-slate-600 px-1 py-0.5 hover:border-primary/50 hover:bg-primary/5 transition-colors" data-testid="button-quick-weight">
                   {currentWeight}
                 </button>
               )}
             </div>
             <div className="flex items-center gap-0.5">
               <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Goal</span>
-              <span className="text-[11px] font-bold text-primary">{targetWeight}</span>
+              {editingGoal ? (
+                <input
+                  ref={goalInputRef}
+                  type="number"
+                  value={goalInput}
+                  onChange={(e) => setGoalInput(e.target.value)}
+                  onBlur={handleGoalSave}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleGoalSave(); if (e.key === "Escape") setEditingGoal(false); }}
+                  className="w-10 text-[11px] font-bold text-primary bg-primary/10 border border-primary/30 rounded px-0.5 text-center outline-none"
+                  data-testid="input-quick-goal"
+                />
+              ) : (
+                <button onClick={handleGoalEdit} className="text-[11px] font-bold text-primary rounded border border-primary/20 px-1 py-0.5 hover:border-primary/50 hover:bg-primary/5 transition-colors" data-testid="button-quick-goal">
+                  {targetWeight}
+                </button>
+              )}
             </div>
             <span className="text-[9px] text-muted-foreground">lbs</span>
             <div className="text-slate-200 dark:text-slate-700 text-[10px]">|</div>
