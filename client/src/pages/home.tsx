@@ -316,7 +316,13 @@ export default function Home() {
       setMealScannerOpen(true);
     } else if (tab === "recipes") {
       setActiveRecipesTab("recommended");
-      recipesTabRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => {
+        const el = recipesTabRef.current;
+        if (el) {
+          const y = el.getBoundingClientRect().top + window.scrollY - 70;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      }, 50);
     } else if (tab === "profile") {
       setTimeout(() => {
         profileSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
