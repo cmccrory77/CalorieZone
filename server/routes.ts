@@ -234,5 +234,43 @@ The confidence field should be "high", "medium", or "low" based on how clearly t
     }
   });
 
+  app.post("/api/read-barcode", express.json({ limit: "10mb" }), async (req, res) => {
+    try {
+      const { image } = req.body;
+      if (!image) {
+        return res.status(400).json({ message: "Image data is required" });
+      }
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are a barcode reading expert. Look at the image and find any barcode (UPC, EAN, etc). Return ONLY valid JSON: { "code": "the barcode number" } or { "code": null } if no barcode is found. Only return the numeric barcode value, nothing else.`
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Read the barcode number from this image." },
+              { type: "image_url", image_url: { url: image } }
+            ]
+          }
+        ],
+        max_tokens: 100,
+        response_format: { type: "json_object" },
+      });
+
+      const content = response.choices[0]?.message?.content || "";
+      const result = JSON.parse(content);
+      res.json({ code: result.code || null });
+    } catch (error: any) {
+      console.error("Barcode reading error:", error);
+      if (error?.message?.includes("FREE_CLOUD_BUDGET_EXCEEDED")) {
+        return res.status(402).json({ message: "AI usage limit reached." });
+      }
+      res.status(500).json({ code: null });
+    }
+  });
+
   return httpServer;
 }
