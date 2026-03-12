@@ -171,7 +171,7 @@ export default function OnboardingDialog({
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <Activity className="h-5 w-5 text-white" />
             </div>
-            <span className="font-display font-bold text-xl text-primary tracking-tight">Caloriq</span>
+            <span className="font-display font-bold text-xl text-primary tracking-tight">CalorieZone</span>
           </div>
           <DialogHeader className="text-left">
             <DialogTitle className="text-xl font-display">
@@ -443,10 +443,10 @@ export default function OnboardingDialog({
                       setDarkMode(checked);
                       if (checked) {
                         document.documentElement.classList.add("dark");
-                        localStorage.setItem("caloriq-dark-mode", "true");
+                        localStorage.setItem("caloriezone-dark-mode", "true");
                       } else {
                         document.documentElement.classList.remove("dark");
-                        localStorage.setItem("caloriq-dark-mode", "false");
+                        localStorage.setItem("caloriezone-dark-mode", "false");
                       }
                     }}
                     data-testid="switch-dark-mode"

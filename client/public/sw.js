@@ -1,4 +1,4 @@
-const CACHE_NAME = 'caloriq-v1';
+const CACHE_NAME = 'caloriezone-v1';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

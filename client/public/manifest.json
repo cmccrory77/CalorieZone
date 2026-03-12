@@ -1,6 +1,6 @@
 {
-  "name": "Caloriq",
-  "short_name": "Caloriq",
+  "name": "CalorieZone",
+  "short_name": "CalorieZone",
   "description": "Weight management & meal planning powered by AI",
   "start_url": "/",
   "display": "standalone",

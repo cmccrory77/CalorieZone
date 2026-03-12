@@ -237,7 +237,7 @@ export default function Home() {
     setEditingGoal(true);
     setTimeout(() => goalInputRef.current?.select(), 50);
   }, [targetWeight]);
-  const [healthKitEnabled, setHealthKitEnabled] = useState(() => localStorage.getItem("caloriq-healthkit") === "true");
+  const [healthKitEnabled, setHealthKitEnabled] = useState(() => localStorage.getItem("caloriezone-healthkit") === "true");
   const [healthKitSteps, setHealthKitSteps] = useState(0);
   const [healthKitCalories, setHealthKitCalories] = useState(0);
 
@@ -1373,7 +1373,7 @@ export default function Home() {
           <div className="flex justify-between h-14 sm:h-16 items-center">
             <div className="flex items-center gap-2 text-primary">
               <Activity className="h-6 w-6" />
-              <span className="font-display font-bold text-xl tracking-tight">Caloriq</span>
+              <span className="font-display font-bold text-xl tracking-tight">CalorieZone</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-2.5 mr-2">
@@ -2798,10 +2798,10 @@ export default function Home() {
                     setDarkMode(checked);
                     if (checked) {
                       document.documentElement.classList.add("dark");
-                      localStorage.setItem("caloriq-dark-mode", "true");
+                      localStorage.setItem("caloriezone-dark-mode", "true");
                     } else {
                       document.documentElement.classList.remove("dark");
-                      localStorage.setItem("caloriq-dark-mode", "false");
+                      localStorage.setItem("caloriezone-dark-mode", "false");
                     }
                   }}
                   data-testid="switch-dark-mode-inline"
@@ -2826,11 +2826,11 @@ export default function Home() {
                         const granted = await requestHealthKitPermissions();
                         if (granted) {
                           setHealthKitEnabled(true);
-                          localStorage.setItem("caloriq-healthkit", "true");
+                          localStorage.setItem("caloriezone-healthkit", "true");
                         }
                       } else {
                         setHealthKitEnabled(false);
-                        localStorage.setItem("caloriq-healthkit", "false");
+                        localStorage.setItem("caloriezone-healthkit", "false");
                       }
                     }}
                     data-testid="switch-healthkit"

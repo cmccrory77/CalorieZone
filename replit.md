@@ -1,4 +1,4 @@
-# Caloriq - Weight Management App
+# CalorieZone - Weight Management App
 
 ## Overview
 A web-based weight management app inspired by MyFitnessPal and Noom. Helps users reach their target weight through personalized caloric planning, recipe recommendations, and daily calorie/macro tracking.
@@ -44,7 +44,7 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - Palette: primary green `#4CAF50`, secondary orange `#FF9800`, accent blue `#03A9F4`, background `bg-green-50/40` (light) / `bg-slate-950` (dark)
 - Layout: 2-column top row [Daily Targets (col-7) | Meal Planner (col-5)], full-width Recipes below with Meal Plan / Recommended / My Recipes tabs; navbar has "Weight Goal" label + weight progress bar + Settings gear
 - All cards: white/dark background, colored `h-2` top bar (green/orange/blue)
-- **Dark Mode**: Toggle in Settings dialog via Switch component; `.dark` class on `<html>` element; persisted in localStorage (`caloriq-dark-mode`); inline script in `index.html` restores preference before React render to prevent flash; CSS dark variables defined in `client/src/index.css` `.dark` block; all components use `dark:` Tailwind variants
+- **Dark Mode**: Toggle in Settings dialog via Switch component; `.dark` class on `<html>` element; persisted in localStorage (`caloriezone-dark-mode`); inline script in `index.html` restores preference before React render to prevent flash; CSS dark variables defined in `client/src/index.css` `.dark` block; all components use `dark:` Tailwind variants
 
 ## Features
 - **Weight Goal Tracker**: Set starting/current/target weights + timeframe in Settings dialog; auto-calculates daily caloric target; progress shown in navbar

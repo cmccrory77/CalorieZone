@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.caloriq.app',
-  appName: 'Caloriq',
+  appId: 'com.caloriezone.app',
+  appName: 'CalorieZone',
   webDir: 'dist/public',
   server: {
     androidScheme: 'https'

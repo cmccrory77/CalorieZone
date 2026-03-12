@@ -1,4 +1,4 @@
-# Caloriq iOS App - Build & Publish Guide
+# CalorieZone iOS App - Build & Publish Guide
 
 ## What You'll Need
 
@@ -31,13 +31,13 @@ Download this entire project from Replit to your Mac. You can either:
 3. Unzip the downloaded file on your Mac
 4. Open Terminal and navigate to the folder:
 ```bash
-cd ~/Downloads/caloriq    # adjust path to wherever you unzipped it
+cd ~/Downloads/caloriezone    # adjust path to wherever you unzipped it
 ```
 
 **Option B — Use Git (if you have it set up):**
 ```bash
 git clone <your-replit-git-url>
-cd caloriq
+cd caloriezone
 ```
 
 Then install all the packages:
@@ -101,7 +101,7 @@ In Xcode:
 3. Check the **"Automatically manage signing"** checkbox
 4. Click the **Team** dropdown and select your Apple Developer account
    - If it's not there, go to Xcode > Settings > Accounts and add your Apple ID
-5. The **Bundle Identifier** should already be `com.caloriq.app`
+5. The **Bundle Identifier** should already be `com.caloriezone.app`
 
 ---
 
@@ -119,9 +119,9 @@ Now add privacy descriptions:
 2. Hover over any row and click the **+** button to add new rows
 3. Add these two entries:
    - Key: `Privacy - Health Share Usage Description`
-     Value: `Caloriq reads your health data to track steps, calories burned, and weight to provide personalized recommendations.`
+     Value: `CalorieZone reads your health data to track steps, calories burned, and weight to provide personalized recommendations.`
    - Key: `Privacy - Health Update Usage Description`
-     Value: `Caloriq writes nutritional data and weight updates to Apple Health to keep your health records complete.`
+     Value: `CalorieZone writes nutritional data and weight updates to Apple Health to keep your health records complete.`
 
 ---
 
@@ -132,7 +132,7 @@ Add one more privacy description for the barcode scanner:
 1. Still in the **Info** tab
 2. Add a new row:
    - Key: `Privacy - Camera Usage Description`
-     Value: `Caloriq uses the camera to scan product barcodes and photograph meals for calorie tracking.`
+     Value: `CalorieZone uses the camera to scan product barcodes and photograph meals for calorie tracking.`
 
 ---
 
@@ -179,10 +179,10 @@ Once testing looks good:
 2. Click **My Apps** > **+** > **New App**
 3. Fill in:
    - **Platform:** iOS
-   - **Name:** Caloriq
+   - **Name:** CalorieZone
    - **Primary Language:** English
-   - **Bundle ID:** Select `com.caloriq.app`
-   - **SKU:** `caloriq-001` (any unique string)
+   - **Bundle ID:** Select `com.caloriezone.app`
+   - **SKU:** `caloriezone-001` (any unique string)
 4. Click **Create**
 
 ---
