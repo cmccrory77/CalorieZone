@@ -1218,13 +1218,14 @@ export default function Home() {
       if (!list[cat]) return;
       const selected = list[cat].filter(e => groceryChecked[e.item.toLowerCase().trim()]);
       if (selected.length === 0) return;
-      lines.push(`── ${cat} ──`);
+      lines.push(`${cat}:`);
       selected.forEach(entry => {
         const qty = entry.amounts.length > 1 ? `${entry.amounts.length}x needed` : entry.amounts[0];
-        lines.push(`☐ ${entry.item} (${qty})`);
+        lines.push(`- ${entry.item} (${qty})`);
       });
       lines.push("");
     });
+    lines.push("Tip: In Apple Notes, select all items → tap Aa → Checklist to make them tappable checkboxes.");
     return lines.join("\n").trim();
   };
 
