@@ -316,7 +316,7 @@ export default function Home() {
       setMealScannerOpen(true);
     } else if (tab === "recipes") {
       setActiveRecipesTab("recommended");
-      recipesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      recipesTabRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else if (tab === "profile") {
       setTimeout(() => {
         profileSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
