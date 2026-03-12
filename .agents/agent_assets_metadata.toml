@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "FFcIebNnScYujLkfKqL15"
+uri = "file://IOS_BUILD_GUIDE.md"
+type = "text"
+title = "Caloriq - iOS App Store Build Guide"
