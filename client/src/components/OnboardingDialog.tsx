@@ -165,8 +165,8 @@ export default function OnboardingDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen && onClose) onClose(); }}>
-      <DialogContent className={`max-w-md p-0 overflow-hidden max-h-[95vh] ${!editMode ? "[&>button]:hidden" : ""}`}>
-        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4">
+      <DialogContent className={`max-w-md p-0 overflow-hidden max-h-[90dvh] flex flex-col ${!editMode ? "[&>button]:hidden" : ""}`}>
+        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4 shrink-0">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <Activity className="h-5 w-5 text-white" />
@@ -187,7 +187,7 @@ export default function OnboardingDialog({
           </DialogHeader>
         </div>
 
-        <div className="px-6 space-y-5 max-h-[70vh] overflow-y-auto pb-2">
+        <div className="px-6 space-y-5 overflow-y-auto flex-1 min-h-0 pb-2">
           {step === "profile" && (
             <>
               {editMode && (
@@ -502,7 +502,7 @@ export default function OnboardingDialog({
           )}
         </div>
 
-        <div className="px-6 pb-6 pt-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <div className="px-6 pb-6 pt-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0">
           {step === "profile" && (
             editMode ? (
               <div className="flex gap-2">
