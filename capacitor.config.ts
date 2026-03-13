@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
   appName: 'CalorieZone',
   webDir: 'dist/public',
   server: {
+    url: 'https://b5252e75-7d72-4a27-a063-837869a7ea78-00-1fypdustfwrn6.kirk.replit.dev',
     androidScheme: 'https'
   },
   plugins: {
