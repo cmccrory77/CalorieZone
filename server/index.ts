@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin && (origin.startsWith('capacitor://') || origin.startsWith('ionic://') || origin === 'http://localhost')) {
+  if (origin) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -35,6 +35,16 @@ app.use((req, res, next) => {
     }
   }
   next();
+});
+
+app.post("/api/debug/client-error", (req, res) => {
+  const { error, context, userAgent } = req.body || {};
+  console.log(`[CLIENT-ERROR] ${context || 'unknown'}: ${error || 'no message'} | UA: ${userAgent || 'n/a'}`);
+  res.json({ ok: true });
+});
+
+app.get("/api/debug/ping", (_req, res) => {
+  res.json({ ok: true, time: Date.now(), env: process.env.NODE_ENV });
 });
 
 export function log(message: string, source = "express") {

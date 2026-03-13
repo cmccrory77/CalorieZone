@@ -7,19 +7,36 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+function debugReport(msg: string) {
+  try {
+    fetch("/api/debug/client-error", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: msg, context: "apiRequest" }),
+    }).catch(() => {});
+  } catch {}
+}
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-  });
+  debugReport(`${method} ${url} starting`);
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: data ? { "Content-Type": "application/json" } : {},
+      body: data ? JSON.stringify(data) : undefined,
+    });
 
-  await throwIfResNotOk(res);
-  return res;
+    debugReport(`${method} ${url} -> ${res.status}`);
+    await throwIfResNotOk(res);
+    return res;
+  } catch (err: any) {
+    debugReport(`${method} ${url} FAILED: ${err?.message || err}`);
+    throw err;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
