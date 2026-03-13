@@ -2645,27 +2645,19 @@ export default function Home() {
                       <Bookmark className="h-5 w-5 text-accent" />
                       My Saved Recipes
                     </h2>
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                       {savedRecipesData.map((recipe) => (
-                        <div key={recipe.id} className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 via-secondary/15 to-accent/20 flex items-center justify-center shrink-0">
-                            <ChefHat className="h-6 w-6 text-primary" />
+                        <div key={recipe.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-transparent" data-testid={`saved-recipe-${recipe.id}`}>
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600">
+                            <ChefHat className="h-3.5 w-3.5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-sm leading-tight truncate">{recipe.title}</h3>
-                            <div className="flex items-center gap-1.5 mt-1">
-                              <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-accent/10 text-accent capitalize">{recipe.type}</span>
-                              <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                                {(recipe as any).dietaryTag === "high-protein" ? "High Protein" : (recipe as any).dietaryTag === "keto" ? "Keto" : (recipe as any).dietaryTag === "vegetarian" ? "Vegetarian" : "Balanced"}
-                              </span>
-                              <span className="text-[10px] text-muted-foreground">{recipe.calories} cal · {recipe.protein}</span>
-                            </div>
+                            <p className="text-xs font-medium truncate text-slate-700 dark:text-slate-300">{recipe.title}</p>
+                            <p className="text-[10px] text-muted-foreground">{recipe.calories} cal</p>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-slate-400 hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+                            <button
+                              className="p-1.5 rounded-md border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                               onClick={() => setSelectedRecipe({
                                 ...recipe,
                                 match: recipe.type,
@@ -2673,17 +2665,15 @@ export default function Home() {
                               })}
                               data-testid={`button-view-saved-${recipe.id}`}
                             >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-full"
+                              <Eye className="h-3 w-3 text-slate-500 dark:text-slate-400" />
+                            </button>
+                            <button
+                              className="p-1.5 rounded-md border border-slate-200 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-red-950/50 hover:border-red-200 dark:hover:border-red-800 transition-colors"
                               onClick={() => removeSavedRecipeMutation.mutate(recipe.id)}
                               data-testid={`button-remove-saved-${recipe.id}`}
                             >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                              <Trash2 className="h-3 w-3 text-slate-500 dark:text-slate-400 hover:text-red-500" />
+                            </button>
                           </div>
                         </div>
                       ))}
