@@ -111,7 +111,6 @@ export default function Home() {
   const [generatedRecipe, setGeneratedRecipe] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [genProteinSource, setGenProteinSource] = useState("chicken");
-  const [genMealType, setGenMealType] = useState("dinner");
   const [genServings, setGenServings] = useState(1);
   const [genDietaryTag, setGenDietaryTag] = useState("balanced");
 
@@ -1267,7 +1266,7 @@ export default function Home() {
     setTimeout(() => {
       const rawUserIngredients = generatorIngredients.split(',').map(s => s.trim()).filter(Boolean);
       const mealCal = Math.round(targetCalories / 3);
-      const cat = genMealType;
+      const cat = "dinner";
       const proteinLabel = genProteinSource === "vegetarian" ? "Tofu" : genProteinSource.charAt(0).toUpperCase() + genProteinSource.slice(1);
       const userIngredients = rawUserIngredients.filter(
         ing => ing.toLowerCase() !== proteinLabel.toLowerCase()
@@ -2494,7 +2493,7 @@ export default function Home() {
                       </p>
                       
                       <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-3">
                           <div className="space-y-1.5">
                             <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Protein Source</Label>
                             <Select value={genProteinSource} onValueChange={setGenProteinSource}>
@@ -2506,20 +2505,6 @@ export default function Home() {
                                 <SelectItem value="fish">Fish</SelectItem>
                                 <SelectItem value="beef">Beef</SelectItem>
                                 <SelectItem value="vegetarian">Vegetarian</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Meal Type</Label>
-                            <Select value={genMealType} onValueChange={setGenMealType}>
-                              <SelectTrigger className="h-10 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-meal-type">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="breakfast">Breakfast</SelectItem>
-                                <SelectItem value="lunch">Lunch</SelectItem>
-                                <SelectItem value="dinner">Dinner</SelectItem>
-                                <SelectItem value="snack">Snack</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -2553,18 +2538,17 @@ export default function Home() {
                               </SelectContent>
                             </Select>
                           </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Extra Ingredients <span className="normal-case font-normal text-muted-foreground">(optional)</span></Label>
-                          <Input 
-                            placeholder="e.g. broccoli, rice, bell peppers..." 
-                            className="h-10 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm"
-                            value={generatorIngredients}
-                            onChange={(e) => setGeneratorIngredients(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleGenerateRecipe()}
-                            data-testid="input-generator-ingredients"
-                          />
+                          <div className="space-y-1.5">
+                            <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Extra Ingredients <span className="normal-case font-normal text-muted-foreground">(optional)</span></Label>
+                            <Input 
+                              placeholder="e.g. broccoli, rice, bell peppers..." 
+                              className="h-10 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm"
+                              value={generatorIngredients}
+                              onChange={(e) => setGeneratorIngredients(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleGenerateRecipe()}
+                              data-testid="input-generator-ingredients"
+                            />
+                          </div>
                         </div>
 
                         <Button 
