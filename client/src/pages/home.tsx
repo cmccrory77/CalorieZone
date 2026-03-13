@@ -113,6 +113,7 @@ export default function Home() {
   const [genProteinSource, setGenProteinSource] = useState("chicken");
   const [genMealType, setGenMealType] = useState("dinner");
   const [genServings, setGenServings] = useState(1);
+  const [genDietaryTag, setGenDietaryTag] = useState("balanced");
 
   const { data: savedRecipesData = [] } = useQuery<SavedRecipe[]>({
     queryKey: ["/api/saved-recipes", profile?.id],
@@ -996,9 +997,8 @@ export default function Home() {
     const compatibleRecipes = savedRecipesData.filter(r => {
       const tag = (r as any).dietaryTag || "balanced";
       if (mpPreference === "vegetarian") return tag === "vegetarian";
-      if (mpPreference === "balanced") return true;
-      if (mpPreference === "high-protein") return tag !== "vegetarian" || tag === "high-protein";
-      if (mpPreference === "keto") return tag !== "vegetarian" || tag === "keto";
+      if (mpPreference === "high-protein") return tag === "high-protein" || tag === "balanced";
+      if (mpPreference === "keto") return tag === "keto" || tag === "balanced";
       return true;
     });
     const useSavedRecipes = mpIncludeMyRecipes && compatibleRecipes.length > 0;
@@ -1354,13 +1354,12 @@ export default function Home() {
       };
 
       const totalCal = mealCal * genServings;
-      const dietaryTag = genProteinSource === "vegetarian" ? "vegetarian" : "balanced";
       setGeneratedRecipe({
         id: Date.now(),
         title,
         type: cat,
         cuisine: "custom",
-        dietaryTag,
+        dietaryTag: genDietaryTag,
         calories: totalCal,
         protein: `${proteinG * genServings}g`,
         carbs: `${carbsG * genServings}g`,
@@ -2488,7 +2487,7 @@ export default function Home() {
                       </p>
                       
                       <div className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           <div className="space-y-1.5">
                             <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Protein Source</Label>
                             <Select value={genProteinSource} onValueChange={setGenProteinSource}>
@@ -2514,6 +2513,20 @@ export default function Home() {
                                 <SelectItem value="lunch">Lunch</SelectItem>
                                 <SelectItem value="dinner">Dinner</SelectItem>
                                 <SelectItem value="snack">Snack</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Meal Preference</Label>
+                            <Select value={genDietaryTag} onValueChange={setGenDietaryTag}>
+                              <SelectTrigger className="bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-dietary-tag">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="balanced">Balanced</SelectItem>
+                                <SelectItem value="high-protein">High Protein</SelectItem>
+                                <SelectItem value="keto">Keto</SelectItem>
+                                <SelectItem value="vegetarian">Vegetarian</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
