@@ -1,5 +1,23 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+function isCapacitor(): boolean {
+  try {
+    const w = window as any;
+    return !!(w.Capacitor && w.Capacitor.isNativePlatform && w.Capacitor.isNativePlatform());
+  } catch {
+    return false;
+  }
+}
+
+const API_BASE = isCapacitor()
+  ? "https://b5252e75-7d72-4a27-a063-837869a7ea78-00-1fypdustfwrn6.kirk.replit.dev"
+  : "";
+
+export function resolveApiUrl(path: string): string {
+  if (path.startsWith("http")) return path;
+  return API_BASE + path;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -7,36 +25,20 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-function debugReport(msg: string) {
-  try {
-    fetch("/api/debug/client-error", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ error: msg, context: "apiRequest" }),
-    }).catch(() => {});
-  } catch {}
-}
-
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  debugReport(`${method} ${url} starting`);
-  try {
-    const res = await fetch(url, {
-      method,
-      headers: data ? { "Content-Type": "application/json" } : {},
-      body: data ? JSON.stringify(data) : undefined,
-    });
+  const fullUrl = resolveApiUrl(url);
+  const res = await fetch(fullUrl, {
+    method,
+    headers: data ? { "Content-Type": "application/json" } : {},
+    body: data ? JSON.stringify(data) : undefined,
+  });
 
-    debugReport(`${method} ${url} -> ${res.status}`);
-    await throwIfResNotOk(res);
-    return res;
-  } catch (err: any) {
-    debugReport(`${method} ${url} FAILED: ${err?.message || err}`);
-    throw err;
-  }
+  await throwIfResNotOk(res);
+  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -45,7 +47,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string);
+    const path = queryKey.join("/") as string;
+    const fullUrl = resolveApiUrl(path);
+    const res = await fetch(fullUrl);
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;

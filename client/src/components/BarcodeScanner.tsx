@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { resolveApiUrl } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -191,7 +192,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
         reader.onload = () => resolve(reader.result as string);
         reader.readAsDataURL(file);
       });
-      const res = await fetch("/api/read-barcode", {
+      const res = await fetch(resolveApiUrl("/api/read-barcode"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: dataUrl }),

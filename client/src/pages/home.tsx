@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, resolveApiUrl } from "@/lib/queryClient";
 import { 
   Activity, 
   Flame, 
@@ -85,7 +85,7 @@ export default function Home() {
     queryKey: ["/api/food-entries", profile?.id, selectedDateStr],
     enabled: !!profile?.id,
     queryFn: async () => {
-      const res = await fetch(`/api/food-entries/${profile!.id}/${selectedDateStr}`);
+      const res = await fetch(resolveApiUrl(`/api/food-entries/${profile!.id}/${selectedDateStr}`));
       if (!res.ok) throw new Error("Failed to load food entries");
       return res.json();
     },
@@ -95,7 +95,7 @@ export default function Home() {
     queryKey: ["/api/food-entries", profile?.id, "frequent"],
     enabled: !!profile?.id,
     queryFn: async () => {
-      const res = await fetch(`/api/food-entries/${profile!.id}/frequent`);
+      const res = await fetch(resolveApiUrl(`/api/food-entries/${profile!.id}/frequent`));
       if (!res.ok) throw new Error("Failed to load frequent foods");
       return res.json();
     },
@@ -118,7 +118,7 @@ export default function Home() {
     queryKey: ["/api/saved-recipes", profile?.id],
     enabled: !!profile?.id,
     queryFn: async () => {
-      const res = await fetch(`/api/saved-recipes/${profile!.id}`);
+      const res = await fetch(resolveApiUrl(`/api/saved-recipes/${profile!.id}`));
       if (!res.ok) throw new Error("Failed to load saved recipes");
       return res.json();
     },
@@ -176,7 +176,7 @@ export default function Home() {
     queryKey: ["/api/planned-meals", profile?.id, weekStartStr, weekEndStr],
     enabled: !!profile?.id,
     queryFn: async () => {
-      const res = await fetch(`/api/planned-meals/${profile!.id}/${weekStartStr}/${weekEndStr}`);
+      const res = await fetch(resolveApiUrl(`/api/planned-meals/${profile!.id}/${weekStartStr}/${weekEndStr}`));
       if (!res.ok) throw new Error("Failed to load planned meals");
       return res.json();
     },
@@ -362,7 +362,7 @@ export default function Home() {
     queryKey: ["/api/exercise-entries", profile?.id, selectedDateStr],
     enabled: !!profile?.id,
     queryFn: async () => {
-      const res = await fetch(`/api/exercise-entries/${profile!.id}/${selectedDateStr}`);
+      const res = await fetch(resolveApiUrl(`/api/exercise-entries/${profile!.id}/${selectedDateStr}`));
       if (!res.ok) throw new Error("Failed to load exercise entries");
       return res.json();
     },
@@ -449,7 +449,7 @@ export default function Home() {
     queryKey: ["/api/food-entries/range", profile?.id, weekStartStr, weekEndStr],
     enabled: !!profile?.id && plannedMealsData.length > 0,
     queryFn: async () => {
-      const res = await fetch(`/api/food-entries/${profile!.id}/range/${weekStartStr}/${weekEndStr}`);
+      const res = await fetch(resolveApiUrl(`/api/food-entries/${profile!.id}/range/${weekStartStr}/${weekEndStr}`));
       if (!res.ok) throw new Error("Failed to load week food entries");
       return res.json();
     },
@@ -2808,48 +2808,6 @@ export default function Home() {
                 />
               </div>
 
-              {isHealthKitAvailable() && (
-                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                      <Heart className="h-4 w-4 text-red-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Apple Health</p>
-                      <p className="text-xs text-muted-foreground">Sync steps & calories</p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={healthKitEnabled}
-                    onCheckedChange={async (checked) => {
-                      if (checked) {
-                        const granted = await requestHealthKitPermissions();
-                        if (granted) {
-                          setHealthKitEnabled(true);
-                          localStorage.setItem("caloriezone-healthkit", "true");
-                        }
-                      } else {
-                        setHealthKitEnabled(false);
-                        localStorage.setItem("caloriezone-healthkit", "false");
-                      }
-                    }}
-                    data-testid="switch-healthkit"
-                  />
-                </div>
-              )}
-
-              {healthKitEnabled && isHealthKitAvailable() && (healthKitSteps > 0 || healthKitCalories > 0) && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30">
-                    <p className="text-[10px] uppercase tracking-wider text-red-400 font-medium mb-1">Steps Today</p>
-                    <p className="text-lg font-bold text-red-500">{healthKitSteps.toLocaleString()}</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30">
-                    <p className="text-[10px] uppercase tracking-wider text-red-400 font-medium mb-1">Active Cal</p>
-                    <p className="text-lg font-bold text-red-500">{healthKitCalories}</p>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { resolveApiUrl } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Camera, Sparkles, Loader2, AlertCircle, Plus, Check, ImageIcon } from "lucide-react";
@@ -123,7 +124,7 @@ export default function MealScanner({ onLog, externalOpen, onExternalOpenChange 
     setAnalyzing(true);
     setError(null);
     try {
-      const res = await fetch("/api/analyze-meal", {
+      const res = await fetch(resolveApiUrl("/api/analyze-meal"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: imageDataUrl }),
