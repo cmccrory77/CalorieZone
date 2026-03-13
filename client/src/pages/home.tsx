@@ -2556,10 +2556,10 @@ export default function Home() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Optional Ingredients <span className="normal-case font-normal text-muted-foreground">(Add your own)</span></Label>
+                          <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Extra Ingredients <span className="normal-case font-normal text-muted-foreground">(optional)</span></Label>
                           <Input 
                             placeholder="e.g. broccoli, rice, bell peppers..." 
-                            className="h-12 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm"
+                            className="h-10 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm"
                             value={generatorIngredients}
                             onChange={(e) => setGeneratorIngredients(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleGenerateRecipe()}
@@ -2595,11 +2595,9 @@ export default function Home() {
                           <span className="bg-accent/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm">
                             {generatedRecipe.match}
                           </span>
-                          {generatedRecipe.dietaryTag && generatedRecipe.dietaryTag !== "balanced" && (
-                            <span className="bg-emerald-500/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm capitalize">
-                              {generatedRecipe.dietaryTag}
-                            </span>
-                          )}
+                          <span className="bg-emerald-500/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm">
+                            {generatedRecipe.dietaryTag === "high-protein" ? "High Protein" : generatedRecipe.dietaryTag === "keto" ? "Keto" : generatedRecipe.dietaryTag === "vegetarian" ? "Vegetarian" : "Balanced"}
+                          </span>
                         </div>
                         <div className="flex flex-col items-center gap-2 text-center px-4">
                           <div className="w-16 h-16 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm">
@@ -2677,11 +2675,9 @@ export default function Home() {
                               <span className="bg-accent/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm capitalize">
                                 {recipe.type}
                               </span>
-                              {(recipe as any).dietaryTag && (recipe as any).dietaryTag !== "balanced" && (
-                                <span className="bg-emerald-500/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm capitalize">
-                                  {(recipe as any).dietaryTag}
-                                </span>
-                              )}
+                              <span className="bg-emerald-500/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm">
+                                {(recipe as any).dietaryTag === "high-protein" ? "High Protein" : (recipe as any).dietaryTag === "keto" ? "Keto" : (recipe as any).dietaryTag === "vegetarian" ? "Vegetarian" : "Balanced"}
+                              </span>
                             </div>
                             <div className="absolute top-3 right-3 z-10">
                               <Button
