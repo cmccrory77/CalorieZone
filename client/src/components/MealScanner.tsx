@@ -98,6 +98,10 @@ export default function MealScanner({ onLog, externalOpen, onExternalOpenChange 
     analyzeImage(dataUrl);
   }, [stopCamera]);
 
+  useEffect(() => {
+    return () => { stopCamera(); };
+  }, [stopCamera]);
+
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

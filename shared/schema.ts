@@ -3,6 +3,9 @@ import { pgTable, text, varchar, integer, real, date, jsonb } from "drizzle-orm/
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export { conversations, messages, insertConversationSchema, insertMessageSchema } from "./models/chat";
+export type { Conversation, InsertConversation, Message, InsertMessage } from "./models/chat";
+
 export const userProfiles = pgTable("user_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name"),

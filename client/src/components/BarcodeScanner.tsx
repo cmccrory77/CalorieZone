@@ -279,6 +279,10 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
     }
   }, [open, stopCamera]);
 
+  useEffect(() => {
+    return () => { stopCamera(); };
+  }, [stopCamera]);
+
   const handleManualLookup = async () => {
     const code = manualCode.trim();
     if (!code) return;
