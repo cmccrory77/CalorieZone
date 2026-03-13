@@ -112,9 +112,9 @@ export default function OnboardingDialog({
     if (open) {
       setName(initialName || "");
       setSelectedAvatar(initialAvatar || "Felix");
-      setStartingWeight(initialStartingWeight || 185);
-      setCurrentWeight(initialCurrentWeight || 185);
-      setTargetWeight(initialTargetWeight || 165);
+      setStartingWeight(initialStartingWeight ?? null);
+      setCurrentWeight(initialCurrentWeight ?? null);
+      setTargetWeight(initialTargetWeight ?? null);
       setTimeframe(initialTimeframe || 12);
       setActivityLevel(initialActivityLevel || "moderate");
       const initDate = initialTargetDate ? new Date(initialTargetDate + "T00:00:00") : addWeeks(new Date(), initialTimeframe || 12);
