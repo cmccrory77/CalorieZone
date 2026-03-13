@@ -101,9 +101,9 @@ export default function Home() {
     },
   });
 
-  const [startingWeight, setStartingWeight] = useState(185);
-  const [currentWeight, setCurrentWeight] = useState(185);
-  const [targetWeight, setTargetWeight] = useState(165);
+  const [startingWeight, setStartingWeight] = useState<number | null>(null);
+  const [currentWeight, setCurrentWeight] = useState<number | null>(null);
+  const [targetWeight, setTargetWeight] = useState<number | null>(null);
   const [timeframe, setTimeframe] = useState(12);
   const [mealType, setMealType] = useState("all");
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
@@ -218,7 +218,7 @@ export default function Home() {
   }, [weightInput, currentWeight, profile?.id]);
 
   const handleWeightEdit = useCallback(() => {
-    setWeightInput(String(currentWeight));
+    setWeightInput(currentWeight != null ? String(currentWeight) : "");
     setEditingWeight(true);
     setTimeout(() => weightInputRef.current?.select(), 50);
   }, [currentWeight]);
@@ -233,7 +233,7 @@ export default function Home() {
   }, [goalInput, targetWeight, profile?.id]);
 
   const handleGoalEdit = useCallback(() => {
-    setGoalInput(String(targetWeight));
+    setGoalInput(targetWeight != null ? String(targetWeight) : "");
     setEditingGoal(true);
     setTimeout(() => goalInputRef.current?.select(), 50);
   }, [targetWeight]);
@@ -535,17 +535,19 @@ export default function Home() {
 
 
   const maintenanceCalories = profile?.maintenanceCalories ?? 2450;
-  const isGainingWeight = targetWeight > startingWeight;
-  const weeklyLossGoal = Math.abs(currentWeight - targetWeight) / timeframe;
-  const dailyDifference = weeklyLossGoal * 500; // rough estimate 500 cal difference = 1 lb/week
+  const sw = startingWeight ?? 0;
+  const cw = currentWeight ?? 0;
+  const tw = targetWeight ?? 0;
+  const isGainingWeight = tw > sw;
+  const weeklyLossGoal = Math.abs(cw - tw) / timeframe;
+  const dailyDifference = weeklyLossGoal * 500;
   
-  // If gaining weight, add the surplus. If losing, subtract the deficit.
   const targetCalories = isGainingWeight 
     ? Math.round(maintenanceCalories + dailyDifference)
     : Math.round(maintenanceCalories - dailyDifference);
   
-  const totalWeightDifference = Math.abs(startingWeight - targetWeight);
-  const weightChangedSoFar = Math.abs(startingWeight - currentWeight);
+  const totalWeightDifference = Math.abs(sw - tw);
+  const weightChangedSoFar = Math.abs(sw - cw);
   const progressPercentage = totalWeightDifference > 0 
     ? Math.max(0, Math.min(100, (weightChangedSoFar / totalWeightDifference) * 100)) 
     : 0;
@@ -1395,7 +1397,7 @@ export default function Home() {
                     />
                   ) : (
                     <button onClick={handleWeightEdit} className="text-sm font-bold text-slate-800 dark:text-slate-200 rounded border border-slate-200 dark:border-slate-600 px-1.5 py-0.5 hover:border-primary/50 hover:bg-primary/5 transition-colors" data-testid="text-current-weight">
-                      {currentWeight}
+                      {currentWeight ?? "—"}
                     </button>
                   )}
                 </div>
@@ -1417,7 +1419,7 @@ export default function Home() {
                     />
                   ) : (
                     <button onClick={handleGoalEdit} className="text-sm font-bold text-primary rounded border border-primary/20 px-1.5 py-0.5 hover:border-primary/50 hover:bg-primary/5 transition-colors" data-testid="text-target-weight">
-                      {targetWeight}
+                      {targetWeight ?? "—"}
                     </button>
                   )}
                 </div>
@@ -1483,7 +1485,7 @@ export default function Home() {
                 />
               ) : (
                 <button onClick={handleWeightEdit} className="text-[11px] font-bold text-slate-800 dark:text-slate-200 rounded border border-slate-200 dark:border-slate-600 px-1 py-0.5 hover:border-primary/50 hover:bg-primary/5 transition-colors" data-testid="button-quick-weight">
-                  {currentWeight}
+                  {currentWeight ?? "—"}
                 </button>
               )}
             </div>
@@ -1505,7 +1507,7 @@ export default function Home() {
                 />
               ) : (
                 <button onClick={handleGoalEdit} className="text-[11px] font-bold text-primary rounded border border-primary/20 px-1 py-0.5 hover:border-primary/50 hover:bg-primary/5 transition-colors" data-testid="button-quick-goal">
-                  {targetWeight}
+                  {targetWeight ?? "—"}
                 </button>
               )}
             </div>
@@ -2739,15 +2741,15 @@ export default function Home() {
               <div className="grid grid-cols-3 gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
                 <div className="text-center">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Starting</p>
-                  <p className="text-sm font-bold text-slate-600 dark:text-slate-400">{startingWeight} lbs</p>
+                  <p className="text-sm font-bold text-slate-600 dark:text-slate-400">{startingWeight ?? "—"} lbs</p>
                 </div>
                 <div className="text-center">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Current</p>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{currentWeight} lbs</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{currentWeight ?? "—"} lbs</p>
                 </div>
                 <div className="text-center">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Goal</p>
-                  <p className="text-sm font-bold text-primary">{targetWeight} lbs</p>
+                  <p className="text-sm font-bold text-primary">{targetWeight ?? "—"} lbs</p>
                 </div>
               </div>
 

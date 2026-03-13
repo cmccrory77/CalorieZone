@@ -93,9 +93,9 @@ export default function OnboardingDialog({
 }: OnboardingDialogProps) {
   const [name, setName] = useState(initialName || "");
   const [selectedAvatar, setSelectedAvatar] = useState(initialAvatar || "Felix");
-  const [startingWeight, setStartingWeight] = useState(initialStartingWeight || 185);
-  const [currentWeight, setCurrentWeight] = useState(initialCurrentWeight || 185);
-  const [targetWeight, setTargetWeight] = useState(initialTargetWeight || 165);
+  const [startingWeight, setStartingWeight] = useState<number | null>(initialStartingWeight ?? null);
+  const [currentWeight, setCurrentWeight] = useState<number | null>(initialCurrentWeight ?? null);
+  const [targetWeight, setTargetWeight] = useState<number | null>(initialTargetWeight ?? null);
   const [timeframe, setTimeframe] = useState(initialTimeframe || 12);
   const [activityLevel, setActivityLevel] = useState(initialActivityLevel || "moderate");
   const [targetDate, setTargetDate] = useState<Date>(
@@ -149,7 +149,7 @@ export default function OnboardingDialog({
   };
 
   const handleFinish = () => {
-    if (name.trim()) {
+    if (name.trim() && startingWeight && startingWeight > 0 && currentWeight && currentWeight > 0 && targetWeight && targetWeight > 0) {
       onComplete({
         name: name.trim(),
         avatarSeed: selectedAvatar,
@@ -230,9 +230,15 @@ export default function OnboardingDialog({
                     <Label htmlFor="onboard-starting" className="text-xs text-muted-foreground">Starting (lbs)</Label>
                     <Input
                       id="onboard-starting"
-                      type="number"
-                      value={startingWeight}
-                      onChange={(e) => setStartingWeight(Number(e.target.value))}
+                      type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*\.?[0-9]*"
+                      placeholder=""
+                      value={startingWeight ?? ""}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setStartingWeight(v === "" ? null : Number(v));
+                      }}
                       className="h-10 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-semibold"
                       data-testid="input-onboard-starting-weight"
                     />
@@ -241,9 +247,15 @@ export default function OnboardingDialog({
                     <Label htmlFor="onboard-current" className="text-xs text-muted-foreground">Current (lbs)</Label>
                     <Input
                       id="onboard-current"
-                      type="number"
-                      value={currentWeight}
-                      onChange={(e) => setCurrentWeight(Number(e.target.value))}
+                      type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*\.?[0-9]*"
+                      placeholder=""
+                      value={currentWeight ?? ""}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setCurrentWeight(v === "" ? null : Number(v));
+                      }}
                       className="h-10 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-semibold"
                       data-testid="input-onboard-current-weight"
                     />
@@ -252,9 +264,15 @@ export default function OnboardingDialog({
                     <Label htmlFor="onboard-target" className="text-xs text-muted-foreground">Target (lbs)</Label>
                     <Input
                       id="onboard-target"
-                      type="number"
-                      value={targetWeight}
-                      onChange={(e) => setTargetWeight(Number(e.target.value))}
+                      type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*\.?[0-9]*"
+                      placeholder=""
+                      value={targetWeight ?? ""}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setTargetWeight(v === "" ? null : Number(v));
+                      }}
                       className="h-10 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-semibold"
                       data-testid="input-onboard-target-weight"
                     />
