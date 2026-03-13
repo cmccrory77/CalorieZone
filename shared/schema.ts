@@ -36,6 +36,7 @@ export const savedRecipes = pgTable("saved_recipes", {
   title: text("title").notNull(),
   type: text("type").notNull(),
   cuisine: text("cuisine").notNull().default("custom"),
+  dietaryTag: text("dietary_tag").notNull().default("balanced"),
   calories: integer("calories").notNull(),
   protein: text("protein").notNull(),
   carbs: text("carbs").notNull(),

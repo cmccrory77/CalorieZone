@@ -131,6 +131,7 @@ export default function Home() {
         title: recipe.title,
         type: recipe.type,
         cuisine: recipe.cuisine || "custom",
+        dietaryTag: recipe.dietaryTag || "balanced",
         calories: recipe.calories,
         protein: recipe.protein,
         carbs: recipe.carbs,
@@ -992,10 +993,18 @@ export default function Home() {
       Object.assign(currentTemplates, ketoOverrides);
     }
 
-    const useSavedRecipes = mpIncludeMyRecipes && savedRecipesData.length > 0;
+    const compatibleRecipes = savedRecipesData.filter(r => {
+      const tag = (r as any).dietaryTag || "balanced";
+      if (mpPreference === "vegetarian") return tag === "vegetarian";
+      if (mpPreference === "balanced") return true;
+      if (mpPreference === "high-protein") return tag !== "vegetarian" || tag === "high-protein";
+      if (mpPreference === "keto") return tag !== "vegetarian" || tag === "keto";
+      return true;
+    });
+    const useSavedRecipes = mpIncludeMyRecipes && compatibleRecipes.length > 0;
     const savedByType: Record<string, any[]> = {};
     if (useSavedRecipes) {
-      savedRecipesData.forEach(r => {
+      compatibleRecipes.forEach(r => {
         const t = r.type || "dinner";
         if (!savedByType[t]) savedByType[t] = [];
         savedByType[t].push(r);
@@ -1345,11 +1354,13 @@ export default function Home() {
       };
 
       const totalCal = mealCal * genServings;
+      const dietaryTag = genProteinSource === "vegetarian" ? "vegetarian" : "balanced";
       setGeneratedRecipe({
         id: Date.now(),
         title,
         type: cat,
         cuisine: "custom",
+        dietaryTag,
         calories: totalCal,
         protein: `${proteinG * genServings}g`,
         carbs: `${carbsG * genServings}g`,
@@ -2560,8 +2571,15 @@ export default function Home() {
                   <Card className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all duration-300">
                     <div className="flex flex-col md:flex-row">
                       <div className="relative md:w-72 h-48 md:h-auto overflow-hidden flex-shrink-0 bg-gradient-to-br from-primary/20 via-secondary/15 to-accent/20 flex items-center justify-center">
-                        <div className="absolute top-3 left-3 z-10 bg-accent/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm">
-                          {generatedRecipe.match}
+                        <div className="absolute top-3 left-3 z-10 flex gap-1.5">
+                          <span className="bg-accent/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm">
+                            {generatedRecipe.match}
+                          </span>
+                          {generatedRecipe.dietaryTag && generatedRecipe.dietaryTag !== "balanced" && (
+                            <span className="bg-emerald-500/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm capitalize">
+                              {generatedRecipe.dietaryTag}
+                            </span>
+                          )}
                         </div>
                         <div className="flex flex-col items-center gap-2 text-center px-4">
                           <div className="w-16 h-16 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm">
@@ -2635,8 +2653,15 @@ export default function Home() {
                       {savedRecipesData.map((recipe) => (
                         <Card key={recipe.id} className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                           <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/15 to-accent/20 flex items-center justify-center">
-                            <div className="absolute top-3 left-3 z-10 bg-accent/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm capitalize">
-                              {recipe.type}
+                            <div className="absolute top-3 left-3 z-10 flex gap-1.5">
+                              <span className="bg-accent/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm capitalize">
+                                {recipe.type}
+                              </span>
+                              {(recipe as any).dietaryTag && (recipe as any).dietaryTag !== "balanced" && (
+                                <span className="bg-emerald-500/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm capitalize">
+                                  {(recipe as any).dietaryTag}
+                                </span>
+                              )}
                             </div>
                             <div className="absolute top-3 right-3 z-10">
                               <Button
