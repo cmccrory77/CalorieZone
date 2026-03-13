@@ -1,0 +1,50 @@
+CapacitorCordova
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/AppDelegate.h
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/AppDelegate.h:2:9 double-quoted include "CDVViewController.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDV.h
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDV.h:20:9 double-quoted include "CDVAvailability.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDV.h:21:9 double-quoted include "CDVPlugin.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDV.h:22:9 double-quoted include "CDVPluginResult.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDV.h:23:9 double-quoted include "CDVCommandDelegate.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDV.h:24:9 double-quoted include "CDVInvokedUrlCommand.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDV.h:25:9 double-quoted include "CDVViewController.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDV.h:26:9 double-quoted include "CDVURLProtocol.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDV.h:27:9 double-quoted include "CDVScreenOrientationDelegate.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDV.h:28:9 double-quoted include "CDVWebViewProcessPoolFactory.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVCommandDelegate.h
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVCommandDelegate.h:20:9 double-quoted include "CDVInvokedUrlCommand.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVCommandDelegateImpl.h
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVCommandDelegateImpl.h:21:9 double-quoted include "CDVCommandDelegate.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVCommandDelegateImpl.h:23:9 double-quoted include "CDVPluginManager.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVPlugin.h
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVPlugin.h:22:9 double-quoted include "CDVPluginResult.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVPlugin.h:23:9 double-quoted include "CDVCommandDelegate.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVPlugin.h:24:9 double-quoted include "CDVAvailability.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVPlugin+Resources.h
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVPlugin+Resources.h:21:9 double-quoted include "CDVPlugin.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVPluginManager.h
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVPluginManager.h:9:9 double-quoted include "CDVPlugin.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVPluginManager.h:10:9 double-quoted include "CDVConfigParser.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVPluginManager.h:11:9 double-quoted include "CDVCommandDelegate.h" in framework header, expected angle-bracketed instead
+
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVURLProtocol.h
+/Users/chrismccrory/Documents/AppProjects/CalorieZone/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova/Classes/Public/CDVURLProtocol.h:21:9 double-quoted include "CDVAvailability.h" in framework header, expected angle-bracketed instead
