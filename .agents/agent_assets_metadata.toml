@@ -6,3 +6,21 @@ id = "FFcIebNnScYujLkfKqL15"
 uri = "file://IOS_BUILD_GUIDE.md"
 type = "text"
 title = "Caloriq - iOS App Store Build Guide"
+
+[[outputs]]
+id = "1yoeWwY_XwvjEReLCy7qa"
+uri = "file://screenshots/daily-tracker.png"
+type = "image"
+title = "CalorieZone - Daily Tracker"
+
+[[outputs]]
+id = "bEXbUxZ94LAerXI3hMhmx"
+uri = "file://screenshots/meal-planner.png"
+type = "image"
+title = "CalorieZone - Meal Planner"
+
+[[outputs]]
+id = "wtFGt9VrdWy5C9z-7Y7YN"
+uri = "file://screenshots/recipes.png"
+type = "image"
+title = "CalorieZone - Recipes"
