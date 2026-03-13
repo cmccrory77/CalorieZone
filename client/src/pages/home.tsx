@@ -2645,62 +2645,27 @@ export default function Home() {
                       <Bookmark className="h-5 w-5 text-accent" />
                       My Saved Recipes
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="space-y-3">
                       {savedRecipesData.map((recipe) => (
-                        <Card key={recipe.id} className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-                          <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/15 to-accent/20 flex items-center justify-center">
-                            <div className="absolute top-3 left-3 z-10 flex gap-1.5">
-                              <span className="bg-accent/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm capitalize">
-                                {recipe.type}
-                              </span>
-                              <span className="bg-emerald-500/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm">
+                        <div key={recipe.id} className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 via-secondary/15 to-accent/20 flex items-center justify-center shrink-0">
+                            <ChefHat className="h-6 w-6 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm leading-tight truncate">{recipe.title}</h3>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-accent/10 text-accent capitalize">{recipe.type}</span>
+                              <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                 {(recipe as any).dietaryTag === "high-protein" ? "High Protein" : (recipe as any).dietaryTag === "keto" ? "Keto" : (recipe as any).dietaryTag === "vegetarian" ? "Vegetarian" : "Balanced"}
                               </span>
-                            </div>
-                            <div className="absolute top-3 right-3 z-10">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-950 text-slate-400 hover:text-red-500 rounded-full"
-                                onClick={() => removeSavedRecipeMutation.mutate(recipe.id)}
-                                data-testid={`button-remove-saved-${recipe.id}`}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <div className="flex flex-col items-center gap-2 text-center px-4">
-                              <div className="w-16 h-16 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm">
-                                <ChefHat className="h-8 w-8 text-primary" />
-                              </div>
-                              <p className="text-sm font-display font-bold text-slate-700 dark:text-slate-200">{profile?.name || "Your"}'s Custom Recipe</p>
+                              <span className="text-[10px] text-muted-foreground">{recipe.calories} cal · {recipe.protein}</span>
                             </div>
                           </div>
-                          <CardContent className="p-5">
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-display font-semibold text-lg leading-tight line-clamp-2">{recipe.title}</h3>
-                            </div>
-                            
-                            <div className="flex items-center gap-4 mt-4">
-                              <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Calories</span>
-                                <span className="font-bold text-foreground">{recipe.calories}</span>
-                              </div>
-                              <div className="h-8 w-px bg-slate-100 dark:bg-slate-700"></div>
-                              <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Protein</span>
-                                <span className="font-medium text-slate-600 dark:text-slate-400">{recipe.protein}</span>
-                              </div>
-                              <div className="h-8 w-px bg-slate-100 dark:bg-slate-700"></div>
-                              <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Time</span>
-                                <span className="font-medium text-slate-600 dark:text-slate-400">{recipe.time}</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                          <CardFooter className="p-5 pt-0 flex gap-2">
-                            <Button 
-                              className="flex-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-foreground border border-slate-200 dark:border-slate-700" 
-                              variant="outline"
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-400 hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
                               onClick={() => setSelectedRecipe({
                                 ...recipe,
                                 match: recipe.type,
@@ -2708,20 +2673,19 @@ export default function Home() {
                               })}
                               data-testid={`button-view-saved-${recipe.id}`}
                             >
-                              View Recipe
+                              <Eye className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              className="bg-secondary hover:bg-secondary/90 text-white shrink-0" 
-                              onClick={() => addRecipeToTracker({
-                                ...recipe,
-                                match: recipe.type,
-                                image: null,
-                              })}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-full"
+                              onClick={() => removeSavedRecipeMutation.mutate(recipe.id)}
+                              data-testid={`button-remove-saved-${recipe.id}`}
                             >
-                              <Plus className="h-4 w-4 mr-1.5" /> Log
+                              <Trash2 className="h-4 w-4" />
                             </Button>
-                          </CardFooter>
-                        </Card>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
