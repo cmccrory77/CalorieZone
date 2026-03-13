@@ -1265,10 +1265,13 @@ export default function Home() {
     setGeneratedRecipe(null);
 
     setTimeout(() => {
-      const userIngredients = generatorIngredients.split(',').map(s => s.trim()).filter(Boolean);
+      const rawUserIngredients = generatorIngredients.split(',').map(s => s.trim()).filter(Boolean);
       const mealCal = Math.round(targetCalories / 3);
       const cat = genMealType;
       const proteinLabel = genProteinSource === "vegetarian" ? "Tofu" : genProteinSource.charAt(0).toUpperCase() + genProteinSource.slice(1);
+      const userIngredients = rawUserIngredients.filter(
+        ing => ing.toLowerCase() !== proteinLabel.toLowerCase()
+      );
       const nouns: Record<string, string[]> = {
         breakfast: ["Scramble", "Bowl", "Plate"],
         lunch: ["Bowl", "Salad", "Wrap"],
@@ -1287,10 +1290,14 @@ export default function Home() {
       const fatG = Math.round((mealCal * 0.3) / 9);
 
       const ingredients: { item: string; amount: string; cal: number }[] = [];
+      const seen = new Set<string>();
       const allIngs = [proteinLabel, ...userIngredients];
       const calPerIng = Math.round(mealCal / (allIngs.length + 3));
 
       allIngs.forEach((ing, idx) => {
+        const key = ing.toLowerCase().trim();
+        if (seen.has(key)) return;
+        seen.add(key);
         const portions = ["4 oz (115g)", "1 cup", "½ cup", "3 oz (85g)", "2 oz (55g)"];
         ingredients.push({
           item: ing.charAt(0).toUpperCase() + ing.slice(1),
@@ -2487,11 +2494,11 @@ export default function Home() {
                       </p>
                       
                       <div className="space-y-4">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1.5">
                             <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Protein Source</Label>
                             <Select value={genProteinSource} onValueChange={setGenProteinSource}>
-                              <SelectTrigger className="bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-protein-source">
+                              <SelectTrigger className="h-10 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-protein-source">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -2505,7 +2512,7 @@ export default function Home() {
                           <div className="space-y-1.5">
                             <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Meal Type</Label>
                             <Select value={genMealType} onValueChange={setGenMealType}>
-                              <SelectTrigger className="bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-meal-type">
+                              <SelectTrigger className="h-10 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-meal-type">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -2519,7 +2526,7 @@ export default function Home() {
                           <div className="space-y-1.5">
                             <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Meal Preference</Label>
                             <Select value={genDietaryTag} onValueChange={setGenDietaryTag}>
-                              <SelectTrigger className="bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-dietary-tag">
+                              <SelectTrigger className="h-10 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-dietary-tag">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -2533,7 +2540,7 @@ export default function Home() {
                           <div className="space-y-1.5">
                             <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Servings</Label>
                             <Select value={String(genServings)} onValueChange={(v) => setGenServings(Number(v))}>
-                              <SelectTrigger className="bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-servings">
+                              <SelectTrigger className="h-10 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm" data-testid="select-servings">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -2604,7 +2611,7 @@ export default function Home() {
                       <div className="flex-1 p-6 space-y-4">
                         <div>
                           <h3 className="font-display font-bold text-xl">{generatedRecipe.title}</h3>
-                          <p className="text-sm text-muted-foreground capitalize mt-1">{generatedRecipe.type} · {generatedRecipe.time}</p>
+                          <p className="text-sm text-muted-foreground capitalize mt-1">{generatedRecipe.type} · {generatedRecipe.dietaryTag === "balanced" ? "Balanced" : generatedRecipe.dietaryTag === "high-protein" ? "High Protein" : generatedRecipe.dietaryTag === "keto" ? "Keto" : generatedRecipe.dietaryTag === "vegetarian" ? "Vegetarian" : "Balanced"} · {generatedRecipe.time}</p>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="flex flex-col">
