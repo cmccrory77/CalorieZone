@@ -24,3 +24,21 @@ id = "wtFGt9VrdWy5C9z-7Y7YN"
 uri = "file://screenshots/recipes.png"
 type = "image"
 title = "CalorieZone - Recipes"
+
+[[outputs]]
+id = "a_3owVYnRM1CYG2icMuSg"
+uri = "file://screenshots/promo-1-tracker.png"
+type = "image"
+title = "1. Track Calories & Macros Easily"
+
+[[outputs]]
+id = "34UjuI2bLGoKFmZKH6dZy"
+uri = "file://screenshots/promo-2-planner.png"
+type = "image"
+title = "2. Meal Plans Tailored to Your Calorie Target"
+
+[[outputs]]
+id = "c_FA9wQ22s4_AYtZhNMBx"
+uri = "file://screenshots/promo-3-recipes.png"
+type = "image"
+title = "3. Smart Recipes & Grocery Lists in Seconds"
