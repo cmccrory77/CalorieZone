@@ -1360,7 +1360,7 @@ export default function Home() {
       };
 
       const totalCal = mealCal * genServings;
-      setGeneratedRecipe({
+      const recipe = {
         id: Date.now(),
         title,
         type: cat,
@@ -1375,7 +1375,9 @@ export default function Home() {
         match: `${genServings} serving${genServings > 1 ? 's' : ''}`,
         ingredients: ingredients.map(i => ({ ...i, cal: i.cal * genServings, amount: genServings > 1 ? `${genServings}x ${i.amount}` : i.amount })),
         steps: stepSets[noun] || stepSets.Skillet
-      });
+      };
+      setGeneratedRecipe(recipe);
+      addSavedRecipeMutation.mutate(recipe);
       setIsGenerating(false);
     }, 1200);
   };
@@ -2624,14 +2626,6 @@ export default function Home() {
                             data-testid="button-view-generated-recipe"
                           >
                             View Recipe
-                          </Button>
-                          <Button 
-                            className="bg-accent hover:bg-accent/90 text-white shrink-0"
-                            onClick={() => addSavedRecipeMutation.mutate(generatedRecipe)}
-                            disabled={addSavedRecipeMutation.isPending}
-                            data-testid="button-add-to-my-recipes"
-                          >
-                            <Bookmark className="h-4 w-4 mr-1.5" /> Add to My Recipes
                           </Button>
                           <Button 
                             className="bg-secondary hover:bg-secondary/90 text-white shrink-0"
