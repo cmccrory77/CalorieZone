@@ -143,7 +143,7 @@ export default function Home() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/saved-recipes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-recipes", profile?.id] });
     },
   });
 
@@ -152,7 +152,7 @@ export default function Home() {
       await apiRequest("DELETE", `/api/saved-recipes/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/saved-recipes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-recipes", profile?.id] });
     },
   });
 
