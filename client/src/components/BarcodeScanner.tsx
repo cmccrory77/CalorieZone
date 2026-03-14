@@ -22,9 +22,57 @@ interface BarcodeScannerProps {
   locked?: boolean;
 }
 
+function resizeImageToBlob(source: HTMLVideoElement | HTMLImageElement | File): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
+    const maxDim = 1280;
+
+    const draw = (img: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement, w: number, h: number) => {
+      const scale = Math.min(maxDim / w, maxDim / h, 1);
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      ctx.drawImage(img as any, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => {
+        if (blob) resolve(new File([blob], "scan.jpg", { type: "image/jpeg" }));
+        else reject(new Error("Failed to create blob"));
+      }, "image/jpeg", 0.9);
+    };
+
+    if (source instanceof HTMLVideoElement) {
+      draw(source, source.videoWidth, source.videoHeight);
+    } else if (source instanceof File) {
+      const img = new Image();
+      img.onload = () => { draw(img, img.naturalWidth, img.naturalHeight); URL.revokeObjectURL(img.src); };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = URL.createObjectURL(source);
+    } else {
+      draw(source, source.naturalWidth, source.naturalHeight);
+    }
+  });
+}
+
+async function tryDecode(file: File): Promise<string | null> {
+  const { Html5Qrcode } = await import("html5-qrcode");
+  const tempId = "bcd-" + Math.random().toString(36).slice(2);
+  const div = document.createElement("div");
+  div.id = tempId;
+  div.style.cssText = "position:fixed;left:-9999px;top:0;width:300px;height:300px;overflow:hidden;";
+  document.body.appendChild(div);
+  try {
+    const scanner = new Html5Qrcode(tempId);
+    const result = await scanner.scanFile(file, false);
+    try { scanner.clear(); } catch {}
+    return result;
+  } catch {
+    return null;
+  } finally {
+    try { document.body.removeChild(div); } catch {}
+  }
+}
+
 export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeScannerProps) {
   const [open, setOpen] = useState(false);
-  const [scanning, setScanning] = useState(false);
   const [looking, setLooking] = useState(false);
   const [product, setProduct] = useState<NutritionInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,23 +80,19 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
   const [servings, setServings] = useState(1);
   const [manualCode, setManualCode] = useState("");
   const [showManual, setShowManual] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
   const [scanStatus, setScanStatus] = useState("");
-  const scannerRef = useRef<any>(null);
-  const containerRef = useRef<string>("barcode-reader-" + Math.random().toString(36).slice(2));
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const foundRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const stopScanner = useCallback(async () => {
-    if (scannerRef.current) {
-      try {
-        const state = scannerRef.current.getState();
-        if (state === 2) {
-          await scannerRef.current.stop();
-        }
-        scannerRef.current.clear();
-      } catch {}
-      scannerRef.current = null;
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
     }
-    setScanning(false);
+    setCameraActive(false);
     setScanStatus("");
   }, []);
 
@@ -89,99 +133,96 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
     }
   }, []);
 
-  const startScanner = useCallback(async () => {
+  const startCamera = useCallback(async () => {
     setProduct(null);
     setError(null);
     setLogged(false);
     setShowManual(false);
-    setScanning(true);
-    setScanStatus("Starting camera...");
-
-    await new Promise(r => setTimeout(r, 300));
-
-    const el = document.getElementById(containerRef.current);
-    if (!el) {
-      setError("Scanner container not ready. Please try again.");
-      setScanning(false);
-      setScanStatus("");
-      return;
-    }
+    foundRef.current = false;
 
     try {
-      const { Html5Qrcode } = await import("html5-qrcode");
-      const scanner = new Html5Qrcode(containerRef.current);
-      scannerRef.current = scanner;
-
-      setScanStatus("Scanning...");
-
-      await scanner.start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 280, height: 160 },
-          aspectRatio: 1.6,
-        },
-        async (decodedText) => {
-          await stopScanner();
-          lookupBarcode(decodedText);
-        },
-        () => {}
-      );
-    } catch (err: any) {
-      setScanning(false);
-      setScanStatus("");
-      if (err?.toString?.().includes("NotAllowedError") || err?.toString?.().includes("Permission")) {
-        setError("Camera access was denied. Please allow camera permissions in your device settings, or enter the barcode manually.");
-      } else {
-        setError("Could not start camera. You can upload a photo or type the barcode number instead.");
-      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      streamRef.current = stream;
+      setCameraActive(true);
+      setScanStatus("Point camera at barcode, then tap Capture");
+    } catch {
+      setError("Camera access was denied. Please allow camera permissions or enter the barcode manually.");
     }
-  }, [stopScanner, lookupBarcode]);
+  }, []);
+
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [cameraActive]);
+
+  const readBarcodeWithAI = useCallback(async (file: File): Promise<string | null> => {
+    try {
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      const res = await fetch(resolveApiUrl("/api/read-barcode"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.code || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const captureAndDecode = useCallback(async () => {
+    if (!videoRef.current || foundRef.current) return;
+    setScanStatus("Reading barcode...");
+
+    try {
+      const file = await resizeImageToBlob(videoRef.current);
+      let code = await tryDecode(file);
+
+      if (!code) {
+        setScanStatus("Using AI to read barcode...");
+        code = await readBarcodeWithAI(file);
+      }
+
+      if (code) {
+        foundRef.current = true;
+        stopCamera();
+        await lookupBarcode(code);
+      } else {
+        setScanStatus("No barcode found — move closer and try again");
+        setTimeout(() => setScanStatus("Point camera at barcode, then tap Capture"), 3000);
+      }
+    } catch {
+      setScanStatus("Point camera at barcode, then tap Capture");
+    }
+  }, [stopCamera, lookupBarcode, readBarcodeWithAI]);
 
   const handlePhotoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (fileInputRef.current) fileInputRef.current.value = "";
 
-    await stopScanner();
+    stopCamera();
     setError(null);
     setProduct(null);
     setLooking(true);
     setScanStatus("Reading barcode from photo...");
 
     try {
-      const { Html5Qrcode } = await import("html5-qrcode");
-      const tempId = "bcd-" + Math.random().toString(36).slice(2);
-      const div = document.createElement("div");
-      div.id = tempId;
-      div.style.cssText = "position:fixed;left:-9999px;top:0;width:300px;height:300px;overflow:hidden;";
-      document.body.appendChild(div);
-
-      let code: string | null = null;
-      try {
-        const scanner = new Html5Qrcode(tempId);
-        code = await scanner.scanFile(file, false);
-        try { scanner.clear(); } catch {}
-      } catch {}
-      try { document.body.removeChild(div); } catch {}
+      const resized = await resizeImageToBlob(file);
+      let code = await tryDecode(resized);
 
       if (!code) {
-        try {
-          const reader = new FileReader();
-          const dataUrl = await new Promise<string>((resolve) => {
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(file);
-          });
-          const res = await fetch(resolveApiUrl("/api/read-barcode"), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ image: dataUrl }),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            code = data.code || null;
-          }
-        } catch {}
+        setScanStatus("Using AI to read barcode...");
+        code = await readBarcodeWithAI(resized);
       }
 
       setScanStatus("");
@@ -196,11 +237,12 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
       setLooking(false);
       setError("Could not process the photo. Please try again.");
     }
-  }, [stopScanner, lookupBarcode]);
+  }, [stopCamera, lookupBarcode, readBarcodeWithAI]);
 
   useEffect(() => {
     if (!open) {
-      stopScanner();
+      stopCamera();
+      foundRef.current = false;
       setProduct(null);
       setError(null);
       setLogged(false);
@@ -209,16 +251,16 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
       setShowManual(false);
       setScanStatus("");
     }
-  }, [open, stopScanner]);
+  }, [open, stopCamera]);
 
   useEffect(() => {
-    return () => { stopScanner(); };
-  }, [stopScanner]);
+    return () => { stopCamera(); };
+  }, [stopCamera]);
 
   const handleManualLookup = async () => {
     const code = manualCode.trim();
     if (!code) return;
-    await stopScanner();
+    stopCamera();
     setShowManual(false);
     await lookupBarcode(code);
   };
@@ -267,7 +309,7 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
       />
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm p-0 overflow-hidden">
+        <DialogContent className="max-w-md p-0 overflow-hidden">
           <DialogHeader className="p-5 pb-3">
             <DialogTitle className="flex items-center gap-2 text-lg">
               <ScanBarcode className="h-5 w-5 text-primary" />
@@ -279,17 +321,17 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
           </DialogHeader>
 
           <div className="px-5 pb-5 space-y-4">
-            {!scanning && !product && !looking && !showManual && !error && (
+            {!cameraActive && !product && !looking && !showManual && !error && !scanStatus && (
               <div className="flex flex-col items-center gap-4 py-6">
                 <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <Camera className="h-10 w-10 text-primary" />
                 </div>
                 <p className="text-sm text-center text-muted-foreground max-w-[240px]">
-                  Point your camera at a barcode to scan it automatically
+                  Point your camera at a barcode to scan it
                 </p>
                 <div className="flex gap-2 w-full">
                   <Button
-                    onClick={startScanner}
+                    onClick={startCamera}
                     className="flex-1 bg-primary hover:bg-primary/90 text-white gap-2"
                     data-testid="button-start-scanning"
                   >
@@ -352,19 +394,44 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
               </div>
             )}
 
-            {scanning && (
+            {cameraActive && (
               <div className="space-y-3">
-                <div id={containerRef.current} className="rounded-xl overflow-hidden" />
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  {scanStatus || "Scanning..."}
+                <div className="relative rounded-xl overflow-hidden bg-black" style={{ aspectRatio: "3/4" }}>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-[85%] h-[35%] border-2 border-white/70 rounded-lg shadow-lg">
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full whitespace-nowrap">
+                        Align barcode inside this area
+                      </div>
+                    </div>
+                  </div>
                 </div>
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  {scanStatus.includes("Reading") || scanStatus.includes("Using AI") ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : null}
+                  {scanStatus || "Point camera at barcode, then tap Capture"}
+                </div>
+                <Button
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white gap-2 text-base font-semibold rounded-xl shadow-lg"
+                  onClick={captureAndDecode}
+                  data-testid="button-capture-barcode"
+                >
+                  <Camera className="h-5 w-5" />
+                  Capture
+                </Button>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => { stopScanner(); fileInputRef.current?.click(); }}
+                    onClick={() => { stopCamera(); fileInputRef.current?.click(); }}
                     data-testid="button-take-photo"
                   >
                     <ImageIcon className="h-4 w-4 mr-1.5" />
@@ -374,7 +441,7 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => { stopScanner(); setShowManual(true); }}
+                    onClick={() => { stopCamera(); setShowManual(true); }}
                     data-testid="button-switch-to-manual"
                   >
                     <Search className="h-4 w-4 mr-1.5" />
@@ -384,12 +451,19 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={stopScanner}
+                    onClick={stopCamera}
                     data-testid="button-cancel-scanning"
                   >
                     Cancel
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {scanStatus && !cameraActive && !product && !error && (
+              <div className="flex flex-col items-center gap-3 py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">{scanStatus}</p>
               </div>
             )}
 
@@ -410,7 +484,7 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
                   <Button
                     variant="outline"
                     className="flex-1 gap-1.5"
-                    onClick={() => { setError(null); startScanner(); }}
+                    onClick={() => { setError(null); startCamera(); }}
                     data-testid="button-try-again-scan"
                   >
                     <Camera className="h-4 w-4" />
@@ -527,7 +601,7 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
                       <Button
                         variant="outline"
                         className="shrink-0"
-                        onClick={startScanner}
+                        onClick={startCamera}
                         data-testid="button-scan-another"
                       >
                         Scan Another
@@ -544,7 +618,7 @@ export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeS
                       <Button
                         variant="outline"
                         className="shrink-0"
-                        onClick={startScanner}
+                        onClick={startCamera}
                         data-testid="button-scan-another-after-log"
                       >
                         Scan Another
