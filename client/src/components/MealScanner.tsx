@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { resolveApiUrl } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Camera, Sparkles, Loader2, AlertCircle, Plus, Check, ImageIcon } from "lucide-react";
+import { Camera, Sparkles, Loader2, AlertCircle, Plus, Check, ImageIcon, Lock } from "lucide-react";
 
 interface FoodItem {
   name: string;
@@ -24,9 +24,10 @@ interface MealScannerProps {
   externalOpen?: boolean;
   onExternalOpenChange?: (open: boolean) => void;
   onBeforeOpen?: () => boolean;
+  locked?: boolean;
 }
 
-export default function MealScanner({ onLog, externalOpen, onExternalOpenChange, onBeforeOpen }: MealScannerProps) {
+export default function MealScanner({ onLog, externalOpen, onExternalOpenChange, onBeforeOpen, locked }: MealScannerProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = (v: boolean) => {
@@ -187,6 +188,7 @@ export default function MealScanner({ onLog, externalOpen, onExternalOpenChange,
       >
         <Sparkles className="h-3.5 w-3.5" />
         AI Scan
+        {locked && <Lock className="h-2.5 w-2.5 text-amber-500" />}
       </Button>
 
       <input

@@ -3,7 +3,7 @@ import { resolveApiUrl } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ScanBarcode, Camera, Plus, Loader2, AlertCircle, Minus, Search, ImageIcon } from "lucide-react";
+import { ScanBarcode, Camera, Plus, Loader2, AlertCircle, Minus, Search, ImageIcon, Lock } from "lucide-react";
 
 interface NutritionInfo {
   name: string;
@@ -19,9 +19,10 @@ interface NutritionInfo {
 interface BarcodeScannerProps {
   onLog: (food: { name: string; calories: number; protein: number; carbs: number; fat: number }) => void;
   onBeforeOpen?: () => boolean;
+  locked?: boolean;
 }
 
-export default function BarcodeScanner({ onLog, onBeforeOpen }: BarcodeScannerProps) {
+export default function BarcodeScanner({ onLog, onBeforeOpen, locked }: BarcodeScannerProps) {
   const [open, setOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [looking, setLooking] = useState(false);
@@ -252,6 +253,7 @@ export default function BarcodeScanner({ onLog, onBeforeOpen }: BarcodeScannerPr
       >
         <ScanBarcode className="h-3.5 w-3.5" />
         Scan
+        {locked && <Lock className="h-2.5 w-2.5 text-amber-500" />}
       </Button>
 
       <input

@@ -1777,12 +1777,13 @@ export default function Home() {
                       )}
                       <BarcodeScanner onLog={(food) => {
                         addFoodMutation.mutate(food);
-                      }} onBeforeOpen={() => requirePremium("Barcode Scanner")} />
+                      }} onBeforeOpen={() => requirePremium("Barcode Scanner")} locked={!isPremium} />
                       <MealScanner
                         onLog={(food) => { addFoodMutation.mutate(food); }}
                         externalOpen={isPremium ? mealScannerOpen : false}
                         onExternalOpenChange={setMealScannerOpen}
                         onBeforeOpen={() => requirePremium("AI Meal Scanner")}
+                        locked={!isPremium}
                       />
                   </div>
                   <FoodSearch onAdd={(food) => addFoodMutation.mutate(food)} frequentFoods={frequentFoods} />
