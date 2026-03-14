@@ -1793,20 +1793,23 @@ export default function Home() {
                 {trackedFoods.length > 0 && (
                   <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                     <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">{isViewingToday ? "Today's Log" : format(selectedDate, "MMM d") + " Log"}</h4>
-                    <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                    <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
                       {trackedFoods.map(food => (
-                        <div key={food.id} className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-slate-700 group transition-colors">
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate pr-2">{food.name}</span>
-                          <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-sm text-slate-500 dark:text-slate-400 font-semibold">{food.calories} kcal</span>
-                            <button 
-                              onClick={() => handleRemoveFood(food.id)}
-                              className="text-slate-400 hover:text-red-500 active:text-red-600 transition-colors p-1 -mr-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30"
-                              data-testid={`button-remove-food-${food.id}`}
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
+                        <div key={food.id} className="flex items-center gap-2.5 p-2 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 group" data-testid={`food-entry-${food.id}`}>
+                          <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                            <UtensilsCrossed className="h-3.5 w-3.5 text-primary" />
                           </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{food.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{food.calories} kcal · P:{food.protein}g · C:{food.carbs}g · F:{food.fat}g</p>
+                          </div>
+                          <button 
+                            onClick={() => handleRemoveFood(food.id)}
+                            className="text-slate-400 hover:text-red-500 active:text-red-600 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30"
+                            data-testid={`button-remove-food-${food.id}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -1844,7 +1847,7 @@ export default function Home() {
                           </div>
                           <button
                             onClick={() => removeExerciseMutation.mutate(entry.id)}
-                            className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 opacity-0 group-hover:opacity-100"
+                            className="text-slate-400 hover:text-red-500 active:text-red-600 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30"
                             data-testid={`button-remove-exercise-${entry.id}`}
                           >
                             <X className="h-3.5 w-3.5" />
