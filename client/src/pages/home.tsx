@@ -56,7 +56,8 @@ import MealScanner from "@/components/MealScanner";
 import FoodSearch from "@/components/FoodSearch";
 import OnboardingDialog from "@/components/OnboardingDialog";
 import { isHealthKitAvailable, requestHealthKitPermissions, getTodaySteps, getTodayActiveCalories, writeFoodEntry } from "@/services/healthkit";
-import { Heart } from "lucide-react";
+import { Heart, Crown, Lock } from "lucide-react";
+import { usePremium } from "@/contexts/PremiumContext";
 
 import breakfast1 from "@/assets/images/breakfast_meals_1.png";
 import breakfast2 from "@/assets/images/breakfast_meals_2.png";
@@ -73,6 +74,7 @@ import snack3 from "@/assets/images/snack_foods_3.png";
 
 export default function Home() {
   const queryClient = useQueryClient();
+  const { isPremium, requirePremium } = usePremium();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
   const isViewingToday = isToday(selectedDate);
@@ -308,6 +310,9 @@ export default function Home() {
   }, [profile?.id]);
 
   const handleMobileTab = useCallback((tab: "track" | "plan" | "scan" | "recipes" | "profile") => {
+    if (tab === "plan" && !requirePremium("Meal Planner")) return;
+    if (tab === "scan" && !requirePremium("AI Meal Scanner")) return;
+    if (tab === "recipes" && !requirePremium("Recipes")) return;
     setMobileTab(tab);
     if (tab === "track") {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -329,7 +334,7 @@ export default function Home() {
         profileSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 50);
     }
-  }, []);
+  }, [requirePremium]);
 
   const addFoodMutation = useMutation({
     mutationFn: async (entry: { name: string; calories: number; protein: number; carbs: number; fat: number }) => {
@@ -1772,11 +1777,12 @@ export default function Home() {
                       )}
                       <BarcodeScanner onLog={(food) => {
                         addFoodMutation.mutate(food);
-                      }} />
+                      }} onBeforeOpen={() => requirePremium("Barcode Scanner")} />
                       <MealScanner
                         onLog={(food) => { addFoodMutation.mutate(food); }}
-                        externalOpen={mealScannerOpen}
+                        externalOpen={isPremium ? mealScannerOpen : false}
                         onExternalOpenChange={setMealScannerOpen}
+                        onBeforeOpen={() => requirePremium("AI Meal Scanner")}
                       />
                   </div>
                   <FoodSearch onAdd={(food) => addFoodMutation.mutate(food)} frequentFoods={frequentFoods} />
@@ -1916,7 +1922,20 @@ export default function Home() {
           </div>
 
           <div className="lg:col-span-5" ref={mealPlannerRef}>
-            <Card className="border-none shadow-sm bg-white dark:bg-slate-900 relative flex flex-col rounded-xl h-full">
+            <Card className="border-none shadow-sm bg-white dark:bg-slate-900 relative flex flex-col rounded-xl h-full overflow-hidden">
+              {!isPremium && (
+                <div className="absolute inset-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl cursor-pointer" onClick={() => requirePremium("Meal Planner")} data-testid="premium-gate-meal-planner">
+                  <div className="w-14 h-14 bg-gradient-to-br from-[#4CAF50] to-[#2E7D32] rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-primary/20">
+                    <Crown className="h-7 w-7 text-white" />
+                  </div>
+                  <p className="font-['Poppins',sans-serif] font-bold text-slate-900 dark:text-slate-100 text-base">Meal Planner</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 text-center max-w-[200px]">Unlock personalized weekly meal plans</p>
+                  <div className="mt-3 px-4 py-1.5 bg-[#4CAF50] text-white text-xs font-semibold rounded-full flex items-center gap-1.5">
+                    <Lock className="h-3 w-3" />
+                    Upgrade to Pro
+                  </div>
+                </div>
+              )}
               <div className="h-2 bg-primary w-full rounded-t-xl"></div>
               <CardHeader className="pb-2">
                 <CardTitle className="text-slate-900 dark:text-slate-100 flex items-center gap-2 text-lg">
@@ -2180,7 +2199,20 @@ export default function Home() {
           </div>
 
           {/* Right Column - Recipes & Meals */}
-          <div className="lg:col-span-12 space-y-6" ref={recipesSectionRef}>
+          <div className="lg:col-span-12 space-y-6 relative" ref={recipesSectionRef}>
+            {!isPremium && (
+              <div className="absolute inset-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl cursor-pointer" onClick={() => requirePremium("Recipes")} data-testid="premium-gate-recipes">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#4CAF50] to-[#2E7D32] rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-primary/20">
+                  <Crown className="h-7 w-7 text-white" />
+                </div>
+                <p className="font-['Poppins',sans-serif] font-bold text-slate-900 dark:text-slate-100 text-base">Recipes</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 text-center max-w-[220px]">Access AI-generated recipes, save favorites, and get grocery lists</p>
+                <div className="mt-3 px-4 py-1.5 bg-[#4CAF50] text-white text-xs font-semibold rounded-full flex items-center gap-1.5">
+                  <Lock className="h-3 w-3" />
+                  Upgrade to Pro
+                </div>
+              </div>
+            )}
             
             <Tabs value={activeRecipesTab ?? (plannedMealsData.length > 0 ? "planned" : "recommended")} onValueChange={setActiveRecipesTab} className="w-full" ref={recipesTabRef}>
               <div className="flex flex-col gap-3 mb-6">
@@ -2759,6 +2791,27 @@ export default function Home() {
                 </div>
               )}
 
+              <div
+                className={`flex items-center justify-between p-3 rounded-xl border ${isPremium ? 'border-primary/30 bg-primary/5 dark:bg-primary/10' : 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30'}`}
+                onClick={() => { if (!isPremium) requirePremium("Meal Planner"); }}
+                data-testid="premium-status-card"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isPremium ? 'bg-primary/20' : 'bg-amber-100 dark:bg-amber-900/30'}`}>
+                    <Crown className={`h-4 w-4 ${isPremium ? 'text-primary' : 'text-amber-500'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{isPremium ? 'Pro Active' : 'Free Plan'}</p>
+                    <p className="text-xs text-muted-foreground">{isPremium ? 'All features unlocked' : 'Tap to upgrade'}</p>
+                  </div>
+                </div>
+                {isPremium ? (
+                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded-full">PRO</span>
+                ) : (
+                  <div className="px-3 py-1.5 bg-[#4CAF50] text-white text-xs font-semibold rounded-full">Upgrade</div>
+                )}
+              </div>
+
               <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
@@ -3177,11 +3230,11 @@ export default function Home() {
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 sm:hidden safe-bottom" data-testid="mobile-bottom-nav">
         <div className="flex justify-around items-center h-16 px-2">
           {[
-            { id: "track" as const, icon: Activity, label: "Track" },
-            { id: "plan" as const, icon: CalendarDays, label: "Plan" },
-            { id: "scan" as const, icon: ScanLine, label: "AI Scan" },
-            { id: "recipes" as const, icon: ChefHat, label: "Recipes" },
-            { id: "profile" as const, icon: User, label: "Profile" },
+            { id: "track" as const, icon: Activity, label: "Track", premium: false },
+            { id: "plan" as const, icon: CalendarDays, label: "Plan", premium: true },
+            { id: "scan" as const, icon: ScanLine, label: "AI Scan", premium: true },
+            { id: "recipes" as const, icon: ChefHat, label: "Recipes", premium: true },
+            { id: "profile" as const, icon: User, label: "Profile", premium: false },
           ].map((item) => (
             <button
               key={item.id}
@@ -3194,11 +3247,15 @@ export default function Home() {
               data-testid={`mobile-nav-${item.id}`}
             >
               {item.id === "scan" ? (
-                <div className="bg-primary text-white rounded-full p-2.5 -mt-5 shadow-lg shadow-primary/30">
+                <div className="bg-primary text-white rounded-full p-2.5 -mt-5 shadow-lg shadow-primary/30 relative">
                   <item.icon className="h-5 w-5" />
+                  {!isPremium && <Lock className="h-2.5 w-2.5 absolute -top-0.5 -right-0.5 text-white bg-amber-500 rounded-full p-0.5 box-content" />}
                 </div>
               ) : (
-                <item.icon className={`h-5 w-5 ${mobileTab === item.id ? "stroke-[2.5]" : ""}`} />
+                <div className="relative">
+                  <item.icon className={`h-5 w-5 ${mobileTab === item.id ? "stroke-[2.5]" : ""}`} />
+                  {item.premium && !isPremium && <Lock className="h-2 w-2 absolute -top-1 -right-1.5 text-amber-500" />}
+                </div>
               )}
               <span className={`text-[10px] font-medium ${item.id === "scan" ? "mt-0.5" : ""}`}>{item.label}</span>
             </button>

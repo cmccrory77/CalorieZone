@@ -8,6 +8,8 @@ import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import Privacy from "@/pages/privacy";
 import Support from "@/pages/support";
+import { PremiumProvider } from "@/contexts/PremiumContext";
+import UpgradeModal from "@/components/UpgradeModal";
 
 function Router() {
   return (
@@ -24,10 +26,13 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <PremiumProvider>
+        <TooltipProvider>
+          <Toaster />
+          <UpgradeModal />
+          <Router />
+        </TooltipProvider>
+      </PremiumProvider>
     </QueryClientProvider>
   );
 }

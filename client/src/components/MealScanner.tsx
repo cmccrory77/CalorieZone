@@ -23,9 +23,10 @@ interface MealScannerProps {
   onLog: (food: { name: string; calories: number; protein: number; carbs: number; fat: number }) => void;
   externalOpen?: boolean;
   onExternalOpenChange?: (open: boolean) => void;
+  onBeforeOpen?: () => boolean;
 }
 
-export default function MealScanner({ onLog, externalOpen, onExternalOpenChange }: MealScannerProps) {
+export default function MealScanner({ onLog, externalOpen, onExternalOpenChange, onBeforeOpen }: MealScannerProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = (v: boolean) => {
@@ -181,7 +182,7 @@ export default function MealScanner({ onLog, externalOpen, onExternalOpenChange 
         variant="outline"
         size="sm"
         className="h-9 gap-1.5 text-xs border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-600 dark:text-purple-400"
-        onClick={() => { reset(); setOpen(true); }}
+        onClick={() => { if (onBeforeOpen && !onBeforeOpen()) return; reset(); setOpen(true); }}
         data-testid="button-meal-scanner"
       >
         <Sparkles className="h-3.5 w-3.5" />

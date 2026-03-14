@@ -18,6 +18,7 @@ interface NutritionInfo {
 
 interface BarcodeScannerProps {
   onLog: (food: { name: string; calories: number; protein: number; carbs: number; fat: number }) => void;
+  onBeforeOpen?: () => boolean;
 }
 
 function resizeImageToBlob(source: HTMLVideoElement | HTMLImageElement | File): Promise<File> {
@@ -69,7 +70,7 @@ async function tryDecode(file: File): Promise<string | null> {
   }
 }
 
-export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
+export default function BarcodeScanner({ onLog, onBeforeOpen }: BarcodeScannerProps) {
   const [open, setOpen] = useState(false);
   const [looking, setLooking] = useState(false);
   const [product, setProduct] = useState<NutritionInfo | null>(null);
@@ -317,7 +318,7 @@ export default function BarcodeScanner({ onLog }: BarcodeScannerProps) {
         variant="outline"
         size="sm"
         className="h-9 gap-1.5 text-xs border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
-        onClick={() => setOpen(true)}
+        onClick={() => { if (onBeforeOpen && !onBeforeOpen()) return; setOpen(true); }}
         data-testid="button-barcode-scanner"
       >
         <ScanBarcode className="h-3.5 w-3.5" />
