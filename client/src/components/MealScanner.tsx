@@ -194,7 +194,6 @@ export default function MealScanner({ onLog, externalOpen, onExternalOpenChange,
       <input
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         ref={fileInputRef}
         onChange={handleFileUpload}
