@@ -44,24 +44,14 @@ export default function Landing() {
           <p className="text-lg md:text-xl text-slate-500 leading-relaxed max-w-xl mx-auto mb-10" data-testid="text-hero-subtitle">
             Track calories, plan meals, and discover recipes — all personalized to your body and your goals.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="https://apps.apple.com"
-              className="inline-flex items-center gap-2.5 bg-black hover:bg-slate-800 text-white font-semibold px-7 py-3.5 rounded-xl transition-colors text-base"
-              data-testid="link-download-hero"
-            >
-              <Apple className="h-5 w-5" />
-              Download on the App Store
-            </a>
-            <a
-              href="/app"
-              className="inline-flex items-center gap-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold px-7 py-3.5 rounded-xl transition-colors text-base"
-              data-testid="link-try-app"
-            >
-              Try the Web App
-              <ArrowRight className="h-4 w-4" />
-            </a>
-          </div>
+          <a
+            href="https://apps.apple.com"
+            className="inline-flex items-center gap-2.5 bg-black hover:bg-slate-800 text-white font-semibold px-7 py-3.5 rounded-xl transition-colors text-base"
+            data-testid="link-download-hero"
+          >
+            <Apple className="h-5 w-5" />
+            Download on the App Store
+          </a>
         </div>
       </section>
 
