@@ -228,7 +228,10 @@ export default function Landing() {
             <Activity className="h-5 w-5 text-[#4CAF50]" />
             <span className="font-['Poppins',sans-serif] font-bold">CalorieZone</span>
           </div>
-          <p className="text-sm text-slate-400">&copy; {new Date().getFullYear()} CalorieZone. All rights reserved.</p>
+          <div className="flex items-center gap-6">
+            <a href="/privacy" className="text-sm text-slate-400 hover:text-slate-600 transition-colors" data-testid="link-privacy-footer">Privacy Policy</a>
+            <p className="text-sm text-slate-400">&copy; {new Date().getFullYear()} CalorieZone. All rights reserved.</p>
+          </div>
         </div>
       </footer>
     </div>
