@@ -162,6 +162,15 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/reset-all-data", async (_req, res) => {
+    try {
+      await storage.resetAllData();
+      res.json({ success: true, message: "All data cleared" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to reset data" });
+    }
+  });
+
   const openai = new OpenAI({
     apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
     baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
