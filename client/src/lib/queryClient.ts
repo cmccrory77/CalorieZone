@@ -3,19 +3,22 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 function isCapacitor(): boolean {
   try {
     const w = window as any;
-    return !!(w.Capacitor && w.Capacitor.isNativePlatform && w.Capacitor.isNativePlatform());
+    if (w.Capacitor && w.Capacitor.isNativePlatform && w.Capacitor.isNativePlatform()) return true;
+    if (window.location.protocol === "capacitor:") return true;
+    if (window.location.protocol === "ionic:") return true;
+    if (document.URL.includes("capacitor://") || document.URL.includes("ionic://")) return true;
+    return false;
   } catch {
     return false;
   }
 }
 
-const API_BASE = isCapacitor()
-  ? "https://b5252e75-7d72-4a27-a063-837869a7ea78-00-1fypdustfwrn6.kirk.replit.dev"
-  : "";
+const NATIVE_API_BASE = "https://caloriezone.app";
 
 export function resolveApiUrl(path: string): string {
   if (path.startsWith("http")) return path;
-  return API_BASE + path;
+  if (isCapacitor()) return NATIVE_API_BASE + path;
+  return path;
 }
 
 async function throwIfResNotOk(res: Response) {
