@@ -2507,7 +2507,13 @@ export default function Home() {
                         </Button>
                         <Button 
                           className="bg-secondary hover:bg-secondary/90 text-white shrink-0" 
-                          onClick={() => addRecipeToTracker(recipe)}
+                          onClick={() => {
+                            addRecipeToTracker(recipe);
+                            toast({
+                              title: `Logged ${recipe.title}`,
+                              description: `${recipe.calories} cal added to today's diary`,
+                            });
+                          }}
                         >
                           <Plus className="h-4 w-4 mr-1.5" /> Log
                         </Button>
@@ -2580,14 +2586,25 @@ export default function Home() {
                           </div>
                           <div className="space-y-1.5">
                             <Label className="text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider">Extra Ingredients <span className="normal-case font-normal text-muted-foreground">(optional)</span></Label>
-                            <Input 
-                              placeholder="e.g. broccoli, rice, bell peppers..." 
-                              className="h-10 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm"
-                              value={generatorIngredients}
-                              onChange={(e) => setGeneratorIngredients(e.target.value)}
-                              onKeyDown={(e) => e.key === 'Enter' && handleGenerateRecipe()}
-                              data-testid="input-generator-ingredients"
-                            />
+                            <div className="relative">
+                              <Input 
+                                placeholder="e.g. broccoli, rice, bell peppers..." 
+                                className="h-10 bg-white dark:bg-slate-800 border-blue-200 dark:border-slate-700 shadow-sm pr-8"
+                                value={generatorIngredients}
+                                onChange={(e) => setGeneratorIngredients(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleGenerateRecipe()}
+                                data-testid="input-generator-ingredients"
+                              />
+                              {generatorIngredients && (
+                                <button
+                                  onClick={() => setGeneratorIngredients("")}
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 active:text-red-600 transition-colors p-0.5 rounded"
+                                  data-testid="button-clear-ingredients"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -2667,9 +2684,24 @@ export default function Home() {
                           </Button>
                           <Button 
                             className="bg-secondary hover:bg-secondary/90 text-white shrink-0"
-                            onClick={() => addRecipeToTracker(generatedRecipe)}
+                            onClick={() => {
+                              addRecipeToTracker(generatedRecipe);
+                              toast({
+                                title: `Logged ${generatedRecipe.title}`,
+                                description: `${generatedRecipe.calories} cal added to today's diary`,
+                              });
+                            }}
                           >
                             <Plus className="h-4 w-4 mr-1.5" /> Log
+                          </Button>
+                          <Button 
+                            variant="ghost"
+                            size="icon"
+                            className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                            onClick={() => setGeneratedRecipe(null)}
+                            data-testid="button-dismiss-generated-recipe"
+                          >
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -2959,6 +2991,10 @@ export default function Home() {
                   className="flex-1 bg-secondary hover:bg-secondary/90 text-white"
                   onClick={() => {
                     addRecipeToTracker(selectedRecipe);
+                    toast({
+                      title: `Logged ${selectedRecipe.title}`,
+                      description: `${selectedRecipe.calories} cal added to today's diary`,
+                    });
                     setSelectedRecipe(null);
                   }}
                   data-testid="button-log-from-dialog"
