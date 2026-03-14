@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { Eye } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { format, addDays, subDays, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
+import { format, addDays, subDays, isToday, isSameDay } from "date-fns";
 import type { UserProfile, FoodEntry, SavedRecipe, PlannedMeal, ExerciseEntry } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -170,8 +170,8 @@ export default function Home() {
   const [groceryChecked, setGroceryChecked] = useState<Record<string, boolean>>({});
   const [groceryCopied, setGroceryCopied] = useState(false);
 
-  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 0 });
-  const currentWeekEnd = endOfWeek(new Date(), { weekStartsOn: 0 });
+  const currentWeekStart = new Date();
+  const currentWeekEnd = addDays(new Date(), 6);
   const weekStartStr = format(currentWeekStart, "yyyy-MM-dd");
   const weekEndStr = format(currentWeekEnd, "yyyy-MM-dd");
 
@@ -1016,9 +1016,9 @@ export default function Home() {
     }
 
     const allMeals: any[] = [];
-    const todayDayIndex = new Date().getDay();
-    for (let day = todayDayIndex; day < 7; day++) {
-      const dateStr = format(addDays(currentWeekStart, day), "yyyy-MM-dd");
+    const today = new Date();
+    for (let day = 0; day < 7; day++) {
+      const dateStr = format(addDays(today, day), "yyyy-MM-dd");
 
       mealTypes.forEach((mt, mtIdx) => {
         let usedSaved = false;
@@ -1089,7 +1089,9 @@ export default function Home() {
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const todayPlannedMeals = plannedMealsData.filter(m => m.date === todayStr);
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const allDayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const todayDayIndex = new Date().getDay();
+  const dayNames = Array.from({ length: 7 }, (_, i) => allDayNames[(todayDayIndex + i) % 7]);
 
   const aggregatedGroceryList = useCallback(() => {
     const canonicalNames: Record<string, string> = {
