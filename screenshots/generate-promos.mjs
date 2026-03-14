@@ -28,6 +28,9 @@ const slides = [
   }
 ];
 
+const SCREENSHOT_WIDTH = 1284;
+const SCREENSHOT_HEIGHT = 2778;
+
 async function generate() {
   const browser = await puppeteer.launch({
     headless: 'new',
@@ -35,7 +38,7 @@ async function generate() {
   });
 
   const page = await browser.newPage();
-  await page.setViewport({ width: 1290, height: 2796, deviceScaleFactor: 1 });
+  await page.setViewport({ width: SCREENSHOT_WIDTH, height: SCREENSHOT_HEIGHT, deviceScaleFactor: 1 });
 
   const templatePath = `file://${path.resolve(__dirname, 'promo-template.html')}`;
   
@@ -62,7 +65,7 @@ async function generate() {
 
     await page.screenshot({
       path: path.resolve(__dirname, slide.output),
-      clip: { x: 0, y: 0, width: 1290, height: 2796 }
+      clip: { x: 0, y: 0, width: SCREENSHOT_WIDTH, height: SCREENSHOT_HEIGHT }
     });
     console.log(`Generated: ${slide.output}`);
   }
