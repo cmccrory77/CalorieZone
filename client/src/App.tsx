@@ -14,7 +14,13 @@ import UpgradeModal from "@/components/UpgradeModal";
 function isCapacitor(): boolean {
   try {
     const w = window as any;
-    return !!(w.Capacitor && w.Capacitor.isNativePlatform && w.Capacitor.isNativePlatform());
+    if (w.Capacitor && w.Capacitor.isNativePlatform && w.Capacitor.isNativePlatform()) return true;
+    if (window.location.protocol === "capacitor:") return true;
+    if (window.location.protocol === "ionic:") return true;
+    if (!window.location.hostname || window.location.hostname === "localhost") {
+      if (document.URL.includes("capacitor://") || document.URL.includes("ionic://")) return true;
+    }
+    return false;
   } catch { return false; }
 }
 
