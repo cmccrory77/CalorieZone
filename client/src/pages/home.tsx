@@ -56,7 +56,7 @@ import MealScanner from "@/components/MealScanner";
 import FoodSearch from "@/components/FoodSearch";
 import OnboardingDialog from "@/components/OnboardingDialog";
 import { isHealthKitAvailable, requestHealthKitPermissions, getTodaySteps, getTodayActiveCalories, writeFoodEntry } from "@/services/healthkit";
-import { Heart, Crown, Lock } from "lucide-react";
+import { Heart, Crown, Lock, RotateCcw } from "lucide-react";
 import { usePremium } from "@/contexts/PremiumContext";
 
 import breakfast1 from "@/assets/images/breakfast_meals_1.png";
@@ -74,7 +74,7 @@ import snack3 from "@/assets/images/snack_foods_3.png";
 
 export default function Home() {
   const queryClient = useQueryClient();
-  const { isPremium, requirePremium } = usePremium();
+  const { isPremium, setPremium, requirePremium } = usePremium();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
   const isViewingToday = isToday(selectedDate);
@@ -2849,6 +2849,35 @@ export default function Home() {
                   <div className="px-3 py-1.5 bg-[#4CAF50] text-white text-xs font-semibold rounded-full">Upgrade</div>
                 )}
               </div>
+
+              {!isPremium && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const w = window as any;
+                      const plugin = w.Capacitor?.Plugins?.StoreKitPlugin;
+                      if (plugin) {
+                        const result = await plugin.restorePurchases();
+                        if (result.restored) {
+                          setPremium(true);
+                          toast({ title: "Purchase restored!", description: "Your Pro access has been restored." });
+                        } else {
+                          toast({ title: "No purchases found", description: "No previous purchases were found for this account." });
+                        }
+                      } else {
+                        setPremium(true);
+                      }
+                    } catch {
+                      toast({ title: "Restore failed", description: "Could not restore purchases. Please try again.", variant: "destructive" });
+                    }
+                  }}
+                  className="flex items-center justify-center gap-1.5 w-full py-2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                  data-testid="button-restore-purchases-profile"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Restore Purchases
+                </button>
+              )}
 
               <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
                 <div className="flex items-center gap-3">

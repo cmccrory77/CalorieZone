@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, ScanLine, ChefHat, CalendarDays, Sparkles, Check, Loader2 } from "lucide-react";
+import { Crown, ScanLine, ChefHat, CalendarDays, Sparkles, Check, Loader2, RotateCcw } from "lucide-react";
 import { usePremium } from "@/contexts/PremiumContext";
+import { useToast } from "@/hooks/use-toast";
 
 const featureDetails: Record<string, { icon: typeof Crown; description: string }> = {
   "Meal Planner": {
@@ -43,6 +44,15 @@ const FALLBACK_PRICES: Record<PlanId, string> = {
   yearly: "$29.99",
   lifetime: "$49.99",
 };
+
+interface StoreProduct {
+  productId: string;
+  price: string;
+  priceRaw: number;
+  currencyCode: string;
+  title: string;
+  description: string;
+}
 
 interface PlanDisplay {
   id: PlanId;
@@ -103,6 +113,7 @@ function buildPlans(prices: Record<PlanId, string>): PlanDisplay[] {
 function useStoreProducts() {
   const [prices, setPrices] = useState<Record<PlanId, string>>(FALLBACK_PRICES);
   const [loading, setLoading] = useState(false);
+  const [storeAvailable, setStoreAvailable] = useState(false);
   const fetched = useRef(false);
 
   useEffect(() => {
@@ -115,6 +126,7 @@ function useStoreProducts() {
     if (!plugin) return;
 
     setLoading(true);
+    setStoreAvailable(true);
 
     plugin
       .getProducts({
@@ -124,7 +136,7 @@ function useStoreProducts() {
           PRODUCT_IDS.lifetime,
         ],
       })
-      .then((result: any) => {
+      .then((result: { products: StoreProduct[] }) => {
         const updated: Partial<Record<PlanId, string>> = {};
         for (const product of result.products || []) {
           if (product.productId === PRODUCT_IDS.monthly) updated.monthly = product.price;
@@ -143,15 +155,17 @@ function useStoreProducts() {
       });
   }, []);
 
-  return { prices, loading };
+  return { prices, loading, storeAvailable };
 }
 
 export default function UpgradeModal() {
   const { showUpgradeModal, setShowUpgradeModal, attemptedFeature, setPremium } = usePremium();
+  const { toast } = useToast();
   const detail = featureDetails[attemptedFeature];
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("yearly");
   const [purchasing, setPurchasing] = useState(false);
-  const { prices, loading: pricesLoading } = useStoreProducts();
+  const [restoring, setRestoring] = useState(false);
+  const { prices, loading: pricesLoading, storeAvailable } = useStoreProducts();
 
   const plans = buildPlans(prices);
   const selected = plans.find((p) => p.id === selectedPlan)!;
@@ -160,22 +174,47 @@ export default function UpgradeModal() {
     const plan = plans.find((p) => p.id === selectedPlan);
     if (!plan) return;
 
-    if (isCapacitorNative()) {
-      const plugin = getStoreKitPlugin();
-      if (plugin) {
-        setPurchasing(true);
-        try {
-          await plugin.purchase({ productId: plan.productId });
+    const plugin = getStoreKitPlugin();
+    if (isCapacitorNative() && plugin) {
+      setPurchasing(true);
+      try {
+        const result = await plugin.purchase({ productId: plan.productId });
+        if (result.success) {
           setPremium(true);
           setShowUpgradeModal(false);
-        } catch (err) {
-          console.error("Purchase failed:", err);
-        } finally {
-          setPurchasing(false);
+          toast({ title: "Welcome to Pro!", description: "All features are now unlocked." });
         }
-      } else {
-        setPremium(true);
-        setShowUpgradeModal(false);
+      } catch (err: any) {
+        const msg = err?.message || String(err);
+        if (!msg.includes("cancelled")) {
+          toast({ title: "Purchase failed", description: "Please try again.", variant: "destructive" });
+        }
+      } finally {
+        setPurchasing(false);
+      }
+    } else {
+      setPremium(true);
+      setShowUpgradeModal(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    const plugin = getStoreKitPlugin();
+    if (isCapacitorNative() && plugin) {
+      setRestoring(true);
+      try {
+        const result = await plugin.restorePurchases();
+        if (result.restored) {
+          setPremium(true);
+          setShowUpgradeModal(false);
+          toast({ title: "Purchase restored!", description: "Your Pro access has been restored." });
+        } else {
+          toast({ title: "No purchases found", description: "No previous purchases were found for this account." });
+        }
+      } catch (err: any) {
+        toast({ title: "Restore failed", description: "Could not restore purchases. Please try again.", variant: "destructive" });
+      } finally {
+        setRestoring(false);
       }
     } else {
       setPremium(true);
@@ -308,13 +347,29 @@ export default function UpgradeModal() {
             </p>
           </div>
 
-          <button
-            onClick={() => setShowUpgradeModal(false)}
-            className="w-full text-center text-xs text-slate-400 hover:text-slate-600 transition-colors py-1"
-            data-testid="button-dismiss-upgrade"
-          >
-            Maybe Later
-          </button>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={handleRestore}
+              disabled={restoring}
+              className="text-xs text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1"
+              data-testid="button-restore-purchases"
+            >
+              {restoring ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <RotateCcw className="h-3 w-3" />
+              )}
+              {restoring ? "Restoring..." : "Restore Purchases"}
+            </button>
+            <span className="text-slate-200 dark:text-slate-700">·</span>
+            <button
+              onClick={() => setShowUpgradeModal(false)}
+              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+              data-testid="button-dismiss-upgrade"
+            >
+              Maybe Later
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
