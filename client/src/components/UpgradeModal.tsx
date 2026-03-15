@@ -204,9 +204,11 @@ export default function UpgradeModal() {
       } finally {
         setPurchasing(false);
       }
-    } else {
+    } else if (!isCapacitorNative()) {
       setPremium(true);
       setShowUpgradeModal(false);
+    } else {
+      toast({ title: "Store unavailable", description: "Unable to connect to the App Store. Please try again later.", variant: "destructive" });
     }
   };
 
@@ -228,9 +230,11 @@ export default function UpgradeModal() {
       } finally {
         setRestoring(false);
       }
-    } else {
+    } else if (!isCapacitorNative()) {
       setPremium(true);
       setShowUpgradeModal(false);
+    } else {
+      toast({ title: "Store unavailable", description: "Unable to connect to the App Store. Please try again later.", variant: "destructive" });
     }
   };
 
