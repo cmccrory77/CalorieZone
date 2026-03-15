@@ -63,9 +63,9 @@ function isCapacitorNative(): boolean {
   return false;
 }
 
-function getStore(): any {
+function getStoreKitPlugin(): any {
   try {
-    return (window as any).CdvPurchase?.store || null;
+    return (window as any).Capacitor?.Plugins?.StoreKitPlugin || null;
   } catch {
     return null;
   }
@@ -103,57 +103,44 @@ function buildPlans(prices: Record<PlanId, string>): PlanDisplay[] {
 function useStoreProducts() {
   const [prices, setPrices] = useState<Record<PlanId, string>>(FALLBACK_PRICES);
   const [loading, setLoading] = useState(false);
-  const initialized = useRef(false);
+  const fetched = useRef(false);
 
   useEffect(() => {
-    if (!isCapacitorNative() || initialized.current) return;
-    initialized.current = true;
+    if (fetched.current) return;
+    fetched.current = true;
 
-    const store = getStore();
-    if (!store) return;
+    if (!isCapacitorNative()) return;
+
+    const plugin = getStoreKitPlugin();
+    if (!plugin) return;
 
     setLoading(true);
 
-    const CdvPurchase = (window as any).CdvPurchase;
-    const Platform = CdvPurchase?.Platform?.APPLE_APPSTORE;
-    const ProductType = CdvPurchase?.ProductType;
-
-    if (!Platform || !ProductType) {
-      setLoading(false);
-      return;
-    }
-
-    store.register([
-      { id: PRODUCT_IDS.monthly, type: ProductType.PAID_SUBSCRIPTION, platform: Platform },
-      { id: PRODUCT_IDS.yearly, type: ProductType.PAID_SUBSCRIPTION, platform: Platform },
-      { id: PRODUCT_IDS.lifetime, type: ProductType.NON_CONSUMABLE, platform: Platform },
-    ]);
-
-    store.when()
-      .productUpdated(() => {
-        const updated: Record<string, string> = {};
-        for (const [key, pid] of Object.entries(PRODUCT_IDS)) {
-          const product = store.get(pid);
-          const offer = product?.pricing;
-          if (offer?.price) {
-            updated[key] = offer.price;
-          }
+    plugin
+      .getProducts({
+        productIds: [
+          PRODUCT_IDS.monthly,
+          PRODUCT_IDS.yearly,
+          PRODUCT_IDS.lifetime,
+        ],
+      })
+      .then((result: any) => {
+        const updated: Partial<Record<PlanId, string>> = {};
+        for (const product of result.products || []) {
+          if (product.productId === PRODUCT_IDS.monthly) updated.monthly = product.price;
+          if (product.productId === PRODUCT_IDS.yearly) updated.yearly = product.price;
+          if (product.productId === PRODUCT_IDS.lifetime) updated.lifetime = product.price;
         }
         if (Object.keys(updated).length > 0) {
           setPrices((prev) => ({ ...prev, ...updated }));
         }
+      })
+      .catch((err: any) => {
+        console.error("Failed to fetch store products:", err);
+      })
+      .finally(() => {
         setLoading(false);
-      })
-      .approved((transaction: any) => {
-        transaction.verify();
-      })
-      .verified((receipt: any) => {
-        receipt.finish();
       });
-
-    store.initialize([Platform])
-      .then(() => store.update())
-      .catch(() => setLoading(false));
   }, []);
 
   return { prices, loading };
@@ -174,19 +161,13 @@ export default function UpgradeModal() {
     if (!plan) return;
 
     if (isCapacitorNative()) {
-      const store = getStore();
-      if (store) {
+      const plugin = getStoreKitPlugin();
+      if (plugin) {
         setPurchasing(true);
         try {
-          const product = store.get(plan.productId);
-          const offer = product?.getOffer();
-          if (offer) {
-            await store.order(offer);
-            setPremium(true);
-            setShowUpgradeModal(false);
-          } else {
-            console.error("No offer found for product:", plan.productId);
-          }
+          await plugin.purchase({ productId: plan.productId });
+          setPremium(true);
+          setShowUpgradeModal(false);
         } catch (err) {
           console.error("Purchase failed:", err);
         } finally {
