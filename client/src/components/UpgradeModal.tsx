@@ -42,7 +42,7 @@ const PRODUCT_IDS: Record<PlanId, string> = {
 const FALLBACK_PRICES: Record<PlanId, string> = {
   monthly: "$7.99",
   yearly: "$44.99",
-  lifetime: "$59.99",
+  lifetime: "$69.99",
 };
 
 interface StoreProduct {
