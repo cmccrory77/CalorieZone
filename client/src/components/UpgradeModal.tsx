@@ -79,6 +79,9 @@ export function getStoreKitPlugin(): any {
   if (_storeKitPlugin) return _storeKitPlugin;
   try {
     const cap = (window as any).Capacitor;
+    const keys = cap ? Object.keys(cap).join(",") : "no-cap";
+    const pluginKeys = cap?.Plugins ? Object.keys(cap.Plugins).join(",") : "no-plugins";
+
     if (cap?.Plugins?.StoreKitPlugin) {
       _storeKitPlugin = cap.Plugins.StoreKitPlugin;
       _pluginSource = "direct";
@@ -89,7 +92,7 @@ export function getStoreKitPlugin(): any {
       _pluginSource = "registered";
       return _storeKitPlugin;
     }
-    _pluginSource = "not found";
+    _pluginSource = `cap:[${keys}] plugins:[${pluginKeys}]`;
     return null;
   } catch (e: any) {
     _pluginSource = `error: ${e?.message || String(e)}`;
@@ -146,7 +149,7 @@ function useStoreProducts() {
 
     const plugin = getStoreKitPlugin();
     if (!plugin) {
-      setDebugInfo("native but plugin NOT found");
+      setDebugInfo(`native no plugin: ${getPluginSource()}`);
       return;
     }
 
