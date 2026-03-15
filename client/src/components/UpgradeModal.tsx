@@ -370,6 +370,28 @@ export default function UpgradeModal() {
               Maybe Later
             </button>
           </div>
+
+          <div className="flex items-center justify-center gap-3 pt-1">
+            <a
+              href={isCapacitorNative() ? "https://caloriezone.app/privacy" : "/privacy"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-slate-400 hover:text-slate-600 transition-colors underline underline-offset-2"
+              data-testid="link-privacy-upgrade"
+            >
+              Privacy Policy
+            </a>
+            <span className="text-slate-200 dark:text-slate-700">·</span>
+            <a
+              href={isCapacitorNative() ? "https://caloriezone.app/terms" : "/terms"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-slate-400 hover:text-slate-600 transition-colors underline underline-offset-2"
+              data-testid="link-terms-upgrade"
+            >
+              Terms of Use
+            </a>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
