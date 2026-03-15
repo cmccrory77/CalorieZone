@@ -73,9 +73,20 @@ function isCapacitorNative(): boolean {
   return false;
 }
 
+let _storeKitPlugin: any = null;
 function getStoreKitPlugin(): any {
+  if (_storeKitPlugin) return _storeKitPlugin;
   try {
-    return (window as any).Capacitor?.Plugins?.StoreKitPlugin || null;
+    const cap = (window as any).Capacitor;
+    if (cap?.Plugins?.StoreKitPlugin) {
+      _storeKitPlugin = cap.Plugins.StoreKitPlugin;
+      return _storeKitPlugin;
+    }
+    if (cap?.registerPlugin) {
+      _storeKitPlugin = cap.registerPlugin("StoreKitPlugin");
+      return _storeKitPlugin;
+    }
+    return null;
   } catch {
     return null;
   }
