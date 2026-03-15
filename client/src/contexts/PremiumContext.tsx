@@ -13,7 +13,7 @@ const PremiumContext = createContext<PremiumContextType | null>(null);
 
 const STORAGE_KEY = "caloriezone-premium";
 const BUILD_VERSION_KEY = "caloriezone-build-version";
-const CURRENT_BUILD = "2026031502";
+const CURRENT_BUILD = "2026031503";
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
   const [isPremium, setIsPremium] = useState(() => {

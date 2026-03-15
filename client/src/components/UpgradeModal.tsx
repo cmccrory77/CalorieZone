@@ -64,7 +64,7 @@ interface PlanDisplay {
   highlight?: boolean;
 }
 
-function isCapacitorNative(): boolean {
+export function isCapacitorNative(): boolean {
   try {
     const w = window as any;
     if (w.Capacitor?.isNativePlatform?.()) return true;
@@ -74,23 +74,29 @@ function isCapacitorNative(): boolean {
 }
 
 let _storeKitPlugin: any = null;
-function getStoreKitPlugin(): any {
+let _pluginSource: string = "none";
+export function getStoreKitPlugin(): any {
   if (_storeKitPlugin) return _storeKitPlugin;
   try {
     const cap = (window as any).Capacitor;
     if (cap?.Plugins?.StoreKitPlugin) {
       _storeKitPlugin = cap.Plugins.StoreKitPlugin;
+      _pluginSource = "direct";
       return _storeKitPlugin;
     }
     if (cap?.registerPlugin) {
       _storeKitPlugin = cap.registerPlugin("StoreKitPlugin");
+      _pluginSource = "registered";
       return _storeKitPlugin;
     }
+    _pluginSource = "not found";
     return null;
-  } catch {
+  } catch (e: any) {
+    _pluginSource = `error: ${e?.message || String(e)}`;
     return null;
   }
 }
+function getPluginSource(): string { return _pluginSource; }
 
 function buildPlans(prices: Record<PlanId, string>): PlanDisplay[] {
   return [
@@ -145,8 +151,7 @@ function useStoreProducts() {
     }
 
     setLoading(true);
-    setStoreAvailable(true);
-    setDebugInfo("plugin found, fetching...");
+    setDebugInfo(`plugin via: ${getPluginSource()}, fetching...`);
 
     plugin
       .getProducts({
@@ -158,7 +163,8 @@ function useStoreProducts() {
       })
       .then((result: { products: StoreProduct[] }) => {
         const count = result.products?.length || 0;
-        setDebugInfo(`store returned ${count} product(s)`);
+        setStoreAvailable(count > 0);
+        setDebugInfo(`via ${getPluginSource()}: ${count} product(s)`);
         const updated: Partial<Record<PlanId, string>> = {};
         for (const product of result.products || []) {
           if (product.productId === PRODUCT_IDS.monthly) updated.monthly = product.price;
@@ -170,7 +176,8 @@ function useStoreProducts() {
         }
       })
       .catch((err: any) => {
-        setDebugInfo(`error: ${err?.message || String(err)}`);
+        setStoreAvailable(false);
+        setDebugInfo(`via ${getPluginSource()} err: ${err?.message || String(err)}`);
         console.error("Failed to fetch store products:", err);
       })
       .finally(() => {

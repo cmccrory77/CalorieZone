@@ -58,6 +58,7 @@ import OnboardingDialog from "@/components/OnboardingDialog";
 import { isHealthKitAvailable, requestHealthKitPermissions, getTodaySteps, getTodayActiveCalories, writeFoodEntry } from "@/services/healthkit";
 import { Heart, Crown, Lock, RotateCcw } from "lucide-react";
 import { usePremium } from "@/contexts/PremiumContext";
+import { getStoreKitPlugin, isCapacitorNative } from "@/components/UpgradeModal";
 
 import breakfast1 from "@/assets/images/breakfast_meals_1.png";
 import breakfast2 from "@/assets/images/breakfast_meals_2.png";
@@ -2854,8 +2855,7 @@ export default function Home() {
                 <button
                   onClick={async () => {
                     try {
-                      const w = window as any;
-                      const plugin = w.Capacitor?.Plugins?.StoreKitPlugin;
+                      const plugin = getStoreKitPlugin();
                       if (plugin) {
                         const result = await plugin.restorePurchases();
                         if (result.restored) {
@@ -2864,8 +2864,10 @@ export default function Home() {
                         } else {
                           toast({ title: "No purchases found", description: "No previous purchases were found for this account." });
                         }
-                      } else {
+                      } else if (!isCapacitorNative()) {
                         setPremium(true);
+                      } else {
+                        toast({ title: "Store unavailable", description: "Unable to connect to the App Store. Please try again later.", variant: "destructive" });
                       }
                     } catch {
                       toast({ title: "Restore failed", description: "Could not restore purchases. Please try again.", variant: "destructive" });
