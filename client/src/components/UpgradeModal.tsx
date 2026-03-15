@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Crown, ScanLine, ChefHat, CalendarDays, Sparkles, Check, Loader2 } from "lucide-react";
@@ -32,7 +32,19 @@ const premiumFeatures = [
 
 type PlanId = "monthly" | "yearly" | "lifetime";
 
-interface PricingPlan {
+const PRODUCT_IDS: Record<PlanId, string> = {
+  monthly: "com.caloriezone.pro.monthly",
+  yearly: "com.caloriezone.pro.yearly",
+  lifetime: "com.caloriezone.lifetime",
+};
+
+const FALLBACK_PRICES: Record<PlanId, string> = {
+  monthly: "$4.99",
+  yearly: "$29.99",
+  lifetime: "$49.99",
+};
+
+interface PlanDisplay {
   id: PlanId;
   productId: string;
   label: string;
@@ -41,33 +53,6 @@ interface PricingPlan {
   badge?: string;
   highlight?: boolean;
 }
-
-const pricingPlans: PricingPlan[] = [
-  {
-    id: "monthly",
-    productId: "com.caloriezone.pro.monthly",
-    label: "Monthly",
-    price: "$4.99",
-    period: "/month",
-  },
-  {
-    id: "yearly",
-    productId: "com.caloriezone.pro.yearly",
-    label: "Yearly",
-    price: "$29.99",
-    period: "/year",
-    badge: "Save 50%",
-    highlight: true,
-  },
-  {
-    id: "lifetime",
-    productId: "com.caloriezone.lifetime",
-    label: "Lifetime",
-    price: "$49.99",
-    period: "one-time",
-    badge: "Best Value",
-  },
-];
 
 function isCapacitorNative(): boolean {
   try {
@@ -78,41 +63,144 @@ function isCapacitorNative(): boolean {
   return false;
 }
 
+function getStore(): any {
+  try {
+    return (window as any).CdvPurchase?.store || null;
+  } catch {
+    return null;
+  }
+}
+
+function buildPlans(prices: Record<PlanId, string>): PlanDisplay[] {
+  return [
+    {
+      id: "monthly",
+      productId: PRODUCT_IDS.monthly,
+      label: "Monthly",
+      price: prices.monthly,
+      period: "/month",
+    },
+    {
+      id: "yearly",
+      productId: PRODUCT_IDS.yearly,
+      label: "Yearly",
+      price: prices.yearly,
+      period: "/year",
+      badge: "Save 50%",
+      highlight: true,
+    },
+    {
+      id: "lifetime",
+      productId: PRODUCT_IDS.lifetime,
+      label: "Lifetime",
+      price: prices.lifetime,
+      period: "one-time",
+      badge: "Best Value",
+    },
+  ];
+}
+
+function useStoreProducts() {
+  const [prices, setPrices] = useState<Record<PlanId, string>>(FALLBACK_PRICES);
+  const [loading, setLoading] = useState(false);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!isCapacitorNative() || initialized.current) return;
+    initialized.current = true;
+
+    const store = getStore();
+    if (!store) return;
+
+    setLoading(true);
+
+    const CdvPurchase = (window as any).CdvPurchase;
+    const Platform = CdvPurchase?.Platform?.APPLE_APPSTORE;
+    const ProductType = CdvPurchase?.ProductType;
+
+    if (!Platform || !ProductType) {
+      setLoading(false);
+      return;
+    }
+
+    store.register([
+      { id: PRODUCT_IDS.monthly, type: ProductType.PAID_SUBSCRIPTION, platform: Platform },
+      { id: PRODUCT_IDS.yearly, type: ProductType.PAID_SUBSCRIPTION, platform: Platform },
+      { id: PRODUCT_IDS.lifetime, type: ProductType.NON_CONSUMABLE, platform: Platform },
+    ]);
+
+    store.when()
+      .productUpdated(() => {
+        const updated: Record<string, string> = {};
+        for (const [key, pid] of Object.entries(PRODUCT_IDS)) {
+          const product = store.get(pid);
+          const offer = product?.pricing;
+          if (offer?.price) {
+            updated[key] = offer.price;
+          }
+        }
+        if (Object.keys(updated).length > 0) {
+          setPrices((prev) => ({ ...prev, ...updated }));
+        }
+        setLoading(false);
+      })
+      .approved((transaction: any) => {
+        transaction.verify();
+      })
+      .verified((receipt: any) => {
+        receipt.finish();
+      });
+
+    store.initialize([Platform])
+      .then(() => store.update())
+      .catch(() => setLoading(false));
+  }, []);
+
+  return { prices, loading };
+}
+
 export default function UpgradeModal() {
   const { showUpgradeModal, setShowUpgradeModal, attemptedFeature, setPremium } = usePremium();
   const detail = featureDetails[attemptedFeature];
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("yearly");
   const [purchasing, setPurchasing] = useState(false);
+  const { prices, loading: pricesLoading } = useStoreProducts();
+
+  const plans = buildPlans(prices);
+  const selected = plans.find((p) => p.id === selectedPlan)!;
 
   const handlePurchase = async () => {
-    const plan = pricingPlans.find((p) => p.id === selectedPlan);
+    const plan = plans.find((p) => p.id === selectedPlan);
     if (!plan) return;
 
     if (isCapacitorNative()) {
-      setPurchasing(true);
-      try {
-        const w = window as any;
-        if (w.Capacitor?.Plugins?.InAppPurchase2) {
-          const iap = w.Capacitor.Plugins.InAppPurchase2;
-          await iap.purchase({ productId: plan.productId });
-          setPremium(true);
-          setShowUpgradeModal(false);
-        } else {
-          setPremium(true);
-          setShowUpgradeModal(false);
+      const store = getStore();
+      if (store) {
+        setPurchasing(true);
+        try {
+          const product = store.get(plan.productId);
+          const offer = product?.getOffer();
+          if (offer) {
+            await store.order(offer);
+            setPremium(true);
+            setShowUpgradeModal(false);
+          } else {
+            console.error("No offer found for product:", plan.productId);
+          }
+        } catch (err) {
+          console.error("Purchase failed:", err);
+        } finally {
+          setPurchasing(false);
         }
-      } catch (err) {
-        console.error("Purchase failed:", err);
-      } finally {
-        setPurchasing(false);
+      } else {
+        setPremium(true);
+        setShowUpgradeModal(false);
       }
     } else {
       setPremium(true);
       setShowUpgradeModal(false);
     }
   };
-
-  const selected = pricingPlans.find((p) => p.id === selectedPlan)!;
 
   return (
     <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
@@ -157,63 +245,70 @@ export default function UpgradeModal() {
 
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Choose your plan</p>
-            <div className="space-y-2">
-              {pricingPlans.map((plan) => (
-                <button
-                  key={plan.id}
-                  onClick={() => setSelectedPlan(plan.id)}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-xl border-2 transition-all text-left ${
-                    selectedPlan === plan.id
-                      ? "border-[#4CAF50] bg-[#4CAF50]/5"
-                      : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
-                  }`}
-                  data-testid={`plan-option-${plan.id}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+            {pricesLoading ? (
+              <div className="flex items-center justify-center py-6 gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                <span className="text-sm text-slate-400">Loading prices...</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {plans.map((plan) => (
+                  <button
+                    key={plan.id}
+                    onClick={() => setSelectedPlan(plan.id)}
+                    className={`w-full flex items-center justify-between p-3.5 rounded-xl border-2 transition-all text-left ${
                       selectedPlan === plan.id
-                        ? "border-[#4CAF50] bg-[#4CAF50]"
-                        : "border-slate-300 dark:border-slate-600"
-                    }`}>
-                      {selectedPlan === plan.id && <Check className="h-3 w-3 text-white" />}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-semibold ${
-                          selectedPlan === plan.id ? "text-slate-800 dark:text-slate-200" : "text-slate-600 dark:text-slate-300"
-                        }`}>
-                          {plan.label}
-                        </span>
-                        {plan.badge && (
-                          <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
-                            plan.highlight
-                              ? "bg-[#4CAF50] text-white"
-                              : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                        ? "border-[#4CAF50] bg-[#4CAF50]/5"
+                        : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                    }`}
+                    data-testid={`plan-option-${plan.id}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                        selectedPlan === plan.id
+                          ? "border-[#4CAF50] bg-[#4CAF50]"
+                          : "border-slate-300 dark:border-slate-600"
+                      }`}>
+                        {selectedPlan === plan.id && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-semibold ${
+                            selectedPlan === plan.id ? "text-slate-800 dark:text-slate-200" : "text-slate-600 dark:text-slate-300"
                           }`}>
-                            {plan.badge}
+                            {plan.label}
                           </span>
-                        )}
+                          {plan.badge && (
+                            <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                              plan.highlight
+                                ? "bg-[#4CAF50] text-white"
+                                : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                            }`}>
+                              {plan.badge}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <span className={`text-sm font-bold ${
-                      selectedPlan === plan.id ? "text-slate-800 dark:text-slate-200" : "text-slate-600 dark:text-slate-300"
-                    }`}>
-                      {plan.price}
-                    </span>
-                    <span className="text-[10px] text-slate-400 ml-0.5">{plan.period}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
+                    <div className="text-right">
+                      <span className={`text-sm font-bold ${
+                        selectedPlan === plan.id ? "text-slate-800 dark:text-slate-200" : "text-slate-600 dark:text-slate-300"
+                      }`}>
+                        {plan.price}
+                      </span>
+                      <span className="text-[10px] text-slate-400 ml-0.5">{plan.period}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
             <Button
               className="w-full h-12 rounded-xl bg-[#4CAF50] hover:bg-[#43A047] text-white font-semibold text-base shadow-lg shadow-primary/20"
               onClick={handlePurchase}
-              disabled={purchasing}
+              disabled={purchasing || pricesLoading}
               data-testid="button-upgrade-pro"
             >
               {purchasing ? (
