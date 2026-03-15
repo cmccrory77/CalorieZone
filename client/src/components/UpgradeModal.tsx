@@ -114,19 +114,28 @@ function useStoreProducts() {
   const [prices, setPrices] = useState<Record<PlanId, string>>(FALLBACK_PRICES);
   const [loading, setLoading] = useState(false);
   const [storeAvailable, setStoreAvailable] = useState(false);
+  const [debugInfo, setDebugInfo] = useState("");
   const fetched = useRef(false);
 
   useEffect(() => {
     if (fetched.current) return;
     fetched.current = true;
 
-    if (!isCapacitorNative()) return;
+    const native = isCapacitorNative();
+    if (!native) {
+      setDebugInfo("web mode");
+      return;
+    }
 
     const plugin = getStoreKitPlugin();
-    if (!plugin) return;
+    if (!plugin) {
+      setDebugInfo("native but plugin NOT found");
+      return;
+    }
 
     setLoading(true);
     setStoreAvailable(true);
+    setDebugInfo("plugin found, fetching...");
 
     plugin
       .getProducts({
@@ -137,6 +146,8 @@ function useStoreProducts() {
         ],
       })
       .then((result: { products: StoreProduct[] }) => {
+        const count = result.products?.length || 0;
+        setDebugInfo(`store returned ${count} product(s)`);
         const updated: Partial<Record<PlanId, string>> = {};
         for (const product of result.products || []) {
           if (product.productId === PRODUCT_IDS.monthly) updated.monthly = product.price;
@@ -148,6 +159,7 @@ function useStoreProducts() {
         }
       })
       .catch((err: any) => {
+        setDebugInfo(`error: ${err?.message || String(err)}`);
         console.error("Failed to fetch store products:", err);
       })
       .finally(() => {
@@ -155,7 +167,7 @@ function useStoreProducts() {
       });
   }, []);
 
-  return { prices, loading, storeAvailable };
+  return { prices, loading, storeAvailable, debugInfo };
 }
 
 export default function UpgradeModal() {
@@ -165,7 +177,7 @@ export default function UpgradeModal() {
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("yearly");
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const { prices, loading: pricesLoading, storeAvailable } = useStoreProducts();
+  const { prices, loading: pricesLoading, storeAvailable, debugInfo } = useStoreProducts();
 
   const plans = buildPlans(prices);
   const selected = plans.find((p) => p.id === selectedPlan)!;
@@ -392,6 +404,12 @@ export default function UpgradeModal() {
               Terms of Use
             </a>
           </div>
+
+          {debugInfo && (
+            <p className="text-[9px] text-center text-red-400 pt-1" data-testid="debug-store-info">
+              [DEBUG] {debugInfo}
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
