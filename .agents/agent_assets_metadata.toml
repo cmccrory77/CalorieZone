@@ -54,3 +54,9 @@ id = "EVyc-luTGasPEBpMzoLfq"
 uri = "file://screenshots/iap-review-subscription.png"
 type = "image"
 title = "Calorie Pro — Free Plan with Upgrade Option"
+
+[[outputs]]
+id = "7D2-tkQTTMJGHCdPwhVfw"
+uri = "file://screenshots/iap-review-upgrade.png"
+type = "image"
+title = "IAP Review Screenshot — Upgrade Screen (1080x2340)"
