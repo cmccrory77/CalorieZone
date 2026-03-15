@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, ScanLine, ChefHat, CalendarDays, Sparkles, X } from "lucide-react";
+import { Crown, ScanLine, ChefHat, CalendarDays, Sparkles, Check, Loader2 } from "lucide-react";
 import { usePremium } from "@/contexts/PremiumContext";
 
 const featureDetails: Record<string, { icon: typeof Crown; description: string }> = {
@@ -29,9 +30,89 @@ const premiumFeatures = [
   { icon: Sparkles, label: "AI Meal Scanner" },
 ];
 
+type PlanId = "monthly" | "yearly" | "lifetime";
+
+interface PricingPlan {
+  id: PlanId;
+  productId: string;
+  label: string;
+  price: string;
+  period: string;
+  badge?: string;
+  highlight?: boolean;
+}
+
+const pricingPlans: PricingPlan[] = [
+  {
+    id: "monthly",
+    productId: "com.caloriezone.pro.monthly",
+    label: "Monthly",
+    price: "$4.99",
+    period: "/month",
+  },
+  {
+    id: "yearly",
+    productId: "com.caloriezone.pro.yearly",
+    label: "Yearly",
+    price: "$29.99",
+    period: "/year",
+    badge: "Save 50%",
+    highlight: true,
+  },
+  {
+    id: "lifetime",
+    productId: "com.caloriezone.lifetime",
+    label: "Lifetime",
+    price: "$49.99",
+    period: "one-time",
+    badge: "Best Value",
+  },
+];
+
+function isCapacitorNative(): boolean {
+  try {
+    const w = window as any;
+    if (w.Capacitor?.isNativePlatform?.()) return true;
+    if (window.location.protocol === "capacitor:" || window.location.protocol === "ionic:") return true;
+  } catch {}
+  return false;
+}
+
 export default function UpgradeModal() {
   const { showUpgradeModal, setShowUpgradeModal, attemptedFeature, setPremium } = usePremium();
   const detail = featureDetails[attemptedFeature];
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>("yearly");
+  const [purchasing, setPurchasing] = useState(false);
+
+  const handlePurchase = async () => {
+    const plan = pricingPlans.find((p) => p.id === selectedPlan);
+    if (!plan) return;
+
+    if (isCapacitorNative()) {
+      setPurchasing(true);
+      try {
+        const w = window as any;
+        if (w.Capacitor?.Plugins?.InAppPurchase2) {
+          const iap = w.Capacitor.Plugins.InAppPurchase2;
+          await iap.purchase({ productId: plan.productId });
+          setPremium(true);
+          setShowUpgradeModal(false);
+        } else {
+          setPremium(true);
+          setShowUpgradeModal(false);
+        }
+      } catch (err) {
+        console.error("Purchase failed:", err);
+      } finally {
+        setPurchasing(false);
+      }
+    } else {
+      setPremium(true);
+      setShowUpgradeModal(false);
+    }
+  };
+
+  const selected = pricingPlans.find((p) => p.id === selectedPlan)!;
 
   return (
     <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
@@ -75,19 +156,79 @@ export default function UpgradeModal() {
           </div>
 
           <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Choose your plan</p>
+            <div className="space-y-2">
+              {pricingPlans.map((plan) => (
+                <button
+                  key={plan.id}
+                  onClick={() => setSelectedPlan(plan.id)}
+                  className={`w-full flex items-center justify-between p-3.5 rounded-xl border-2 transition-all text-left ${
+                    selectedPlan === plan.id
+                      ? "border-[#4CAF50] bg-[#4CAF50]/5"
+                      : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                  }`}
+                  data-testid={`plan-option-${plan.id}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      selectedPlan === plan.id
+                        ? "border-[#4CAF50] bg-[#4CAF50]"
+                        : "border-slate-300 dark:border-slate-600"
+                    }`}>
+                      {selectedPlan === plan.id && <Check className="h-3 w-3 text-white" />}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-semibold ${
+                          selectedPlan === plan.id ? "text-slate-800 dark:text-slate-200" : "text-slate-600 dark:text-slate-300"
+                        }`}>
+                          {plan.label}
+                        </span>
+                        {plan.badge && (
+                          <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                            plan.highlight
+                              ? "bg-[#4CAF50] text-white"
+                              : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                          }`}>
+                            {plan.badge}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-sm font-bold ${
+                      selectedPlan === plan.id ? "text-slate-800 dark:text-slate-200" : "text-slate-600 dark:text-slate-300"
+                    }`}>
+                      {plan.price}
+                    </span>
+                    <span className="text-[10px] text-slate-400 ml-0.5">{plan.period}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Button
               className="w-full h-12 rounded-xl bg-[#4CAF50] hover:bg-[#43A047] text-white font-semibold text-base shadow-lg shadow-primary/20"
-              onClick={() => {
-                setPremium(true);
-                setShowUpgradeModal(false);
-              }}
+              onClick={handlePurchase}
+              disabled={purchasing}
               data-testid="button-upgrade-pro"
             >
-              <Crown className="h-4 w-4 mr-2" />
-              Upgrade to Pro
+              {purchasing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Crown className="h-4 w-4 mr-2" />
+              )}
+              {purchasing ? "Processing..." : `Get Pro — ${selected.price}${selected.id !== "lifetime" ? selected.period : ""}`}
             </Button>
             <p className="text-[10px] text-center text-muted-foreground">
-              One-time purchase · Unlock all features forever
+              {selected.id === "lifetime"
+                ? "One-time purchase · Unlock all features forever"
+                : selected.id === "yearly"
+                  ? "Billed annually · Cancel anytime"
+                  : "Billed monthly · Cancel anytime"}
             </p>
           </div>
 
