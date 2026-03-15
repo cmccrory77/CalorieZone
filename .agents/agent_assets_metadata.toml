@@ -42,3 +42,15 @@ id = "c_FA9wQ22s4_AYtZhNMBx"
 uri = "file://screenshots/promo-3-recipes.png"
 type = "image"
 title = "3. Smart Recipes & Grocery Lists in Seconds"
+
+[[outputs]]
+id = "nM7khM8KSqxNLgeMGFVF-"
+uri = "file://screenshots/iap-review-lifetime.png"
+type = "image"
+title = "Calorie Pro — Lifetime Purchase (Review Screenshot)"
+
+[[outputs]]
+id = "EVyc-luTGasPEBpMzoLfq"
+uri = "file://screenshots/iap-review-subscription.png"
+type = "image"
+title = "Calorie Pro — Subscription (Review Screenshot)"

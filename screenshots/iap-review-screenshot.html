@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f8f9fa; font-family: 'Poppins', 'Inter', -apple-system, sans-serif; }
+  
+  .phone-frame {
+    width: 390px;
+    height: 844px;
+    background: white;
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.15);
+    position: relative;
+    border: 8px solid #1a1a1a;
+  }
+  
+  .status-bar {
+    height: 54px;
+    background: white;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 126px;
+    height: 34px;
+    background: #1a1a1a;
+    border-radius: 0 0 20px 20px;
+  }
+  
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .modal {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 340px;
+  }
+  
+  .modal-header {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    padding: 28px 24px;
+    text-align: center;
+    color: white;
+  }
+  
+  .crown-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 32px;
+  }
+  
+  .modal-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  
+  .modal-header p {
+    font-size: 13px;
+    opacity: 0.85;
+    line-height: 1.4;
+  }
+  
+  .modal-body {
+    padding: 24px;
+  }
+  
+  .features-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+  }
+  
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  
+  .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+  }
+  
+  .feature-item.highlighted {
+    border-color: #4CAF50;
+    background: rgba(76,175,80,0.05);
+    color: #4CAF50;
+  }
+  
+  .feature-icon {
+    font-size: 16px;
+  }
+  
+  .upgrade-btn {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 8px 24px rgba(76,175,80,0.25);
+  }
+  
+  .upgrade-note {
+    text-align: center;
+    font-size: 10px;
+    color: #94a3b8;
+    margin-top: 8px;
+  }
+  
+  .maybe-later {
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 16px;
+    padding: 4px;
+  }
+  
+  .page-container {
+    display: flex;
+    gap: 60px;
+    padding: 40px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  
+  .screenshot-wrapper {
+    text-align: center;
+  }
+  
+  .screenshot-label {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 16px;
+  }
+  
+  .screenshot-sublabel {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 20px;
+  }
+  
+  .app-bg {
+    background: #f1f5f9;
+    position: relative;
+    height: 100%;
+  }
+  
+  .app-content {
+    padding: 60px 16px 16px;
+  }
+  
+  .tracker-preview {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  
+  .tracker-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
+  
+  .tracker-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 16px;
+  }
+  
+  .calorie-ring {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 8px solid #e2e8f0;
+    border-top-color: #4CAF50;
+    border-right-color: #4CAF50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    position: relative;
+  }
+  
+  .calorie-ring-text {
+    text-align: center;
+  }
+  
+  .calorie-ring-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  
+  .calorie-ring-label {
+    font-size: 10px;
+    color: #94a3b8;
+  }
+  
+  .macro-row {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 8px;
+  }
+  
+  .macro-item {
+    text-align: center;
+  }
+  
+  .macro-value {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  
+  .macro-label {
+    font-size: 10px;
+    color: #94a3b8;
+  }
+  
+  .lock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fef3c7;
+    color: #f59e0b;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  
+  .gated-section {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .gated-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  
+  .gated-overlay .lock-icon {
+    font-size: 24px;
+    color: #f59e0b;
+  }
+  
+  .gated-overlay .gated-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  
+  .gated-overlay .gated-sub {
+    font-size: 10px;
+    color: #64748b;
+  }
+  
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 8px;
+  }
+  
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    color: #94a3b8;
+    position: relative;
+  }
+  
+  .nav-item.active {
+    color: #4CAF50;
+  }
+  
+  .nav-icon {
+    font-size: 20px;
+  }
+  
+  .nav-lock {
+    position: absolute;
+    top: -2px;
+    right: -6px;
+    font-size: 8px;
+    color: #f59e0b;
+  }
+  
+  .scan-btn {
+    background: #4CAF50;
+    color: white;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -20px;
+    box-shadow: 0 4px 12px rgba(76,175,80,0.3);
+    position: relative;
+  }
+  
+  .plan-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #fde68a;
+    background: #fffbeb;
+    margin-bottom: 12px;
+  }
+  
+  .plan-status-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #fef3c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  
+  .plan-status-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  
+  .plan-status-sub {
+    font-size: 11px;
+    color: #64748b;
+  }
+</style>
+</head>
+<body>
+<div class="page-container">
+
+  <!-- Screenshot 1: Lifetime Purchase Modal -->
+  <div class="screenshot-wrapper">
+    <div class="screenshot-label">Calorie Pro — Lifetime Purchase</div>
+    <div class="screenshot-sublabel">Upgrade modal shown when tapping a gated feature</div>
+    <div class="phone-frame">
+      <div class="notch"></div>
+      <div class="app-bg">
+        <div class="status-bar">
+          <span>9:41</span>
+          <span>⚡ 📶</span>
+        </div>
+        <div class="app-content">
+          <div class="tracker-preview">
+            <div class="tracker-title">Daily Tracker</div>
+            <div class="tracker-sub">Saturday, Mar 14</div>
+            <div class="calorie-ring">
+              <div class="calorie-ring-text">
+                <div class="calorie-ring-number">1,847</div>
+                <div class="calorie-ring-label">remaining</div>
+              </div>
+            </div>
+            <div class="macro-row">
+              <div class="macro-item">
+                <div class="macro-value" style="color:#3b82f6">42g</div>
+                <div class="macro-label">Protein</div>
+              </div>
+              <div class="macro-item">
+                <div class="macro-value" style="color:#10b981">68g</div>
+                <div class="macro-label">Carbs</div>
+              </div>
+              <div class="macro-item">
+                <div class="macro-value" style="color:#f59e0b">23g</div>
+                <div class="macro-label">Fat</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active">
+            <span class="nav-icon">📊</span>
+            <span>Track</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">📅</span>
+            <span>Plan</span>
+            <span class="nav-lock">🔒</span>
+          </div>
+          <div class="nav-item">
+            <div class="scan-btn">
+              <span style="font-size:20px">📷</span>
+              <span class="nav-lock" style="top:-4px;right:-2px">🔒</span>
+            </div>
+            <span>AI Scan</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">👨‍🍳</span>
+            <span>Recipes</span>
+            <span class="nav-lock">🔒</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">👤</span>
+            <span>Profile</span>
+          </div>
+        </div>
+        
+        <div class="overlay">
+          <div class="modal">
+            <div class="modal-header">
+              <div class="crown-icon">👑</div>
+              <h2>Unlock CalorieZone Pro</h2>
+              <p>Get access to all premium features and supercharge your health journey.</p>
+            </div>
+            <div class="modal-body">
+              <div class="features-label">Everything in Pro</div>
+              <div class="features-grid">
+                <div class="feature-item highlighted">
+                  <span class="feature-icon">📅</span>
+                  <span>Meal Planner</span>
+                </div>
+                <div class="feature-item">
+                  <span class="feature-icon">👨‍🍳</span>
+                  <span>AI Recipes</span>
+                </div>
+                <div class="feature-item">
+                  <span class="feature-icon">📱</span>
+                  <span>Barcode Scanner</span>
+                </div>
+                <div class="feature-item">
+                  <span class="feature-icon">✨</span>
+                  <span>AI Meal Scanner</span>
+                </div>
+              </div>
+              <div>
+                <button class="upgrade-btn">
+                  👑 Upgrade to Pro — $9.99
+                </button>
+                <div class="upgrade-note">One-time purchase · Unlock all features forever</div>
+              </div>
+              <div class="maybe-later">Maybe Later</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screenshot 2: Free vs Pro Features -->
+  <div class="screenshot-wrapper">
+    <div class="screenshot-label">Calorie Pro — Subscription</div>
+    <div class="screenshot-sublabel">Free plan with gated premium features</div>
+    <div class="phone-frame">
+      <div class="notch"></div>
+      <div class="app-bg">
+        <div class="status-bar">
+          <span>9:41</span>
+          <span>⚡ 📶</span>
+        </div>
+        <div class="app-content" style="padding-top:60px">
+          <div class="plan-status">
+            <div class="plan-status-icon">👑</div>
+            <div>
+              <div class="plan-status-text">Free Plan</div>
+              <div class="plan-status-sub">Tap to upgrade</div>
+            </div>
+          </div>
+          
+          <div class="tracker-preview" style="padding:12px">
+            <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px">✅ Free Features</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569">
+                <span style="color:#4CAF50">✓</span> Daily Calorie & Macro Tracking
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569">
+                <span style="color:#4CAF50">✓</span> Food Search & Manual Entry
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569">
+                <span style="color:#4CAF50">✓</span> Exercise Logging
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569">
+                <span style="color:#4CAF50">✓</span> Profile & Goal Setting
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569">
+                <span style="color:#4CAF50">✓</span> Weekly Progress Chart
+              </div>
+            </div>
+          </div>
+          
+          <div class="gated-section" style="min-height:100px">
+            <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px">📅 Meal Planner</div>
+            <div style="font-size:11px;color:#64748b">Personalized weekly meal plans...</div>
+            <div class="gated-overlay">
+              <span class="lock-icon">🔒</span>
+              <span class="gated-text">Pro Feature</span>
+              <span class="gated-sub">Unlock personalized weekly meal plans</span>
+            </div>
+          </div>
+          
+          <div class="gated-section" style="min-height:100px">
+            <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px">👨‍🍳 AI Recipes</div>
+            <div style="font-size:11px;color:#64748b">AI-generated recipes tailored...</div>
+            <div class="gated-overlay">
+              <span class="lock-icon">🔒</span>
+              <span class="gated-text">Pro Feature</span>
+              <span class="gated-sub">Access AI recipes & grocery lists</span>
+            </div>
+          </div>
+          
+          <div class="gated-section" style="min-height:100px">
+            <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px">📷 Barcode & AI Scanner</div>
+            <div style="font-size:11px;color:#64748b">Scan barcodes and meals...</div>
+            <div class="gated-overlay">
+              <span class="lock-icon">🔒</span>
+              <span class="gated-text">Pro Feature</span>
+              <span class="gated-sub">Scan barcodes & photograph meals</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item">
+            <span class="nav-icon">📊</span>
+            <span>Track</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">📅</span>
+            <span>Plan</span>
+            <span class="nav-lock">🔒</span>
+          </div>
+          <div class="nav-item">
+            <div class="scan-btn">
+              <span style="font-size:20px">📷</span>
+              <span class="nav-lock" style="top:-4px;right:-2px">🔒</span>
+            </div>
+            <span>AI Scan</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">👨‍🍳</span>
+            <span>Recipes</span>
+            <span class="nav-lock">🔒</span>
+          </div>
+          <div class="nav-item active">
+            <span class="nav-icon">👤</span>
+            <span>Profile</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
