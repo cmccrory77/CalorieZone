@@ -47,10 +47,10 @@ title = "3. Smart Recipes & Grocery Lists in Seconds"
 id = "nM7khM8KSqxNLgeMGFVF-"
 uri = "file://screenshots/iap-review-lifetime.png"
 type = "image"
-title = "Calorie Pro — Lifetime Purchase (Review Screenshot)"
+title = "Calorie Pro Lifetime — Upgrade Modal"
 
 [[outputs]]
 id = "EVyc-luTGasPEBpMzoLfq"
 uri = "file://screenshots/iap-review-subscription.png"
 type = "image"
-title = "Calorie Pro — Subscription (Review Screenshot)"
+title = "Calorie Pro — Free Plan with Upgrade Option"
