@@ -41,8 +41,8 @@ const PRODUCT_IDS: Record<PlanId, string> = {
 
 const FALLBACK_PRICES: Record<PlanId, string> = {
   monthly: "$4.99",
-  yearly: "$29.99",
-  lifetime: "$49.99",
+  yearly: "$44.99",
+  lifetime: "$59.99",
 };
 
 interface StoreProduct {
@@ -224,7 +224,7 @@ export default function UpgradeModal() {
 
   return (
     <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-2xl border-0">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-2xl border-0 max-h-[90vh] overflow-y-auto">
         <div className="bg-gradient-to-br from-[#4CAF50] to-[#2E7D32] p-6 text-white text-center">
           <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Crown className="h-8 w-8" />
