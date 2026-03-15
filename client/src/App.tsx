@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import Privacy from "@/pages/privacy";
 import Support from "@/pages/support";
+import Terms from "@/pages/terms";
 import { PremiumProvider } from "@/contexts/PremiumContext";
 import UpgradeModal from "@/components/UpgradeModal";
 
@@ -30,6 +31,7 @@ function Router() {
     <Switch>
       <Route path="/">{native ? <Redirect to="/app" /> : <Landing />}</Route>
       <Route path="/privacy" component={Privacy}/>
+      <Route path="/terms" component={Terms}/>
       <Route path="/support" component={Support}/>
       <Route path="/app" component={Home}/>
       <Route component={NotFound} />

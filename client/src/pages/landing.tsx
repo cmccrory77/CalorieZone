@@ -230,6 +230,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-6">
             <a href="/privacy" className="text-sm text-slate-400 hover:text-slate-600 transition-colors" data-testid="link-privacy-footer">Privacy Policy</a>
+            <a href="/terms" className="text-sm text-slate-400 hover:text-slate-600 transition-colors" data-testid="link-terms-footer">Terms of Use</a>
             <p className="text-sm text-slate-400">&copy; {new Date().getFullYear()} CalorieZone. All rights reserved.</p>
           </div>
         </div>

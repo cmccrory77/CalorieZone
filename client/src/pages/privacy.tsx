@@ -81,6 +81,10 @@ export default function Privacy() {
       <footer className="border-t border-slate-100 py-8 px-6 mt-16">
         <div className="max-w-4xl mx-auto text-center text-sm text-slate-400">
           <p>&copy; {new Date().getFullYear()} CalorieZone. All rights reserved.</p>
+          <div className="mt-2 space-x-4">
+            <a href="/terms" className="hover:text-slate-600 transition-colors">Terms of Use</a>
+            <a href="/support" className="hover:text-slate-600 transition-colors">Support</a>
+          </div>
         </div>
       </footer>
     </div>
