@@ -12,18 +12,10 @@ interface PremiumContextType {
 const PremiumContext = createContext<PremiumContextType | null>(null);
 
 const STORAGE_KEY = "caloriezone-premium";
-const BUILD_VERSION_KEY = "caloriezone-build-version";
-const CURRENT_BUILD = "2026031503";
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
   const [isPremium, setIsPremium] = useState(() => {
     try {
-      const savedBuild = localStorage.getItem(BUILD_VERSION_KEY);
-      if (savedBuild !== CURRENT_BUILD) {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.setItem(BUILD_VERSION_KEY, CURRENT_BUILD);
-        return false;
-      }
       return localStorage.getItem(STORAGE_KEY) === "true";
     } catch {
       return false;

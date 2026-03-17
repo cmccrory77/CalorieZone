@@ -74,32 +74,23 @@ export function isCapacitorNative(): boolean {
 }
 
 let _storeKitPlugin: any = null;
-let _pluginSource: string = "none";
 export function getStoreKitPlugin(): any {
   if (_storeKitPlugin) return _storeKitPlugin;
   try {
     const cap = (window as any).Capacitor;
-    const keys = cap ? Object.keys(cap).join(",") : "no-cap";
-    const pluginKeys = cap?.Plugins ? Object.keys(cap.Plugins).join(",") : "no-plugins";
-
     if (cap?.Plugins?.StoreKitPlugin) {
       _storeKitPlugin = cap.Plugins.StoreKitPlugin;
-      _pluginSource = "direct";
       return _storeKitPlugin;
     }
     if (cap?.registerPlugin) {
       _storeKitPlugin = cap.registerPlugin("StoreKitPlugin");
-      _pluginSource = "registered";
       return _storeKitPlugin;
     }
-    _pluginSource = `cap:[${keys}] plugins:[${pluginKeys}]`;
     return null;
-  } catch (e: any) {
-    _pluginSource = `error: ${e?.message || String(e)}`;
+  } catch {
     return null;
   }
 }
-function getPluginSource(): string { return _pluginSource; }
 
 function buildPlans(prices: Record<PlanId, string>): PlanDisplay[] {
   return [
@@ -134,27 +125,18 @@ function useStoreProducts() {
   const [prices, setPrices] = useState<Record<PlanId, string>>(FALLBACK_PRICES);
   const [loading, setLoading] = useState(false);
   const [storeAvailable, setStoreAvailable] = useState(false);
-  const [debugInfo, setDebugInfo] = useState("");
   const fetched = useRef(false);
 
   useEffect(() => {
     if (fetched.current) return;
     fetched.current = true;
 
-    const native = isCapacitorNative();
-    if (!native) {
-      setDebugInfo("web mode");
-      return;
-    }
+    if (!isCapacitorNative()) return;
 
     const plugin = getStoreKitPlugin();
-    if (!plugin) {
-      setDebugInfo(`native no plugin: ${getPluginSource()}`);
-      return;
-    }
+    if (!plugin) return;
 
     setLoading(true);
-    setDebugInfo(`plugin via: ${getPluginSource()}, fetching...`);
 
     plugin
       .getProducts({
@@ -165,9 +147,7 @@ function useStoreProducts() {
         ],
       })
       .then((result: { products: StoreProduct[] }) => {
-        const count = result.products?.length || 0;
-        setStoreAvailable(count > 0);
-        setDebugInfo(`via ${getPluginSource()}: ${count} product(s)`);
+        setStoreAvailable((result.products?.length || 0) > 0);
         const updated: Partial<Record<PlanId, string>> = {};
         for (const product of result.products || []) {
           if (product.productId === PRODUCT_IDS.monthly) updated.monthly = product.price;
@@ -180,7 +160,6 @@ function useStoreProducts() {
       })
       .catch((err: any) => {
         setStoreAvailable(false);
-        setDebugInfo(`via ${getPluginSource()} err: ${err?.message || String(err)}`);
         console.error("Failed to fetch store products:", err);
       })
       .finally(() => {
@@ -188,7 +167,7 @@ function useStoreProducts() {
       });
   }, []);
 
-  return { prices, loading, storeAvailable, debugInfo };
+  return { prices, loading, storeAvailable };
 }
 
 export default function UpgradeModal() {
@@ -198,7 +177,7 @@ export default function UpgradeModal() {
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("yearly");
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const { prices, loading: pricesLoading, storeAvailable, debugInfo } = useStoreProducts();
+  const { prices, loading: pricesLoading, storeAvailable } = useStoreProducts();
 
   const plans = buildPlans(prices);
   const selected = plans.find((p) => p.id === selectedPlan)!;
@@ -430,11 +409,6 @@ export default function UpgradeModal() {
             </a>
           </div>
 
-          {debugInfo && (
-            <p className="text-[9px] text-center text-red-400 pt-1" data-testid="debug-store-info">
-              [DEBUG] {debugInfo}
-            </p>
-          )}
         </div>
       </DialogContent>
     </Dialog>
