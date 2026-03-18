@@ -143,7 +143,7 @@ export default function OnboardingDialog({
   };
 
   const handleNext = () => {
-    if (step === "profile" && name.trim()) {
+    if (step === "profile" && name.trim() && startingWeight && startingWeight > 0 && currentWeight && currentWeight > 0 && targetWeight && targetWeight > 0) {
       setStep("avatar");
     }
   };
@@ -546,7 +546,7 @@ export default function OnboardingDialog({
               <Button
                 className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold gap-2"
                 onClick={handleNext}
-                disabled={!name.trim()}
+                disabled={!name.trim() || !startingWeight || startingWeight <= 0 || !currentWeight || currentWeight <= 0 || !targetWeight || targetWeight <= 0}
                 data-testid="button-onboarding-next"
               >
                 Continue
