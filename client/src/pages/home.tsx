@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest, resolveApiUrl } from "@/lib/queryClient";
+import * as localData from "@/lib/localData";
 import { 
   Activity, 
   Flame, 
@@ -74,35 +75,18 @@ import snack2 from "@/assets/images/snack_foods_2.png";
 import snack3 from "@/assets/images/snack_foods_3.png";
 
 export default function Home() {
-  const queryClient = useQueryClient();
   const { isPremium, setPremium, requirePremium } = usePremium();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
   const isViewingToday = isToday(selectedDate);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
-  const { data: profile } = useQuery<UserProfile>({
-    queryKey: ["/api/profile"],
-  });
+  const profile = useMemo(() => localData.getProfile(), [refreshKey]);
 
-  const { data: foodEntries = [] } = useQuery<FoodEntry[]>({
-    queryKey: ["/api/food-entries", profile?.id, selectedDateStr],
-    enabled: !!profile?.id,
-    queryFn: async () => {
-      const res = await fetch(resolveApiUrl(`/api/food-entries/${profile!.id}/${selectedDateStr}`));
-      if (!res.ok) throw new Error("Failed to load food entries");
-      return res.json();
-    },
-  });
+  const foodEntries = useMemo(() => localData.getFoodEntries(selectedDateStr), [selectedDateStr, refreshKey]);
 
-  const { data: frequentFoods = [] } = useQuery<{ name: string; calories: number; protein: number; carbs: number; fat: number; frequency: number; lastUsed: string }[]>({
-    queryKey: ["/api/food-entries", profile?.id, "frequent"],
-    enabled: !!profile?.id,
-    queryFn: async () => {
-      const res = await fetch(resolveApiUrl(`/api/food-entries/${profile!.id}/frequent`));
-      if (!res.ok) throw new Error("Failed to load frequent foods");
-      return res.json();
-    },
-  });
+  const frequentFoods = useMemo(() => localData.getFrequentFoods(), [refreshKey]);
 
   const [startingWeight, setStartingWeight] = useState<number | null>(null);
   const [currentWeight, setCurrentWeight] = useState<number | null>(null);
@@ -117,20 +101,12 @@ export default function Home() {
   const [genServings, setGenServings] = useState(1);
   const [genDietaryTag, setGenDietaryTag] = useState("balanced");
 
-  const { data: savedRecipesData = [] } = useQuery<SavedRecipe[]>({
-    queryKey: ["/api/saved-recipes", profile?.id],
-    enabled: !!profile?.id,
-    queryFn: async () => {
-      const res = await fetch(resolveApiUrl(`/api/saved-recipes/${profile!.id}`));
-      if (!res.ok) throw new Error("Failed to load saved recipes");
-      return res.json();
-    },
-  });
+  const savedRecipesData = useMemo(() => localData.getSavedRecipes(), [refreshKey]);
 
   const addSavedRecipeMutation = useMutation({
     mutationFn: async (recipe: any) => {
-      const res = await apiRequest("POST", "/api/saved-recipes", {
-        profileId: profile!.id,
+      return localData.addSavedRecipe({
+        profileId: profile.id,
         title: recipe.title,
         type: recipe.type,
         cuisine: recipe.cuisine || "custom",
@@ -143,20 +119,15 @@ export default function Home() {
         ingredients: recipe.ingredients || [],
         steps: recipe.steps || [],
       });
-      return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/saved-recipes", profile?.id] });
-    },
+    onSuccess: refresh,
   });
 
   const removeSavedRecipeMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/saved-recipes/${id}`);
+      localData.removeSavedRecipe(id);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/saved-recipes", profile?.id] });
-    },
+    onSuccess: refresh,
   });
 
   const [mpBreakfast, setMpBreakfast] = useState(true);
@@ -176,26 +147,27 @@ export default function Home() {
   const weekStartStr = format(currentWeekStart, "yyyy-MM-dd");
   const weekEndStr = format(currentWeekEnd, "yyyy-MM-dd");
 
-  const { data: plannedMealsData = [] } = useQuery<PlannedMeal[]>({
-    queryKey: ["/api/planned-meals", profile?.id, weekStartStr, weekEndStr],
-    enabled: !!profile?.id,
-    queryFn: async () => {
-      const res = await fetch(resolveApiUrl(`/api/planned-meals/${profile!.id}/${weekStartStr}/${weekEndStr}`));
-      if (!res.ok) throw new Error("Failed to load planned meals");
-      return res.json();
-    },
-  });
+  const plannedMealsData = useMemo(() => localData.getPlannedMeals(weekStartStr, weekEndStr), [weekStartStr, weekEndStr, refreshKey]);
 
   const generateMealPlanMutation = useMutation({
     mutationFn: async (meals: any[]) => {
       const todayStr = format(new Date(), "yyyy-MM-dd");
-      await apiRequest("DELETE", `/api/planned-meals/${profile!.id}/${todayStr}/${weekEndStr}`);
-      const res = await apiRequest("POST", "/api/planned-meals", { meals });
-      return res.json();
+      localData.clearPlannedMealsForWeek(todayStr, weekEndStr);
+      return localData.addPlannedMeals(meals.map((m: any) => ({
+        profileId: profile.id,
+        date: m.date,
+        mealType: m.mealType,
+        title: m.title,
+        calories: m.calories,
+        protein: m.protein,
+        carbs: m.carbs,
+        fat: m.fat,
+        time: m.time,
+        ingredients: m.ingredients || [],
+        steps: m.steps || [],
+      })));
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/planned-meals"] });
-    },
+    onSuccess: refresh,
   });
 
   const profileSynced = useRef(false);
@@ -272,12 +244,9 @@ export default function Home() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<UserProfile>) => {
-      const res = await apiRequest("PATCH", `/api/profile/${profile!.id}`, data);
-      return res.json();
+      return localData.updateProfile(data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
-    },
+    onSuccess: refresh,
   });
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -339,67 +308,48 @@ export default function Home() {
 
   const addFoodMutation = useMutation({
     mutationFn: async (entry: { name: string; calories: number; protein: number; carbs: number; fat: number }) => {
-      const res = await apiRequest("POST", "/api/food-entries", {
-        profileId: profile!.id,
+      const result = localData.addFoodEntry({
+        profileId: profile.id,
         date: selectedDateStr,
         ...entry,
       });
       if (healthKitEnabled && isHealthKitAvailable()) {
         writeFoodEntry(entry.calories, entry.protein, entry.carbs, entry.fat).catch(() => {});
       }
-      return res.json();
+      return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/food-entries"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/food-entries/range"] });
-    },
+    onSuccess: refresh,
   });
 
   const removeFoodMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/food-entries/${id}`);
+      localData.removeFoodEntry(id);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/food-entries"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/food-entries/range"] });
-    },
+    onSuccess: refresh,
   });
 
   const trackedFoods = foodEntries;
 
-  const { data: exerciseEntries = [] } = useQuery<ExerciseEntry[]>({
-    queryKey: ["/api/exercise-entries", profile?.id, selectedDateStr],
-    enabled: !!profile?.id,
-    queryFn: async () => {
-      const res = await fetch(resolveApiUrl(`/api/exercise-entries/${profile!.id}/${selectedDateStr}`));
-      if (!res.ok) throw new Error("Failed to load exercise entries");
-      return res.json();
-    },
-  });
+  const exerciseEntries = useMemo(() => localData.getExerciseEntries(selectedDateStr), [selectedDateStr, refreshKey]);
 
   const addExerciseMutation = useMutation({
     mutationFn: async (entry: { name: string; duration: number; caloriesBurned: number }) => {
-      const res = await apiRequest("POST", "/api/exercise-entries", {
-        profileId: profile!.id,
+      return localData.addExerciseEntry({
+        profileId: profile.id,
         name: entry.name,
         duration: entry.duration,
         caloriesBurned: entry.caloriesBurned,
         date: selectedDateStr,
       });
-      return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/exercise-entries"] });
-    },
+    onSuccess: refresh,
   });
 
   const removeExerciseMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/exercise-entries/${id}`);
+      localData.removeExerciseEntry(id);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/exercise-entries"] });
-    },
+    onSuccess: refresh,
   });
 
   const [exerciseDialogOpen, setExerciseDialogOpen] = useState(false);
@@ -454,15 +404,7 @@ export default function Home() {
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [quickAddSelected, setQuickAddSelected] = useState<Set<number>>(new Set());
 
-  const { data: weekFoodEntries = [] } = useQuery<FoodEntry[]>({
-    queryKey: ["/api/food-entries/range", profile?.id, weekStartStr, weekEndStr],
-    enabled: !!profile?.id && plannedMealsData.length > 0,
-    queryFn: async () => {
-      const res = await fetch(resolveApiUrl(`/api/food-entries/${profile!.id}/range/${weekStartStr}/${weekEndStr}`));
-      if (!res.ok) throw new Error("Failed to load week food entries");
-      return res.json();
-    },
-  });
+  const weekFoodEntries = useMemo(() => localData.getFoodEntriesForRange(weekStartStr, weekEndStr), [weekStartStr, weekEndStr, refreshKey]);
 
   const loggedMealIds = useMemo(() => {
     const logged = new Set<string>();
@@ -512,7 +454,7 @@ export default function Home() {
     setLoggingDay(dateStr);
     try {
       for (const meal of mealsToLog) {
-        await apiRequest("POST", "/api/food-entries", {
+        localData.addFoodEntry({
           profileId: profile.id,
           date: dateStr,
           name: meal.title,
@@ -522,8 +464,7 @@ export default function Home() {
           fat: parseInt(String(meal.fat)),
         });
       }
-      queryClient.invalidateQueries({ queryKey: ["/api/food-entries"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/food-entries/range"] });
+      refresh();
       setSelectedMealIds(prev => ({ ...prev, [dateStr]: new Set() }));
       const dayLabel = format(new Date(dateStr + "T12:00:00"), "EEEE, MMM d");
       toast({
