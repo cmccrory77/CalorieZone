@@ -219,6 +219,10 @@ export default function Home() {
   const [healthKitCalories, setHealthKitCalories] = useState(0);
 
   useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  useEffect(() => {
     if (healthKitEnabled && isHealthKitAvailable()) {
       const fetchHealthData = async () => {
         const [steps, calories] = await Promise.all([getTodaySteps(), getTodayActiveCalories()]);
@@ -282,14 +286,17 @@ export default function Home() {
       heightCm: data.heightCm,
       sex: data.sex,
       maintenanceCalories: computed,
-    } as any);
+    } as any, {
+      onSuccess: () => {
+        setMobileTab("track");
+        setTimeout(() => window.scrollTo({ top: 0 }), 80);
+      },
+    });
     setStartingWeight(data.startingWeight);
     setCurrentWeight(data.currentWeight);
     setTargetWeight(data.targetWeight);
     setTimeframe(data.timeframe);
     setEditProfileOpen(false);
-    setMobileTab("track");
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [profile?.id]);
 
   const handleMobileTab = useCallback((tab: "track" | "plan" | "scan" | "recipes" | "profile") => {

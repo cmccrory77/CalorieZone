@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +86,20 @@ export default function OnboardingDialog({
   initialSex,
   editMode,
 }: OnboardingDialogProps) {
+  const [viewportH, setViewportH] = useState<number | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setViewportH(vv.height);
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
+
   const [name, setName] = useState(initialName || "");
   const [selectedAvatar, setSelectedAvatar] = useState(initialAvatar || "Felix");
   const [startingWeight, setStartingWeight] = useState<number | null>(initialStartingWeight ?? null);
@@ -588,7 +602,10 @@ export default function OnboardingDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen && onClose) onClose(); }}>
-      <DialogContent className="max-w-md p-0 overflow-hidden max-h-[85svh] flex flex-col [&>button]:hidden">
+      <DialogContent
+        className="max-w-md p-0 overflow-hidden flex flex-col [&>button]:hidden"
+        style={{ maxHeight: viewportH ? `${viewportH - 24}px` : "85svh" }}
+      >
         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4 shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
