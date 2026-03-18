@@ -1,4 +1,4 @@
-import { Activity, Search, Camera, Barcode, Calendar, ChefHat, Sparkles, Target, Star, Flame, Dumbbell, Wheat, Droplets, Plus, Check, ChevronRight, BarChart3, Apple, BookOpen, ShoppingCart, Zap, Info, ArrowLeft } from "lucide-react";
+import { Activity, Search, Camera, Barcode, Calendar, CalendarDays, ChefHat, Sparkles, Target, Star, Flame, Dumbbell, Wheat, Droplets, Plus, Check, ChevronRight, BarChart3, Apple, BookOpen, ShoppingCart, Zap, Info, ArrowLeft, Eye } from "lucide-react";
 
 function SectionLabel({ color, children }: { color: string; children: React.ReactNode }) {
   return (
@@ -393,58 +393,220 @@ export default function Tutorial() {
               <Calendar className="h-3.5 w-3.5" /> Meal Planner
             </SectionLabel>
             <h2 className="font-['Poppins',sans-serif] text-2xl font-bold text-slate-900">Plan Your Week</h2>
-            <p className="text-slate-500 mt-1">Available with Pro. Map out meals for the week ahead so you stay on track before you get hungry.</p>
+            <p className="text-slate-500 mt-1">Available with Pro. The Meal Planner generates a full 7-day meal plan tailored to your calorie target and preferences — in one tap.</p>
           </div>
 
+          {/* What it shows */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
               <Info className="h-4 w-4 text-slate-400" />
-              <span className="font-semibold text-sm text-slate-700">What the Meal Planner shows</span>
+              <span className="font-semibold text-sm text-slate-700">What the Meal Planner card shows</span>
             </div>
-            <div className="p-5 space-y-5">
-              {/* Mock planner */}
-              <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
-                <div className="grid grid-cols-3 divide-x divide-slate-100 border-b border-slate-100">
-                  {["Mon", "Tue", "Wed"].map((day, i) => (
-                    <div key={day} className="p-2">
-                      <div className={`text-[11px] font-bold text-center mb-1.5 ${i === 0 ? "text-blue-600" : "text-slate-500"}`}>{day}</div>
-                      {i === 0 ? (
-                        <div className="space-y-1">
-                          <div className="bg-white rounded px-2 py-1 text-[10px] font-medium text-slate-700 border border-blue-100">Oatmeal · 320 cal</div>
-                          <div className="bg-white rounded px-2 py-1 text-[10px] font-medium text-slate-700 border border-blue-100">Grilled Chicken · 480 cal</div>
-                          <div className="text-[10px] font-bold text-blue-600 text-center mt-1">800 cal</div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center h-16 border-2 border-dashed border-slate-200 rounded text-[10px] text-slate-300">+ Add meal</div>
-                      )}
+            <div className="p-5 space-y-4">
+              <p className="text-slate-500 text-sm leading-relaxed">The Meal Planner card has two parts: a <span className="font-semibold text-slate-700">week strip</span> showing all 7 days at a glance, and a <span className="font-semibold text-slate-700">Today's Meals</span> list showing what's planned for today.</p>
+
+              {/* Mock week strip */}
+              <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">This Week</p>
+                <div className="flex gap-1.5">
+                  {["M","T","W","T","F","S","S"].map((d, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[9px] text-slate-400 font-medium">{d}</span>
+                      <div className={`w-full h-5 rounded ${i < 4 ? (i === 1 ? "bg-primary/70 ring-2 ring-primary/30" : "bg-primary/40") : "bg-slate-200"} flex items-center justify-center`}>
+                        {i < 4 && i !== 1 && <Check className="h-2.5 w-2.5 text-white" />}
+                      </div>
                     </div>
                   ))}
                 </div>
-                <div className="px-3 py-2 bg-white border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500">Weekly total: <span className="font-semibold text-slate-700">800 / 12,880 cal</span></span>
-                  <div className="flex items-center gap-1.5 text-[10px] font-semibold text-blue-600">
-                    <ShoppingCart className="h-3 w-3" /> Grocery List
-                  </div>
+                <div className="space-y-1.5 pt-1">
+                  {[
+                    { type: "Breakfast", name: "Oatmeal with Berries", cal: 340, color: "bg-amber-100 text-amber-600" },
+                    { type: "Lunch", name: "Grilled Chicken Salad", cal: 480, color: "bg-blue-100 text-blue-600" },
+                    { type: "Dinner", name: "Salmon & Vegetables", cal: 520, color: "bg-purple-100 text-purple-600" },
+                  ].map((meal, i) => (
+                    <div key={i} className="flex items-center gap-2 p-1.5 bg-white rounded-lg border border-slate-100">
+                      <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 text-[9px] font-bold ${meal.color}`}>{meal.type[0]}</div>
+                      <span className="text-[11px] font-medium text-slate-700 flex-1 truncate">{meal.name}</span>
+                      <span className="text-[10px] font-semibold text-slate-400 shrink-0">{meal.cal}</span>
+                      <div className="flex gap-1 shrink-0">
+                        <div className="w-5 h-5 rounded border border-slate-200 flex items-center justify-center"><Eye className="h-2.5 w-2.5 text-slate-400" /></div>
+                        <div className="w-5 h-5 rounded border border-slate-200 flex items-center justify-center"><Plus className="h-2.5 w-2.5 text-slate-400" /></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="space-y-5">
-                <StepCard step={1} title="Add a meal to a day">
-                  <p className="text-slate-500 text-sm leading-relaxed">Tap the <span className="font-semibold text-slate-700">+ Add Meal</span> button inside any day column. A panel opens where you can search for a food or choose from your saved recipes. Select a meal and tap <span className="font-semibold text-slate-700">Add to Plan</span>.</p>
-                </StepCard>
-                <StepCard step={2} title="See your weekly calorie picture">
-                  <p className="text-slate-500 text-sm leading-relaxed">Each day column shows the total planned calories for that day. The weekly summary at the bottom shows how your plan compares to your 7-day calorie budget. Days close to your target show in green; over-budget days highlight in amber.</p>
-                </StepCard>
-                <StepCard step={3} title="Generate a grocery list">
-                  <p className="text-slate-500 text-sm leading-relaxed mb-2">Tap the <span className="font-semibold text-slate-700">Grocery List</span> button. The app compiles every ingredient from your planned meals into a single list. Tap <span className="font-semibold text-slate-700">Share</span> to send it to Apple Notes — then select all items and tap the Checklist button in Notes to make each item tappable.</p>
-                  <Callout icon={Zap} color="bg-amber-50 text-amber-800 border border-amber-100" title="Pro tip">
-                    Plan the entire week on Sunday, generate the grocery list, and shop once. You'll always have the right ingredients on hand.
-                  </Callout>
-                </StepCard>
-                <StepCard step={4} title="Log a planned meal to today">
-                  <p className="text-slate-500 text-sm leading-relaxed">On any planned day, tap a meal and choose <span className="font-semibold text-slate-700">Log to Diary</span>. The calories and macros are added to that day's tracker instantly — no need to search again.</p>
-                </StepCard>
+              <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                <div className="flex gap-3 p-3 bg-slate-50 rounded-lg">
+                  <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0"><Calendar className="h-3.5 w-3.5 text-blue-500" /></div>
+                  <div>
+                    <p className="font-semibold text-slate-800 text-xs">Week strip</p>
+                    <p className="text-slate-500 text-xs leading-relaxed mt-0.5">Each dot represents a day. A filled dot means meals are planned. Today's dot is highlighted. Past days with completed meals show a checkmark.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 p-3 bg-slate-50 rounded-lg">
+                  <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center shrink-0"><Check className="h-3.5 w-3.5 text-green-600" /></div>
+                  <div>
+                    <p className="font-semibold text-slate-800 text-xs">Today's Meals list</p>
+                    <p className="text-slate-500 text-xs leading-relaxed mt-0.5">Shows all meals planned for today. Each meal has a calorie count, a view button, and a log button. Once logged, the meal shows a green checkmark.</p>
+                  </div>
+                </div>
               </div>
+            </div>
+          </div>
+
+          {/* Step 1: Configure */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+              <Plus className="h-4 w-4 text-slate-400" />
+              <span className="font-semibold text-sm text-slate-700">Step 1 — Configure your plan</span>
+            </div>
+            <div className="p-5 space-y-5">
+              <p className="text-slate-500 text-sm leading-relaxed">Before generating, set your preferences using the three sections at the bottom of the Meal Planner card.</p>
+
+              {/* Include Meals */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold shrink-0">A</div>
+                  <h4 className="font-semibold text-slate-800 text-sm">Include Meals</h4>
+                </div>
+                <p className="text-slate-500 text-sm leading-relaxed pl-8">Choose which meal types to include in the generated plan. Tap any combination of Breakfast, Lunch, Dinner, and Snacks. At least one must be selected before you can generate.</p>
+                <div className="pl-8">
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: "Breakfast", color: "border-amber-200 bg-amber-50 text-amber-700" },
+                      { label: "Lunch", color: "border-blue-200 bg-blue-50 text-blue-700" },
+                      { label: "Dinner", color: "border-purple-200 bg-purple-50 text-purple-700" },
+                      { label: "Snacks", color: "border-green-200 bg-green-50 text-green-700" },
+                    ].map(item => (
+                      <div key={item.label} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium ${item.color}`}>
+                        <div className="w-3.5 h-3.5 rounded border-2 border-current flex items-center justify-center shrink-0">
+                          <Check className="h-2 w-2" />
+                        </div>
+                        {item.label}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-slate-400 italic mt-2">If Snacks is enabled, you can also choose how many snacks per day (1, 2, or 3).</p>
+                </div>
+              </div>
+
+              {/* Meal Preference */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold shrink-0">B</div>
+                  <h4 className="font-semibold text-slate-800 text-sm">Meal Preference</h4>
+                </div>
+                <p className="text-slate-500 text-sm leading-relaxed pl-8">Select your dietary style. Only one can be active at a time. This tells the AI what kind of meals to generate.</p>
+                <div className="pl-8 grid grid-cols-2 gap-2">
+                  {[
+                    { label: "Balanced", desc: "Varied, everyday meals with a mix of all macros" },
+                    { label: "High Protein", desc: "Meals optimised for protein — ideal for muscle gain" },
+                    { label: "Keto", desc: "Low carb, high fat meals" },
+                    { label: "Vegetarian", desc: "No meat. Dairy and eggs may be included" },
+                  ].map((opt, i) => (
+                    <div key={opt.label} className={`p-2.5 rounded-lg border text-xs ${i === 0 ? "border-[#4CAF50] bg-[#4CAF50]/5 text-[#4CAF50] font-semibold" : "border-slate-200 text-slate-600"}`}>
+                      <p className="font-semibold">{opt.label}</p>
+                      <p className={`text-[10px] mt-0.5 ${i === 0 ? "text-[#4CAF50]/70" : "text-slate-400"}`}>{opt.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Include My Recipes */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold shrink-0">C</div>
+                  <h4 className="font-semibold text-slate-800 text-sm">Include My Recipes</h4>
+                </div>
+                <div className="pl-8 space-y-2">
+                  <p className="text-slate-500 text-sm leading-relaxed">When enabled, the AI will use meals from your <span className="font-semibold text-slate-700">Saved Recipes</span> library when building your week plan, instead of generating entirely new ones.</p>
+                  <div className="bg-slate-50 rounded-lg border border-slate-200 p-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
+                      <Sparkles className="h-4 w-4 text-purple-500" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-700">Only available when you have saved recipes</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">If you haven't saved any recipes yet, this option is greyed out. Generate and save recipes first in the Recipes section, then enable this to include them in your plan.</p>
+                    </div>
+                  </div>
+                  <Callout icon={Zap} color="bg-amber-50 text-amber-800 border border-amber-100" title="How it works">
+                    With "Include My Recipes" on, the AI picks meals from your saved recipes that match your calorie target and selected meal types. It's a great way to reuse meals you already enjoy.
+                  </Callout>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 2: Generate */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+              <Zap className="h-4 w-4 text-slate-400" />
+              <span className="font-semibold text-sm text-slate-700">Step 2 — Generate your week plan</span>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-slate-500 text-sm leading-relaxed">Once your settings are configured, tap <span className="font-semibold text-slate-700">Generate Week Plan</span>. The AI creates 7 days of meals in seconds, each day balanced to stay within your daily calorie target.</p>
+              <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 space-y-2">
+                <div className="w-full h-10 bg-[#4CAF50] rounded-lg flex items-center justify-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-white" />
+                  <span className="text-sm font-semibold text-white">Generate Week Plan</span>
+                </div>
+                <p className="text-[11px] text-slate-400 text-center italic">If you already have a plan, this button says "Regenerate Week Plan" — tapping it replaces the existing plan with a fresh one.</p>
+              </div>
+              <p className="text-slate-500 text-sm leading-relaxed">After generating, the plan appears in the <span className="font-semibold text-slate-700">Meal Plan</span> tab inside the Recipes section below the planner card.</p>
+            </div>
+          </div>
+
+          {/* Step 3: View & Log */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+              <Eye className="h-4 w-4 text-slate-400" />
+              <span className="font-semibold text-sm text-slate-700">Step 3 — View recipes and log meals</span>
+            </div>
+            <div className="p-5 space-y-5">
+              <StepCard step={1} title="Log a meal for today">
+                <p className="text-slate-500 text-sm leading-relaxed mb-3">Today's meals appear in the <span className="font-semibold text-slate-700">Today's Meals</span> list on the Meal Planner card. Each row has two buttons:</p>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="w-7 h-7 rounded border border-slate-300 flex items-center justify-center shrink-0 bg-white">
+                      <Eye className="h-3.5 w-3.5 text-slate-500" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-800">View button</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Opens the full recipe — ingredients, instructions, and the complete nutrition breakdown.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="w-7 h-7 rounded border border-[#4CAF50]/40 flex items-center justify-center shrink-0 bg-[#4CAF50]/5">
+                      <Plus className="h-3.5 w-3.5 text-[#4CAF50]" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-800">Log button</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Adds the meal's calories and macros directly to today's food diary. The button turns into a green checkmark once logged so you always know what's been eaten.</p>
+                    </div>
+                  </div>
+                </div>
+              </StepCard>
+
+              <StepCard step={2} title="View meals for other days">
+                <p className="text-slate-500 text-sm leading-relaxed mb-2">Tap <span className="font-semibold text-slate-700">View Full Week Plan</span> at the bottom of the planner card. This takes you to the <span className="font-semibold text-slate-700">Meal Plan tab</span> in the Recipes section where you can browse all 7 days. Tap any day to see its meals and view the recipes for that day.</p>
+                <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
+                  <div className="w-full h-9 bg-[#4CAF50] rounded-lg flex items-center justify-center gap-2 mb-2">
+                    <CalendarDays className="h-3.5 w-3.5 text-white" />
+                    <span className="text-xs font-semibold text-white">View Full Week Plan</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <p className="text-[11px] text-slate-400 text-center italic">This scrolls you to the Meal Plan tab automatically.</p>
+                </div>
+              </StepCard>
+
+              <StepCard step={3} title="Generate a grocery list">
+                <p className="text-slate-500 text-sm leading-relaxed mb-2">Once a plan exists, tap <span className="font-semibold text-slate-700">Grocery List</span>. The app compiles every ingredient from all 7 days into a single shareable list. Tap <span className="font-semibold text-slate-700">Share</span> to send it to Apple Notes — then select all items and tap the Checklist button in Notes to make each item tappable.</p>
+                <Callout icon={Zap} color="bg-amber-50 text-amber-800 border border-amber-100" title="Pro tip">
+                  Generate your plan on Sunday, tap Grocery List, share it to Apple Notes, and shop once for the whole week.
+                </Callout>
+              </StepCard>
             </div>
           </div>
         </section>
