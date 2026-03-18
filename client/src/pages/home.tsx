@@ -1430,8 +1430,9 @@ export default function Home() {
         
         {/* Compact Header + Progress */}
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-2">
             <h1 className="text-sm sm:text-2xl font-display font-bold text-foreground leading-tight whitespace-nowrap">Hi, {profile?.name || "there"}</h1>
+            <a href="/tutorial" className="text-[10px] sm:text-xs text-muted-foreground hover:text-primary border border-slate-200 dark:border-slate-700 hover:border-primary/40 rounded-full px-2 py-0.5 transition-colors whitespace-nowrap" data-testid="link-how-it-works">How it works</a>
           </div>
           <div className="flex items-center gap-1 sm:hidden">
             <div className="flex items-center gap-0.5">

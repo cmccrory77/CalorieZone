@@ -1,4 +1,4 @@
-import { Activity, Search, Camera, Barcode, Calendar, ChefHat, Sparkles, Target, Star, Flame, Dumbbell, Wheat, Droplets, Plus, Check, ChevronRight, BarChart3, Apple, BookOpen, ShoppingCart, Zap, Info } from "lucide-react";
+import { Activity, Search, Camera, Barcode, Calendar, ChefHat, Sparkles, Target, Star, Flame, Dumbbell, Wheat, Droplets, Plus, Check, ChevronRight, BarChart3, Apple, BookOpen, ShoppingCart, Zap, Info, ArrowLeft } from "lucide-react";
 
 function SectionLabel({ color, children }: { color: string; children: React.ReactNode }) {
   return (
@@ -65,7 +65,10 @@ export default function Tutorial() {
             </div>
             CalorieZone
           </div>
-          <span className="text-xs text-slate-400 font-medium">How It Works</span>
+          <a href="/app" className="flex items-center gap-1 text-xs text-[#4CAF50] hover:underline font-medium">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to App
+          </a>
         </div>
       </nav>
 
