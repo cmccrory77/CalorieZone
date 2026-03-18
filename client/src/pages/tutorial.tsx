@@ -65,9 +65,9 @@ export default function Tutorial() {
             </div>
             CalorieZone
           </div>
-          <a href="/app" className="flex items-center gap-1 text-xs text-[#4CAF50] hover:underline font-medium">
+          <a href="/" className="flex items-center gap-1 text-xs text-[#4CAF50] hover:underline font-medium">
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to App
+            Back to CalorieZone
           </a>
         </div>
       </nav>

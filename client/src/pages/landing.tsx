@@ -19,13 +19,22 @@ export default function Landing() {
             <Activity className="h-6 w-6 text-[#4CAF50]" />
             <span className="font-['Poppins',sans-serif] font-bold text-xl tracking-tight">CalorieZone</span>
           </div>
-          <a
-            href="#download"
-            className="bg-[#4CAF50] hover:bg-[#43A047] text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-colors"
-            data-testid="link-download-nav"
-          >
-            Download
-          </a>
+          <div className="flex items-center gap-4">
+            <a
+              href="/tutorial"
+              className="text-sm font-medium text-slate-600 hover:text-[#4CAF50] transition-colors"
+              data-testid="link-how-it-works-nav"
+            >
+              How it works
+            </a>
+            <a
+              href="#download"
+              className="bg-[#4CAF50] hover:bg-[#43A047] text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-colors"
+              data-testid="link-download-nav"
+            >
+              Download
+            </a>
+          </div>
         </div>
       </nav>
 
