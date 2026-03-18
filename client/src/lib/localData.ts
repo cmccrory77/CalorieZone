@@ -45,6 +45,7 @@ const DEFAULT_PROFILE: UserProfile = {
   age: null,
   heightCm: null,
   sex: null,
+  customTargetCalories: null,
 };
 
 export function getProfile(): UserProfile {

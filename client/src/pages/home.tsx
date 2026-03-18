@@ -251,6 +251,8 @@ export default function Home() {
   });
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [editingCustomTarget, setEditingCustomTarget] = useState(false);
+  const [customTargetInput, setCustomTargetInput] = useState("");
 
   const handleOnboardingComplete = useCallback((data: {
     name: string;
@@ -395,6 +397,21 @@ export default function Home() {
   const handleRemoveFood = (id: string) => {
     removeFoodMutation.mutate(id);
   };
+
+  const handleSaveCustomTarget = () => {
+    const val = parseInt(customTargetInput, 10);
+    if (!isNaN(val) && val > 0) {
+      localData.saveProfile({ ...profile, customTargetCalories: val });
+      refresh();
+    }
+    setEditingCustomTarget(false);
+  };
+
+  const handleResetCustomTarget = () => {
+    localData.saveProfile({ ...profile, customTargetCalories: null });
+    refresh();
+    setEditingCustomTarget(false);
+  };
   
   const addRecipeToTracker = (recipe: any) => {
     addFoodMutation.mutate({
@@ -501,9 +518,10 @@ export default function Home() {
   const weeklyLossGoal = Math.abs(cw - tw) / timeframe;
   const dailyDifference = weeklyLossGoal * 500;
   
-  const targetCalories = isGainingWeight 
+  const computedTargetCalories = isGainingWeight
     ? Math.round(maintenanceCalories + dailyDifference)
     : Math.round(maintenanceCalories - dailyDifference);
+  const targetCalories = profile?.customTargetCalories ?? computedTargetCalories;
   
   const totalWeightDifference = Math.abs(sw - tw);
   const weightChangedSoFar = Math.abs(sw - cw);
@@ -1733,9 +1751,52 @@ export default function Home() {
                     <div className="font-bold text-slate-700 dark:text-slate-300 text-sm">{maintenanceCalories}</div>
                     <div className="text-[10px] text-muted-foreground">kcal/day</div>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
-                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Target</div>
-                    <div className="font-bold text-secondary text-sm">{targetCalories}</div>
+                  <div
+                    className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center cursor-pointer hover:bg-secondary/5 dark:hover:bg-secondary/10 transition-colors"
+                    onClick={() => {
+                      if (!editingCustomTarget) {
+                        setCustomTargetInput(String(targetCalories));
+                        setEditingCustomTarget(true);
+                      }
+                    }}
+                    data-testid="tile-custom-target"
+                  >
+                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5 flex items-center justify-center gap-1">
+                      Target
+                      {profile?.customTargetCalories != null && !editingCustomTarget && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleResetCustomTarget(); }}
+                          className="text-amber-500 hover:text-amber-600"
+                          title="Reset to calculated"
+                          data-testid="button-reset-custom-target"
+                        >
+                          <RotateCcw className="h-2.5 w-2.5" />
+                        </button>
+                      )}
+                    </div>
+                    {editingCustomTarget ? (
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          autoFocus
+                          type="number"
+                          inputMode="numeric"
+                          value={customTargetInput}
+                          onChange={(e) => setCustomTargetInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveCustomTarget();
+                            if (e.key === "Escape") setEditingCustomTarget(false);
+                          }}
+                          onBlur={handleSaveCustomTarget}
+                          className="w-full text-center font-bold text-secondary text-sm bg-transparent border-b border-secondary outline-none"
+                          data-testid="input-custom-target"
+                        />
+                      </div>
+                    ) : (
+                      <div className="font-bold text-secondary text-sm flex items-center justify-center gap-0.5">
+                        {targetCalories}
+                        <Pencil className="h-2.5 w-2.5 text-slate-400" />
+                      </div>
+                    )}
                     <div className="text-[10px] text-muted-foreground">kcal/day</div>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">

@@ -21,6 +21,7 @@ export const userProfiles = pgTable("user_profiles", {
   age: integer("age"),
   heightCm: real("height_cm"),
   sex: text("sex"),
+  customTargetCalories: integer("custom_target_calories"),
 });
 
 export const foodEntries = pgTable("food_entries", {
