@@ -401,8 +401,6 @@ export default function Home() {
   const [selectedMealIds, setSelectedMealIds] = useState<Record<string, Set<string>>>({});
   const [loggingDay, setLoggingDay] = useState<string | null>(null);
   const [showPastDays, setShowPastDays] = useState(false);
-  const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [quickAddSelected, setQuickAddSelected] = useState<Set<number>>(new Set());
 
   const weekFoodEntries = useMemo(() => localData.getFoodEntriesForRange(weekStartStr, weekEndStr), [weekStartStr, weekEndStr, refreshKey]);
 
@@ -1620,105 +1618,10 @@ export default function Home() {
                   );
                 })()}
 
-                {/* Add Custom Food */}
+                {/* Add Food */}
                 <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Quick Add</h4>
+                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Add Food</h4>
                   <div className="flex flex-wrap gap-2">
-                      {frequentFoods.length > 0 && (
-                        <Popover open={quickAddOpen} onOpenChange={setQuickAddOpen}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-9 gap-1.5 text-xs border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
-                              data-testid="button-quick-add-frequent"
-                            >
-                              Add Recent
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
-                            <div className="p-3 border-b border-slate-100 dark:border-slate-800">
-                              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Recent &amp; Frequent</p>
-                              <p className="text-xs text-muted-foreground">Select items to add to today's log</p>
-                            </div>
-                            <div className="max-h-[260px] overflow-y-auto p-2 space-y-1">
-                              {frequentFoods.map((food, idx) => {
-                                const isChecked = quickAddSelected.has(idx);
-                                return (
-                                  <button
-                                    key={idx}
-                                    onClick={() => {
-                                      setQuickAddSelected(prev => {
-                                        const next = new Set(prev);
-                                        if (next.has(idx)) next.delete(idx);
-                                        else next.add(idx);
-                                        return next;
-                                      });
-                                    }}
-                                    className={`w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-all ${
-                                      isChecked
-                                        ? 'bg-primary/5 border border-primary/20 ring-1 ring-primary/10'
-                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent'
-                                    }`}
-                                    data-testid={`quick-add-item-${idx}`}
-                                  >
-                                    <Checkbox
-                                      checked={isChecked}
-                                      className="h-4.5 w-4.5 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none"
-                                      tabIndex={-1}
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{food.name}</p>
-                                      <p className="text-[11px] text-muted-foreground">
-                                        {food.calories} cal · {food.frequency}x logged
-                                      </p>
-                                    </div>
-                                    <span className="text-xs font-semibold text-secondary shrink-0">{food.calories}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                              <div className="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                                <p className="text-xs text-muted-foreground">
-                                  {quickAddSelected.size > 0 ? (
-                                    <>{quickAddSelected.size} selected · <span className="font-semibold text-secondary">
-                                      {Array.from(quickAddSelected).reduce((sum, idx) => sum + frequentFoods[idx].calories, 0)} cal
-                                    </span></>
-                                  ) : (
-                                    <>Select items above</>
-                                  )}
-                                </p>
-                                <Button
-                                  size="sm"
-                                  className="h-8 text-xs bg-primary hover:bg-primary/90 text-white"
-                                  disabled={quickAddSelected.size === 0}
-                                  onClick={() => {
-                                    Array.from(quickAddSelected).forEach(idx => {
-                                      const f = frequentFoods[idx];
-                                      addFoodMutation.mutate({
-                                        name: f.name,
-                                        calories: f.calories,
-                                        protein: f.protein,
-                                        carbs: f.carbs,
-                                        fat: f.fat,
-                                      });
-                                    });
-                                    toast({
-                                      title: `Added ${quickAddSelected.size} item${quickAddSelected.size > 1 ? 's' : ''}`,
-                                      description: `Logged to ${isViewingToday ? "today's" : format(selectedDate, "MMM d") + "'s"} diary`,
-                                    });
-                                    setQuickAddSelected(new Set());
-                                    setQuickAddOpen(false);
-                                  }}
-                                  data-testid="button-quick-add-confirm"
-                                >
-                                  <Plus className="h-3.5 w-3.5 mr-1" />
-                                  Add{quickAddSelected.size > 0 ? ` ${quickAddSelected.size}` : ''}
-                                </Button>
-                              </div>
-                          </PopoverContent>
-                        </Popover>
-                      )}
                       <BarcodeScanner onLog={(food) => {
                         addFoodMutation.mutate(food);
                       }} onBeforeOpen={() => requirePremium("Barcode Scanner")} locked={!isPremium} />

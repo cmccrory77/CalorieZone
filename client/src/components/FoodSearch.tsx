@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { searchFoods, type FoodItem } from "@/data/foodDatabase";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Clock, TrendingUp, Minus, Check, X } from "lucide-react";
 
 export interface FrequentFood {
@@ -42,6 +43,7 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
   const [pendingItem, setPendingItem] = useState<DisplayItem | null>(null);
   const [qty, setQty] = useState(1);
   const [qtyText, setQtyText] = useState("1");
+  const [multiSelected, setMultiSelected] = useState<Set<number>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -58,6 +60,8 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
       frequency: f.frequency,
     }));
   }, [frequentFoods]);
+
+  const isShowingRecents = query.trim().length < 1 && recentItems.length > 0;
 
   const mergeResults = useCallback((searchQuery: string): DisplayItem[] => {
     const q = searchQuery.toLowerCase().trim();
@@ -89,6 +93,7 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
   const handleSearch = useCallback((value: string) => {
     setQuery(value);
     setPendingItem(null);
+    setMultiSelected(new Set());
     if (value.trim().length >= 1) {
       const merged = mergeResults(value);
       setResults(merged);
@@ -107,6 +112,32 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
     setShowDropdown(false);
     setTimeout(() => qtyInputRef.current?.select(), 50);
   }, []);
+
+  const toggleMultiSelect = useCallback((idx: number) => {
+    setMultiSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  }, []);
+
+  const addMultiSelected = useCallback(() => {
+    multiSelected.forEach(idx => {
+      const item = recentItems[idx];
+      if (item) {
+        onAdd({
+          name: item.name,
+          calories: item.calories,
+          protein: item.protein,
+          carbs: item.carbs,
+          fat: item.fat,
+        });
+      }
+    });
+    setMultiSelected(new Set());
+    setShowDropdown(false);
+  }, [multiSelected, recentItems, onAdd]);
 
   const confirmAdd = useCallback(() => {
     if (!pendingItem || qty <= 0) return;
@@ -233,8 +264,6 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
     side: "bg-yellow-100 text-yellow-600",
   };
 
-  const showingRecents = query.trim().length < 1 && recentItems.length > 0;
-
   const adjustQty = (delta: number) => {
     setQty(prev => {
       const next = Math.round((prev + delta) * 4) / 4;
@@ -257,24 +286,26 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
     }
   };
 
+  const multiSelectedCalories = Array.from(multiSelected).reduce((sum, idx) => sum + (recentItems[idx]?.calories ?? 0), 0);
+
   return (
     <div ref={containerRef} className="space-y-2">
       {pendingItem ? (
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-3" data-testid="quantity-selector">
+        <div className="rounded-xl border border-primary/30 bg-slate-800 dark:bg-slate-800 p-3 space-y-3" data-testid="quantity-selector">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate" data-testid="text-pending-food-name">
+              <p className="text-sm font-semibold text-white truncate" data-testid="text-pending-food-name">
                 {pendingItem.name}
               </p>
               {pendingItem.serving && (
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs text-slate-400 mt-0.5">
                   {pendingItem.serving}{pendingItem.unit ? ` · ${pendingItem.unit}` : ""}
                 </p>
               )}
             </div>
             <button
               onClick={cancelPending}
-              className="p-1 rounded-md hover:bg-slate-200/60 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+              className="p-1 rounded-md hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors shrink-0"
               data-testid="button-cancel-quantity"
             >
               <X className="h-4 w-4" />
@@ -282,11 +313,11 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="flex items-center gap-1 bg-slate-700 rounded-lg border border-slate-600 shadow-sm">
               <button
                 onClick={() => adjustQty(-0.25)}
                 disabled={qty <= 0.25}
-                className="h-8 w-8 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-l-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="h-8 w-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-600 rounded-l-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 data-testid="button-qty-decrease"
               >
                 <Minus className="h-3.5 w-3.5" />
@@ -307,19 +338,19 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
                   if (e.key === "Enter") { snapQty(); confirmAdd(); }
                   if (e.key === "Escape") cancelPending();
                 }}
-                className="w-14 h-8 text-center text-sm font-bold border-x border-slate-200 bg-transparent focus:outline-none focus:bg-slate-50"
+                className="w-14 h-8 text-center text-sm font-bold text-white bg-transparent border-x border-slate-600 focus:outline-none focus:bg-slate-600"
                 data-testid="input-quantity"
               />
               <button
                 onClick={() => adjustQty(0.25)}
-                className="h-8 w-8 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-r-lg transition-colors"
+                className="h-8 w-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-600 rounded-r-lg transition-colors"
                 data-testid="button-qty-increase"
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
 
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
+            <span className="text-xs text-slate-400 whitespace-nowrap">
               {pendingItem.serving ? `× ${pendingItem.serving}` : "serving(s)"}
             </span>
 
@@ -329,15 +360,15 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
               <span className="text-lg font-bold text-secondary" data-testid="text-adjusted-calories">
                 {Math.round(pendingItem.calories * qty)}
               </span>
-              <span className="text-xs text-muted-foreground ml-1">kcal</span>
+              <span className="text-xs text-slate-400 ml-1">kcal</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex gap-3 text-[11px] text-muted-foreground">
-              <span>P: <b className="text-blue-600">{Math.round(pendingItem.protein * qty)}g</b></span>
-              <span>C: <b className="text-emerald-600">{Math.round(pendingItem.carbs * qty)}g</b></span>
-              <span>F: <b className="text-amber-600">{Math.round(pendingItem.fat * qty)}g</b></span>
+            <div className="flex gap-3 text-[11px] text-slate-400">
+              <span>P: <b className="text-blue-400">{Math.round(pendingItem.protein * qty)}g</b></span>
+              <span>C: <b className="text-emerald-400">{Math.round(pendingItem.carbs * qty)}g</b></span>
+              <span>F: <b className="text-amber-400">{Math.round(pendingItem.fat * qty)}g</b></span>
             </div>
             <div className="flex-1" />
             <Button
@@ -396,54 +427,110 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
               ref={dropdownRef}
               className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden max-h-[320px] overflow-y-auto"
             >
-              {showingRecents && (
+              {isShowingRecents && (
                 <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 flex items-center gap-1.5">
                   <Clock className="h-3 w-3 text-slate-400" />
                   <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Recent & Frequent</span>
                 </div>
               )}
-              {displayItems.map((item, idx) => (
-                <button
-                  key={`${item.name}-${idx}`}
-                  data-dropdown-item
-                  className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0 ${
-                    idx === selectedIndex ? "bg-green-50 dark:bg-green-950/30" : "hover:bg-slate-50 dark:hover:bg-slate-800"
-                  }`}
-                  onClick={() => handleSelect(item)}
-                  onMouseEnter={() => setSelectedIndex(idx)}
-                  data-testid={`food-result-${idx}`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      {item.isHistory && (
-                        <Clock className="h-3 w-3 text-slate-400 shrink-0" />
-                      )}
-                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{item.name}</span>
+              {displayItems.map((item, idx) => {
+                if (isShowingRecents) {
+                  const isChecked = multiSelected.has(idx);
+                  return (
+                    <button
+                      key={`${item.name}-${idx}`}
+                      data-dropdown-item
+                      className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0 ${
+                        isChecked ? "bg-primary/5 dark:bg-primary/10" : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                      }`}
+                      onClick={() => toggleMultiSelect(idx)}
+                      data-testid={`food-result-${idx}`}
+                    >
+                      <Checkbox
+                        checked={isChecked}
+                        className="h-4 w-4 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none shrink-0"
+                        tabIndex={-1}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{item.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {item.frequency && item.frequency > 1 ? (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                              <TrendingUp className="h-2.5 w-2.5" />
+                              {item.frequency}x logged
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end shrink-0">
+                        <span className="text-sm font-bold text-secondary">{item.calories}</span>
+                        <span className="text-[10px] text-muted-foreground">kcal</span>
+                      </div>
+                    </button>
+                  );
+                }
+
+                return (
+                  <button
+                    key={`${item.name}-${idx}`}
+                    data-dropdown-item
+                    className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0 ${
+                      idx === selectedIndex ? "bg-green-50 dark:bg-green-950/30" : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                    }`}
+                    onClick={() => handleSelect(item)}
+                    onMouseEnter={() => setSelectedIndex(idx)}
+                    data-testid={`food-result-${idx}`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        {item.isHistory && (
+                          <Clock className="h-3 w-3 text-slate-400 shrink-0" />
+                        )}
+                        <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{item.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {item.isHistory && item.frequency && item.frequency > 1 ? (
+                          <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 flex items-center gap-0.5">
+                            <TrendingUp className="h-2.5 w-2.5" />
+                            {item.frequency}x logged
+                          </span>
+                        ) : item.category ? (
+                          <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryColors[item.category] || "bg-slate-100 text-slate-600"}`}>
+                            {item.category}
+                          </span>
+                        ) : null}
+                        {item.serving && (
+                          <span className="text-xs text-muted-foreground">
+                            {item.serving}{item.unit ? ` · ${item.unit}` : ""}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {item.isHistory && item.frequency && item.frequency > 1 ? (
-                        <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 flex items-center gap-0.5">
-                          <TrendingUp className="h-2.5 w-2.5" />
-                          {item.frequency}x logged
-                        </span>
-                      ) : item.category ? (
-                        <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryColors[item.category] || "bg-slate-100 text-slate-600"}`}>
-                          {item.category}
-                        </span>
-                      ) : null}
-                      {item.serving && (
-                        <span className="text-xs text-muted-foreground">
-                          {item.serving}{item.unit ? ` · ${item.unit}` : ""}
-                        </span>
-                      )}
+                    <div className="flex flex-col items-end shrink-0">
+                      <span className="text-sm font-bold text-secondary">{item.calories}</span>
+                      <span className="text-[10px] text-muted-foreground">kcal</span>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end shrink-0">
-                    <span className="text-sm font-bold text-secondary">{item.calories}</span>
-                    <span className="text-[10px] text-muted-foreground">kcal</span>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
+              {isShowingRecents && multiSelected.size > 0 && (
+                <div className="sticky bottom-0 p-3 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    {multiSelected.size} selected · <span className="font-semibold text-secondary">{multiSelectedCalories} cal</span>
+                  </p>
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs bg-primary hover:bg-primary/90 text-white gap-1"
+                    onClick={addMultiSelected}
+                    data-testid="button-add-multi-selected"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add {multiSelected.size}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
