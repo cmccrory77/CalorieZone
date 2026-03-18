@@ -401,14 +401,28 @@ export default function Home() {
   const handleSaveCustomTarget = () => {
     const val = parseInt(customTargetInput, 10);
     if (!isNaN(val) && val > 0) {
-      localData.saveProfile({ ...profile, customTargetCalories: val });
+      const diff = Math.abs(val - maintenanceCalories);
+      const weeks = diff > 0 && Math.abs(cw - tw) > 0
+        ? Math.abs(cw - tw) / (diff / 500)
+        : null;
+      const newTargetDate = weeks != null
+        ? format(addDays(new Date(), Math.round(weeks * 7)), "yyyy-MM-dd")
+        : (profile?.targetDate ?? null);
+      localData.saveProfile({ ...profile, customTargetCalories: val, targetDate: newTargetDate });
       refresh();
     }
     setEditingCustomTarget(false);
   };
 
   const handleResetCustomTarget = () => {
-    localData.saveProfile({ ...profile, customTargetCalories: null });
+    const diff = Math.abs(computedTargetCalories - maintenanceCalories);
+    const weeks = diff > 0 && Math.abs(cw - tw) > 0
+      ? Math.abs(cw - tw) / (diff / 500)
+      : null;
+    const restoredDate = weeks != null
+      ? format(addDays(new Date(), Math.round(weeks * 7)), "yyyy-MM-dd")
+      : (profile?.targetDate ?? null);
+    localData.saveProfile({ ...profile, customTargetCalories: null, targetDate: restoredDate });
     refresh();
     setEditingCustomTarget(false);
   };
@@ -523,6 +537,18 @@ export default function Home() {
     : Math.round(maintenanceCalories - dailyDifference);
   const targetCalories = profile?.customTargetCalories ?? computedTargetCalories;
   
+  // Effective target date — recalculated when a custom calorie target is active
+  const customDailyDiff = Math.abs(targetCalories - maintenanceCalories);
+  const weeksToGoal = customDailyDiff > 0 && Math.abs(cw - tw) > 0
+    ? Math.abs(cw - tw) / (customDailyDiff / 500)
+    : null;
+  const dynamicTargetDate: Date | null =
+    profile?.customTargetCalories != null && weeksToGoal != null
+      ? addDays(new Date(), Math.round(weeksToGoal * 7))
+      : profile?.targetDate
+      ? new Date(profile.targetDate + "T00:00:00")
+      : null;
+
   const totalWeightDifference = Math.abs(sw - tw);
   const weightChangedSoFar = Math.abs(sw - cw);
   const progressPercentage = totalWeightDifference > 0 
@@ -1613,9 +1639,17 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground pt-1.5">
-                  {isViewingToday ? "Today" : format(selectedDate, "EEEE")}, {format(selectedDate, "MMMM d, yyyy")}
-                </p>
+                <div className="pt-1.5 flex items-center justify-between flex-wrap gap-x-2">
+                  <p className="text-xs text-muted-foreground">
+                    {isViewingToday ? "Today" : format(selectedDate, "EEEE")}, {format(selectedDate, "MMMM d, yyyy")}
+                  </p>
+                  {dynamicTargetDate && (
+                    <p className="text-xs text-secondary font-medium flex items-center gap-1" data-testid="text-target-date">
+                      <CalendarDays className="h-3 w-3" />
+                      Goal by {format(dynamicTargetDate, "MMM d, yyyy")}
+                    </p>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="relative z-10 space-y-3 sm:space-y-6">
                 
