@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Activity, ChevronRight, ChevronLeft, CalendarDays, Moon, Sun, Armchair, Footprints, Bike, Flame } from "lucide-react";
+import { Activity, ChevronRight, ChevronLeft, CalendarDays, Moon, Sun, Armchair, Footprints, Bike, Flame, HelpCircle } from "lucide-react";
 import { addWeeks, addMonths, subMonths, format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isAfter, isBefore, startOfDay } from "date-fns";
 
 interface OnboardingDialogProps {
@@ -167,11 +167,23 @@ export default function OnboardingDialog({
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen && onClose) onClose(); }}>
       <DialogContent className={`max-w-md p-0 overflow-hidden max-h-[90dvh] flex flex-col ${!editMode ? "[&>button]:hidden" : ""}`}>
         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4 shrink-0">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Activity className="h-5 w-5 text-white" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                <Activity className="h-5 w-5 text-white" />
+              </div>
+              <span className="font-display font-bold text-xl text-primary tracking-tight">CalorieZone</span>
             </div>
-            <span className="font-display font-bold text-xl text-primary tracking-tight">CalorieZone</span>
+            {!editMode && (
+              <a
+                href="/tutorial"
+                className="flex items-center gap-1 text-xs text-primary/70 hover:text-primary transition-colors"
+                data-testid="link-onboarding-guide"
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+                How it works
+              </a>
+            )}
           </div>
           <DialogHeader className="text-left">
             <DialogTitle className="text-xl font-display">

@@ -57,7 +57,7 @@ import MealScanner from "@/components/MealScanner";
 import FoodSearch from "@/components/FoodSearch";
 import OnboardingDialog from "@/components/OnboardingDialog";
 import { isHealthKitAvailable, requestHealthKitPermissions, getTodaySteps, getTodayActiveCalories, writeFoodEntry } from "@/services/healthkit";
-import { Heart, Crown, Lock, RotateCcw } from "lucide-react";
+import { Heart, Crown, Lock, RotateCcw, HelpCircle } from "lucide-react";
 import { usePremium } from "@/contexts/PremiumContext";
 import { getStoreKitPlugin, isCapacitorNative } from "@/components/UpgradeModal";
 
@@ -1412,6 +1412,14 @@ export default function Home() {
                 onClick={() => setEditProfileOpen(true)}
                 data-testid="button-avatar"
               />
+              <a
+                href="/tutorial"
+                className="flex items-center justify-center rounded-full h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                title="Guide"
+                data-testid="link-guide"
+              >
+                <HelpCircle className="h-5 w-5" />
+              </a>
               <Button
                 variant="ghost"
                 size="icon"
@@ -1430,9 +1438,8 @@ export default function Home() {
         
         {/* Compact Header + Progress */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div>
             <h1 className="text-sm sm:text-2xl font-display font-bold text-foreground leading-tight whitespace-nowrap">Hi, {profile?.name || "there"}</h1>
-            <a href="/tutorial" className="text-[10px] sm:text-xs text-muted-foreground hover:text-primary border border-slate-200 dark:border-slate-700 hover:border-primary/40 rounded-full px-2 py-0.5 transition-colors whitespace-nowrap" data-testid="link-how-it-works">How it works</a>
           </div>
           <div className="flex items-center gap-1 sm:hidden">
             <div className="flex items-center gap-0.5">
