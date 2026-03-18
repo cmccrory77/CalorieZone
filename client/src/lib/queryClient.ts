@@ -21,6 +21,34 @@ export function resolveApiUrl(path: string): string {
   return path;
 }
 
+const DEVICE_ID_KEY = "caloriezone-device-id";
+
+function generateDeviceId(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let id = "";
+  for (let i = 0; i < 32; i++) {
+    id += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return id;
+}
+
+export function getDeviceId(): string {
+  try {
+    let id = localStorage.getItem(DEVICE_ID_KEY);
+    if (!id) {
+      id = generateDeviceId();
+      localStorage.setItem(DEVICE_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    return "default";
+  }
+}
+
+function getDeviceHeaders(): Record<string, string> {
+  return { "x-device-id": getDeviceId() };
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -34,9 +62,12 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   const fullUrl = resolveApiUrl(url);
+  const headers: Record<string, string> = { ...getDeviceHeaders() };
+  if (data) headers["Content-Type"] = "application/json";
+
   const res = await fetch(fullUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
   });
 
@@ -52,7 +83,9 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const path = queryKey.join("/") as string;
     const fullUrl = resolveApiUrl(path);
-    const res = await fetch(fullUrl);
+    const res = await fetch(fullUrl, {
+      headers: getDeviceHeaders(),
+    });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;

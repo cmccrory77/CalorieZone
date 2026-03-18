@@ -8,6 +8,7 @@ export type { Conversation, InsertConversation, Message, InsertMessage } from ".
 
 export const userProfiles = pgTable("user_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  deviceId: text("device_id"),
   name: text("name"),
   avatarSeed: text("avatar_seed").notNull().default("Felix"),
   startingWeight: real("starting_weight"),

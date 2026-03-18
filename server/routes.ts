@@ -9,9 +9,10 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  app.get("/api/profile", async (_req, res) => {
+  app.get("/api/profile", async (req, res) => {
     try {
-      const profile = await storage.getDefaultProfile();
+      const deviceId = req.headers["x-device-id"] as string || "default";
+      const profile = await storage.getProfileByDevice(deviceId);
       res.json(profile);
     } catch (error) {
       res.status(500).json({ message: "Failed to load profile" });

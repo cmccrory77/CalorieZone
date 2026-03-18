@@ -31,6 +31,7 @@ export interface FrequentFood {
 export interface IStorage {
   getProfile(id: string): Promise<UserProfile | undefined>;
   getDefaultProfile(): Promise<UserProfile>;
+  getProfileByDevice(deviceId: string): Promise<UserProfile>;
   updateProfile(id: string, data: Partial<InsertUserProfile>): Promise<UserProfile>;
 
   getFoodEntries(profileId: string, date: string): Promise<FoodEntry[]>;
@@ -64,6 +65,14 @@ export class DatabaseStorage implements IStorage {
     if (existing) return existing;
 
     const [created] = await db.insert(userProfiles).values({}).returning();
+    return created;
+  }
+
+  async getProfileByDevice(deviceId: string): Promise<UserProfile> {
+    const [existing] = await db.select().from(userProfiles).where(eq(userProfiles.deviceId, deviceId));
+    if (existing) return existing;
+
+    const [created] = await db.insert(userProfiles).values({ deviceId }).returning();
     return created;
   }
 
