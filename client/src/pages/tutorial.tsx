@@ -1,4 +1,4 @@
-import { Activity, Search, Camera, Barcode, Calendar, CalendarDays, ChefHat, Sparkles, Target, Star, Flame, Dumbbell, Wheat, Droplets, Plus, Check, ChevronRight, BarChart3, Apple, BookOpen, ShoppingCart, Zap, Info, ArrowLeft, Eye } from "lucide-react";
+import { Activity, Search, Camera, Barcode, Calendar, CalendarDays, ChefHat, Sparkles, Target, Star, Flame, Dumbbell, Wheat, Droplets, Plus, Check, ChevronRight, BarChart3, Apple, BookOpen, ShoppingCart, Zap, Info, ArrowLeft, Eye, Bookmark, Trash2, Filter } from "lucide-react";
 
 function SectionLabel({ color, children }: { color: string; children: React.ReactNode }) {
   return (
@@ -617,85 +617,215 @@ export default function Tutorial() {
             <SectionLabel color="bg-purple-100 text-purple-700">
               <ChefHat className="h-3.5 w-3.5" /> Recipes
             </SectionLabel>
-            <h2 className="font-['Poppins',sans-serif] text-2xl font-bold text-slate-900">AI Recipe Generator</h2>
-            <p className="text-slate-500 mt-1">Available with Pro. Describe what you want to eat and get a full recipe with nutrition data in seconds.</p>
+            <h2 className="font-['Poppins',sans-serif] text-2xl font-bold text-slate-900">Recipes</h2>
+            <p className="text-slate-500 mt-1">Available with Pro. Browse pre-built meal suggestions, generate your own AI recipes, and build a library of favourites — all tailored to your calorie target.</p>
           </div>
 
+          {/* Overview: Tabs */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+              <Info className="h-4 w-4 text-slate-400" />
+              <span className="font-semibold text-sm text-slate-700">The Recipes section has four tabs</span>
+            </div>
+            <div className="p-5 space-y-3">
+              {[
+                { label: "Recommended", color: "bg-purple-100 text-purple-700", desc: "Pre-built meals matched to your daily calorie target. These refresh each day." },
+                { label: "Meal Plan", color: "bg-blue-100 text-blue-700", desc: "Appears when you have a generated week plan. Shows all 7 days of planned meals." },
+                { label: "Recipe Generator", color: "bg-indigo-100 text-indigo-700", desc: "Build a custom recipe using simple dropdowns and optional ingredients." },
+                { label: "My Recipes", color: "bg-emerald-100 text-emerald-700", desc: "Your personal library. Every recipe you generate is saved here automatically." },
+              ].map(tab => (
+                <div key={tab.label} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${tab.color}`}>{tab.label}</span>
+                  <p className="text-sm text-slate-500 leading-relaxed">{tab.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recommended Tab */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+              <Star className="h-4 w-4 text-slate-400" />
+              <span className="font-semibold text-sm text-slate-700">Recommended tab</span>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-slate-500 text-sm leading-relaxed">The Recommended tab shows a grid of meal cards — each one portioned to fit your daily calorie budget. Use the meal-type filter at the top to narrow by Breakfast, Lunch, Dinner, or Snacks.</p>
+              {/* Mock recommended card */}
+              <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+                <div className="h-24 bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center relative">
+                  <span className="absolute top-2 left-2 bg-white/90 text-[10px] font-bold text-[#4CAF50] px-2 py-0.5 rounded-full">Best Match</span>
+                  <ChefHat className="h-10 w-10 text-emerald-400" />
+                </div>
+                <div className="p-3 space-y-2">
+                  <p className="font-semibold text-sm text-slate-800">Herb Chicken & Roasted Veg</p>
+                  <div className="flex gap-3 text-xs">
+                    <span className="font-bold text-slate-700">480 <span className="font-normal text-slate-400">cal</span></span>
+                    <span className="text-slate-400">·</span>
+                    <span className="font-medium text-blue-600">42g <span className="text-slate-400 font-normal">protein</span></span>
+                    <span className="text-slate-400">·</span>
+                    <span className="text-slate-500">20 min</span>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <div className="flex-1 h-8 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center text-[11px] font-semibold text-slate-600">View Recipe</div>
+                    <div className="h-8 px-3 bg-[#4CAF50] rounded-lg flex items-center justify-center gap-1 text-[11px] font-semibold text-white"><Plus className="h-3 w-3" />Log</div>
+                  </div>
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="w-7 h-7 rounded border border-slate-200 bg-white flex items-center justify-center shrink-0"><Eye className="h-3.5 w-3.5 text-slate-500" /></div>
+                  <div>
+                    <p className="text-xs font-semibold text-slate-800">View Recipe</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Opens the full recipe with ingredients, step-by-step instructions, and the complete nutrition breakdown.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="w-7 h-7 rounded border border-[#4CAF50]/30 bg-[#4CAF50]/5 flex items-center justify-center shrink-0"><Plus className="h-3.5 w-3.5 text-[#4CAF50]" /></div>
+                  <div>
+                    <p className="text-xs font-semibold text-slate-800">Log</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Adds the meal's calories and macros to today's food diary instantly. No need to search or enter anything manually.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recipe Generator Tab */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-slate-400" />
-              <span className="font-semibold text-sm text-slate-700">How to generate a recipe</span>
+              <span className="font-semibold text-sm text-slate-700">Recipe Generator tab</span>
             </div>
             <div className="p-5 space-y-5">
-              <StepCard step={1} title="Describe what you want">
-                <p className="text-slate-500 text-sm leading-relaxed mb-3">Type a description into the prompt field. You can be as specific or as vague as you like:</p>
-                <div className="space-y-2">
-                  {[
-                    "High-protein chicken dinner under 500 calories",
-                    "Breakfast with eggs and whatever is in my fridge",
-                    "Vegetarian lunch with chickpeas",
-                  ].map((ex, i) => (
-                    <div key={i} className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 flex items-center gap-2">
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
-                      "{ex}"
+              <p className="text-slate-500 text-sm leading-relaxed">The Recipe Generator creates a custom recipe from scratch using four simple fields. Calories are automatically calculated based on your daily target.</p>
+
+              <StepCard step={1} title="Set your options">
+                <p className="text-slate-500 text-sm leading-relaxed mb-3">Fill in the four fields to describe what you want:</p>
+                {/* Mock generator form */}
+                <div className="bg-slate-50 rounded-xl border border-slate-100 p-3.5 space-y-3">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Protein Source</p>
+                    <div className="h-9 bg-white rounded-lg border border-slate-200 px-3 flex items-center justify-between text-sm text-slate-700">
+                      <span>Chicken</span>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400 rotate-90" />
                     </div>
-                  ))}
+                    <p className="text-[10px] text-slate-400 italic">Choose from Chicken, Fish, Beef, or Vegetarian.</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Meal Preference</p>
+                    <div className="h-9 bg-white rounded-lg border border-slate-200 px-3 flex items-center justify-between text-sm text-slate-700">
+                      <span>High Protein</span>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400 rotate-90" />
+                    </div>
+                    <p className="text-[10px] text-slate-400 italic">Balanced, High Protein, Keto, or Vegetarian.</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Servings</p>
+                    <div className="h-9 bg-white rounded-lg border border-slate-200 px-3 flex items-center justify-between text-sm text-slate-700">
+                      <span>2</span>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400 rotate-90" />
+                    </div>
+                    <p className="text-[10px] text-slate-400 italic">Pick 1–6 servings. Ingredient amounts and calories scale accordingly.</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Extra Ingredients <span className="normal-case font-normal">(optional)</span></p>
+                    <div className="h-9 bg-white rounded-lg border border-slate-200 px-3 flex items-center text-sm text-slate-400 italic">
+                      e.g. broccoli, rice, bell peppers...
+                    </div>
+                    <p className="text-[10px] text-slate-400 italic">Type any additional ingredients, separated by a comma. The recipe will include them.</p>
+                  </div>
                 </div>
               </StepCard>
 
-              <StepCard step={2} title="Get your recipe">
-                <p className="text-slate-500 text-sm leading-relaxed mb-3">Tap <span className="font-semibold text-slate-700">Generate</span>. The AI returns a recipe card showing:</p>
-                {/* Mock recipe card */}
-                <div className="bg-slate-50 rounded-xl border border-slate-100 p-3.5 space-y-2.5">
+              <StepCard step={2} title="Generate your recipe">
+                <p className="text-slate-500 text-sm leading-relaxed mb-3">Tap <span className="font-semibold text-slate-700">Generate Recipe</span>. In a moment a result card appears below showing the recipe name, cooking time, servings tag, and the full nutrition breakdown:</p>
+                <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-indigo-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">2 servings</span>
+                    <span className="bg-emerald-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">High Protein</span>
+                  </div>
+                  <p className="font-bold text-sm text-slate-800">Zesty Chicken Skillet</p>
+                  <p className="text-[11px] text-slate-500">Dinner · High Protein · 20 min</p>
+                  <div className="flex gap-2">
+                    {[["480","kcal","orange"],["54g","protein","blue"],["22g","carbs","emerald"],["16g","fat","amber"]].map(([v,l,c]) => (
+                      <div key={l} className={`bg-${c}-50 border border-${c}-100 rounded-lg px-2 py-1.5 text-center`}>
+                        <div className={`text-sm font-bold text-${c}-600`}>{v}</div>
+                        <div className="text-[9px] text-slate-400">{l}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <div className="flex-1 h-8 bg-white rounded-lg border border-slate-200 flex items-center justify-center text-[11px] font-semibold text-slate-600">View Recipe</div>
+                    <div className="h-8 px-3 bg-[#4CAF50] rounded-lg flex items-center gap-1 text-[11px] font-semibold text-white"><Plus className="h-3 w-3" />Log</div>
+                  </div>
+                </div>
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="w-7 h-7 rounded border border-slate-200 bg-white flex items-center justify-center shrink-0"><Eye className="h-3.5 w-3.5 text-slate-500" /></div>
+                    <p className="text-xs text-slate-600 leading-relaxed"><span className="font-semibold text-slate-800">View Recipe</span> — Opens the full recipe with a complete ingredient list and step-by-step cooking instructions.</p>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="w-7 h-7 rounded border border-[#4CAF50]/30 bg-[#4CAF50]/5 flex items-center justify-center shrink-0"><Plus className="h-3.5 w-3.5 text-[#4CAF50]" /></div>
+                    <p className="text-xs text-slate-600 leading-relaxed"><span className="font-semibold text-slate-800">Log</span> — Adds the recipe's calories and macros to today's food diary immediately.</p>
+                  </div>
+                </div>
+              </StepCard>
+
+              <StepCard step={3} title="Recipes are saved automatically">
+                <p className="text-slate-500 text-sm leading-relaxed mb-2">Every recipe you generate is <span className="font-semibold text-slate-700">automatically added to My Recipes</span> — there is no separate save button. As soon as the result card appears, the recipe is already in your library.</p>
+                <Callout icon={Bookmark} color="bg-purple-50 text-purple-800 border border-purple-100" title="No need to save manually">
+                  Just generate and go. Your recipes accumulate in My Recipes so you can reuse them or include them in your Meal Plan later.
+                </Callout>
+              </StepCard>
+            </div>
+          </div>
+
+          {/* My Recipes Tab */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+              <Bookmark className="h-4 w-4 text-slate-400" />
+              <span className="font-semibold text-sm text-slate-700">My Recipes tab</span>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-slate-500 text-sm leading-relaxed">My Recipes is your personal recipe library. Every recipe you've generated appears here as a compact row.</p>
+              {/* Mock saved recipe rows */}
+              <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 space-y-2">
+                {[
+                  { name: "Zesty Chicken Skillet", cal: 480 },
+                  { name: "Golden Fish Bowl", cal: 420 },
+                  { name: "Roasted Beef Skillet", cal: 510 },
+                ].map((r, i) => (
+                  <div key={i} className="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-100">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-emerald-100">
+                      <ChefHat className="h-3.5 w-3.5 text-emerald-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate text-slate-700">{r.name}</p>
+                      <p className="text-[10px] text-slate-400">{r.cal} cal</p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <div className="w-6 h-6 rounded border border-slate-200 flex items-center justify-center"><Eye className="h-3 w-3 text-slate-400" /></div>
+                      <div className="w-6 h-6 rounded border border-slate-200 flex items-center justify-center"><Trash2 className="h-3 w-3 text-slate-400" /></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="w-7 h-7 rounded border border-slate-200 bg-white flex items-center justify-center shrink-0"><Eye className="h-3.5 w-3.5 text-slate-500" /></div>
                   <div>
-                    <p className="font-bold text-sm text-slate-800">Lemon Herb Grilled Chicken</p>
-                    <p className="text-[11px] text-slate-500">2 servings · 25 min prep</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="bg-orange-50 border border-orange-100 rounded-lg px-2.5 py-1.5 text-center">
-                      <div className="text-sm font-bold text-orange-600">420</div>
-                      <div className="text-[9px] text-slate-400">kcal</div>
-                    </div>
-                    <div className="bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1.5 text-center">
-                      <div className="text-sm font-bold text-blue-600">48g</div>
-                      <div className="text-[9px] text-slate-400">protein</div>
-                    </div>
-                    <div className="bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5 text-center">
-                      <div className="text-sm font-bold text-emerald-600">12g</div>
-                      <div className="text-[9px] text-slate-400">carbs</div>
-                    </div>
-                    <div className="bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5 text-center">
-                      <div className="text-sm font-bold text-amber-600">14g</div>
-                      <div className="text-[9px] text-slate-400">fat</div>
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-slate-500 space-y-0.5">
-                    <p className="font-semibold text-slate-700 text-xs">Ingredients</p>
-                    <p>• 200g chicken breast, 2 tbsp olive oil, lemon juice, garlic...</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <MockButton color="bg-[#FF9800]" size="sm"><Plus className="h-3 w-3" />Log to Diary</MockButton>
-                    <MockButton color="bg-purple-600" size="sm"><Sparkles className="h-3 w-3" />Save Recipe</MockButton>
+                    <p className="text-xs font-semibold text-slate-800">View button</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Opens the full recipe — ingredients, instructions, and nutrition. You can also log it to today's diary from inside the recipe view.</p>
                   </div>
                 </div>
-              </StepCard>
-
-              <StepCard step={3} title="Log it or save it">
-                <div className="space-y-2 text-sm">
-                  <div className="flex gap-3 items-start p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <Plus className="h-4 w-4 text-[#FF9800] shrink-0 mt-0.5" />
-                    <p className="text-slate-600 leading-relaxed"><span className="font-semibold text-slate-800">Log to Diary</span> — Adds the recipe's calories and macros directly to today's food log. The tracker updates immediately.</p>
-                  </div>
-                  <div className="flex gap-3 items-start p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <Sparkles className="h-4 w-4 text-purple-500 shrink-0 mt-0.5" />
-                    <p className="text-slate-600 leading-relaxed"><span className="font-semibold text-slate-800">Save Recipe</span> — Stores the recipe in your Saved Recipes tab. Next time, open the saved recipe and tap Log — no need to generate it again.</p>
-                  </div>
-                  <div className="flex gap-3 items-start p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <BookOpen className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-                    <p className="text-slate-600 leading-relaxed"><span className="font-semibold text-slate-800">Add to Meal Plan</span> — Send the recipe to any day in the Meal Planner. It will appear in the grocery list when you generate one.</p>
+                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="w-7 h-7 rounded border border-red-200 bg-red-50 flex items-center justify-center shrink-0"><Trash2 className="h-3.5 w-3.5 text-red-400" /></div>
+                  <div>
+                    <p className="text-xs font-semibold text-slate-800">Remove button</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Permanently removes the recipe from your library. This cannot be undone — generate it again if you need it back.</p>
                   </div>
                 </div>
-              </StepCard>
+              </div>
             </div>
           </div>
         </section>
