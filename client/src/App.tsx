@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Privacy from "@/pages/privacy";
 import Support from "@/pages/support";
 import Terms from "@/pages/terms";
+import Tutorial from "@/pages/tutorial";
 import { PremiumProvider } from "@/contexts/PremiumContext";
 import UpgradeModal from "@/components/UpgradeModal";
 
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/privacy" component={Privacy}/>
       <Route path="/terms" component={Terms}/>
       <Route path="/support" component={Support}/>
+      <Route path="/tutorial" component={Tutorial}/>
       <Route path="/app" component={Home}/>
       <Route component={NotFound} />
     </Switch>
