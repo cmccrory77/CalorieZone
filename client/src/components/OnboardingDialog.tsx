@@ -619,7 +619,7 @@ export default function OnboardingDialog({
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen && onClose) onClose(); }}>
       <DialogContent
         className="max-w-md p-0 overflow-hidden flex flex-col [&>button]:hidden"
-        style={{ maxHeight: `${window.innerHeight - keyboardHeight - 24}px` }}
+        style={{ maxHeight: keyboardHeight > 0 ? `${window.innerHeight - keyboardHeight - 24}px` : "88svh" }}
       >
         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4 shrink-0">
           <div className="flex items-center justify-between mb-4">
@@ -655,7 +655,7 @@ export default function OnboardingDialog({
                 placeholder="Enter your first name"
                 onKeyDown={(e) => e.key === "Enter" && handleWizardNext()}
                 className="text-lg h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-medium"
-                data-testid="input-onboarding-name" autoFocus />
+                data-testid="input-onboarding-name" />
             </div>
           )}
 
