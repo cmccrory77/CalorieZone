@@ -588,7 +588,7 @@ export default function OnboardingDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen && onClose) onClose(); }}>
-      <DialogContent className="max-w-md p-0 overflow-hidden max-h-[90dvh] flex flex-col [&>button]:hidden">
+      <DialogContent className="max-w-md p-0 overflow-hidden max-h-[85svh] flex flex-col [&>button]:hidden">
         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4 shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -614,7 +614,7 @@ export default function OnboardingDialog({
           </DialogHeader>
         </div>
 
-        <div className="px-6 space-y-5 overflow-y-auto flex-1 min-h-0 pb-2">
+        <div className="px-6 space-y-5 overflow-y-auto flex-1 min-h-0 pb-6">
           {wizardStep === "name" && (
             <div className="space-y-2">
               <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Your first name</Label>

@@ -288,6 +288,8 @@ export default function Home() {
     setTargetWeight(data.targetWeight);
     setTimeframe(data.timeframe);
     setEditProfileOpen(false);
+    setMobileTab("track");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [profile?.id]);
 
   const handleMobileTab = useCallback((tab: "track" | "plan" | "scan" | "recipes" | "profile") => {
@@ -1795,18 +1797,8 @@ export default function Home() {
                     }}
                     data-testid="tile-custom-target"
                   >
-                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5 flex items-center justify-center gap-1">
+                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">
                       Target
-                      {profile?.customTargetCalories != null && !editingCustomTarget && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleResetCustomTarget(); }}
-                          className="text-amber-500 hover:text-amber-600"
-                          title="Reset to calculated"
-                          data-testid="button-reset-custom-target"
-                        >
-                          <RotateCcw className="h-2.5 w-2.5" />
-                        </button>
-                      )}
                     </div>
                     {editingCustomTarget ? (
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -1834,15 +1826,39 @@ export default function Home() {
                     <div className="text-[10px] text-muted-foreground">kcal/day</div>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 text-center">
-                    <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">
-                      {isGainingWeight ? 'Surplus' : 'Deficit'}
-                    </div>
-                    <div className="font-bold text-secondary text-sm">
-                      {isGainingWeight ? '+' : '-'}{Math.round(dailyDifference)}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">kcal/day</div>
+                    {(() => {
+                      const effDiff = Math.abs(targetCalories - maintenanceCalories);
+                      const effGaining = targetCalories > maintenanceCalories;
+                      return (
+                        <>
+                          <div className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">
+                            {effGaining ? 'Surplus' : 'Deficit'}
+                          </div>
+                          <div className="font-bold text-secondary text-sm">
+                            {effGaining ? '+' : '-'}{Math.round(effDiff)}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">kcal/day</div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
+
+                {profile?.customTargetCalories != null && (
+                  <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-lg px-3 py-2" data-testid="banner-custom-target">
+                    <div className="flex items-center gap-1.5">
+                      <RotateCcw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                      <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">Custom target active</span>
+                    </div>
+                    <button
+                      onClick={handleResetCustomTarget}
+                      className="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 underline"
+                      data-testid="button-reset-custom-target"
+                    >
+                      Reset to {computedTargetCalories} kcal
+                    </button>
+                  </div>
+                )}
 
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                   <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-3">
