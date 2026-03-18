@@ -410,7 +410,7 @@ export default function Home() {
       const newTargetDate = weeks != null
         ? format(addDays(new Date(), Math.round(weeks * 7)), "yyyy-MM-dd")
         : (profile?.targetDate ?? null);
-      localData.saveProfile({ ...profile, customTargetCalories: val, targetDate: newTargetDate });
+      localData.updateProfile({ customTargetCalories: val, targetDate: newTargetDate });
       refresh();
     }
     setEditingCustomTarget(false);
@@ -424,7 +424,7 @@ export default function Home() {
     const restoredDate = weeks != null
       ? format(addDays(new Date(), Math.round(weeks * 7)), "yyyy-MM-dd")
       : (profile?.targetDate ?? null);
-    localData.saveProfile({ ...profile, customTargetCalories: null, targetDate: restoredDate });
+    localData.updateProfile({ customTargetCalories: null, targetDate: restoredDate });
     refresh();
     setEditingCustomTarget(false);
   };
