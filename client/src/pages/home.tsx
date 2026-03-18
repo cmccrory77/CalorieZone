@@ -2888,7 +2888,7 @@ export default function Home() {
                 />
               </div>
 
-              <p className="text-center text-[10px] text-muted-foreground pt-1" data-testid="text-app-version">CalorieZone · Build 2025.03.18</p>
+              <p className="text-center text-[10px] text-muted-foreground pt-1" data-testid="text-app-version">CalorieZone · Build 2026.03.18</p>
 
             </CardContent>
           </Card>
