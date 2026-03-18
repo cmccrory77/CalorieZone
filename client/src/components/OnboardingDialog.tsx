@@ -620,6 +620,7 @@ export default function OnboardingDialog({
       <DialogContent
         className="max-w-md p-0 overflow-hidden flex flex-col [&>button]:hidden"
         style={{ maxHeight: keyboardHeight > 0 ? `${window.innerHeight - keyboardHeight - 24}px` : "88svh" }}
+        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4 shrink-0">
           <div className="flex items-center justify-between mb-4">
