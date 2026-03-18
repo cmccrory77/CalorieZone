@@ -1,5 +1,11 @@
 {
   "appId": "com.caloriezone.app",
   "appName": "CalorieZone",
-  "webDir": "dist/public"
+  "webDir": "dist/public",
+  "plugins": {
+    "Keyboard": {
+      "hideFormAccessoryBar": true,
+      "resize": "native"
+    }
+  }
 }

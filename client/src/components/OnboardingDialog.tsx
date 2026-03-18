@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { Keyboard } from "@capacitor/keyboard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,32 +86,11 @@ export default function OnboardingDialog({
   initialSex,
   editMode,
 }: OnboardingDialogProps) {
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [availH, setAvailH] = useState(window.innerHeight);
   useEffect(() => {
-    let showListener: any;
-    let hideListener: any;
-    (async () => {
-      try {
-        showListener = await Keyboard.addListener("keyboardWillShow", (info) => {
-          setKeyboardHeight(info.keyboardHeight);
-        });
-        hideListener = await Keyboard.addListener("keyboardWillHide", () => {
-          setKeyboardHeight(0);
-        });
-      } catch {
-        const vv = window.visualViewport;
-        if (vv) {
-          const update = () => setKeyboardHeight(Math.max(0, window.innerHeight - vv.height));
-          vv.addEventListener("resize", update);
-          vv.addEventListener("scroll", update);
-          return () => { vv.removeEventListener("resize", update); vv.removeEventListener("scroll", update); };
-        }
-      }
-    })();
-    return () => {
-      showListener?.remove();
-      hideListener?.remove();
-    };
+    const update = () => setAvailH(window.innerHeight);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   const [name, setName] = useState(initialName || "");
@@ -619,7 +597,7 @@ export default function OnboardingDialog({
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen && onClose) onClose(); }}>
       <DialogContent
         className="max-w-md p-0 overflow-hidden flex flex-col [&>button]:hidden"
-        style={{ maxHeight: keyboardHeight > 0 ? `${window.innerHeight - keyboardHeight - 24}px` : "88svh" }}
+        style={{ maxHeight: `${availH - 24}px` }}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4 shrink-0">
