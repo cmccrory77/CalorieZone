@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Keyboard } from "@capacitor/keyboard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,17 +87,31 @@ export default function OnboardingDialog({
   initialSex,
   editMode,
 }: OnboardingDialogProps) {
-  const [viewportH, setViewportH] = useState<number | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const update = () => setViewportH(vv.height);
-    update();
-    vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
+    let showListener: any;
+    let hideListener: any;
+    (async () => {
+      try {
+        showListener = await Keyboard.addListener("keyboardWillShow", (info) => {
+          setKeyboardHeight(info.keyboardHeight);
+        });
+        hideListener = await Keyboard.addListener("keyboardWillHide", () => {
+          setKeyboardHeight(0);
+        });
+      } catch {
+        const vv = window.visualViewport;
+        if (vv) {
+          const update = () => setKeyboardHeight(Math.max(0, window.innerHeight - vv.height));
+          vv.addEventListener("resize", update);
+          vv.addEventListener("scroll", update);
+          return () => { vv.removeEventListener("resize", update); vv.removeEventListener("scroll", update); };
+        }
+      }
+    })();
     return () => {
-      vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
+      showListener?.remove();
+      hideListener?.remove();
     };
   }, []);
 
@@ -604,7 +619,7 @@ export default function OnboardingDialog({
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen && onClose) onClose(); }}>
       <DialogContent
         className="max-w-md p-0 overflow-hidden flex flex-col [&>button]:hidden"
-        style={{ maxHeight: viewportH ? `${viewportH - 24}px` : "85svh" }}
+        style={{ maxHeight: `${window.innerHeight - keyboardHeight - 24}px` }}
       >
         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-4 shrink-0">
           <div className="flex items-center justify-between mb-4">
