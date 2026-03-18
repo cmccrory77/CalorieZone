@@ -18,6 +18,9 @@ export const userProfiles = pgTable("user_profiles", {
   targetDate: text("target_date"),
   maintenanceCalories: integer("maintenance_calories").notNull().default(2450),
   activityLevel: text("activity_level").notNull().default("moderate"),
+  age: integer("age"),
+  heightCm: real("height_cm"),
+  sex: text("sex"),
 });
 
 export const foodEntries = pgTable("food_entries", {

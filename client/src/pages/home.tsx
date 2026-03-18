@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, resolveApiUrl } from "@/lib/queryClient";
 import * as localData from "@/lib/localData";
+import { calculateMaintenanceCalories } from "@/lib/calories";
 import { 
   Activity, 
   Flame, 
@@ -260,8 +261,12 @@ export default function Home() {
     timeframe: number;
     activityLevel: string;
     targetDate: string;
+    age: number | null;
+    heightCm: number | null;
+    sex: string | null;
   }) => {
     if (!profile?.id) return;
+    const computed = calculateMaintenanceCalories(data.currentWeight, data.heightCm, data.age, data.sex, data.activityLevel);
     updateProfileMutation.mutate({
       name: data.name,
       avatarSeed: data.avatarSeed,
@@ -271,6 +276,10 @@ export default function Home() {
       timeframe: data.timeframe,
       activityLevel: data.activityLevel,
       targetDate: data.targetDate,
+      age: data.age,
+      heightCm: data.heightCm,
+      sex: data.sex,
+      maintenanceCalories: computed,
     } as any);
     setStartingWeight(data.startingWeight);
     setCurrentWeight(data.currentWeight);
@@ -482,7 +491,9 @@ export default function Home() {
   };
 
 
-  const maintenanceCalories = profile?.maintenanceCalories ?? 2450;
+  const maintenanceCalories = (profile?.heightCm && profile?.age && profile?.sex && profile?.currentWeight)
+    ? calculateMaintenanceCalories(profile.currentWeight, profile.heightCm, profile.age, profile.sex, profile?.activityLevel)
+    : (profile?.maintenanceCalories ?? 2450);
   const sw = startingWeight ?? 0;
   const cw = currentWeight ?? 0;
   const tw = targetWeight ?? 0;
@@ -3018,6 +3029,9 @@ export default function Home() {
         initialTargetWeight={targetWeight}
         initialTimeframe={timeframe}
         initialTargetDate={profile?.targetDate || undefined}
+        initialAge={profile?.age ?? null}
+        initialHeightCm={profile?.heightCm ?? null}
+        initialSex={profile?.sex ?? null}
       />
 
       <OnboardingDialog
@@ -3032,6 +3046,9 @@ export default function Home() {
         initialTimeframe={timeframe}
         initialTargetDate={profile?.targetDate || undefined}
         initialActivityLevel={profile?.activityLevel || "moderate"}
+        initialAge={profile?.age ?? null}
+        initialHeightCm={profile?.heightCm ?? null}
+        initialSex={profile?.sex ?? null}
         editMode
       />
 

@@ -42,6 +42,9 @@ const DEFAULT_PROFILE: UserProfile = {
   targetDate: null,
   maintenanceCalories: 2450,
   activityLevel: "moderate",
+  age: null,
+  heightCm: null,
+  sex: null,
 };
 
 export function getProfile(): UserProfile {

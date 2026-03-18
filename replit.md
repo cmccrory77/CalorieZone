@@ -20,7 +20,8 @@ A web-based weight management app inspired by MyFitnessPal and Noom. Helps users
 - `client/src/components/BarcodeScanner.tsx` - Barcode scanning component
 - `client/src/components/MealScanner.tsx` - AI meal photo analysis component
 - `client/src/components/FoodSearch.tsx` - Autocomplete food search with database + recent/frequent history
-- `client/src/components/OnboardingDialog.tsx` - 2-step settings/onboarding: profile + weight goals (step 1) + avatar picker (step 2); 36 DiceBear options
+- `client/src/components/OnboardingDialog.tsx` - 7-step initial setup wizard (name → about → height → weight → activity → timeline → avatar); edit mode keeps 2-step layout with all fields; 36 DiceBear avatar options
+- `client/src/lib/calories.ts` - Mifflin-St Jeor BMR + TDEE utility; height conversion helpers (cm ↔ ft/in)
 - `client/src/data/foodDatabase.ts` - 200+ food items with serving sizes, units, macros
 
 ## API Endpoints
