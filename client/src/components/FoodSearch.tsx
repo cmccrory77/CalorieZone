@@ -363,7 +363,7 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
                 onChange={(e) => handleSearch(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onFocus={handleFocus}
-                className="pl-8 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm h-9"
+                className="pl-8 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm h-9 text-slate-900 dark:text-slate-100"
                 data-testid="input-food-search"
               />
             </div>
@@ -375,7 +375,7 @@ export default function FoodSearch({ onAdd, frequentFoods = [] }: FoodSearchProp
                   value={customCalories}
                   onChange={(e) => setCustomCalories(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleManualAdd()}
-                  className="w-20 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm h-9"
+                  className="w-20 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm h-9 text-slate-900 dark:text-slate-100"
                   data-testid="input-custom-calories"
                 />
                 <Button

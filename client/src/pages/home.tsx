@@ -1442,10 +1442,10 @@ export default function Home() {
                 <input
                   ref={weightInputRef}
                   type="text"
-                  inputMode="decimal"
-                  pattern="[0-9]*\.?[0-9]*"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={weightInput}
-                  onChange={(e) => setWeightInput(e.target.value)}
+                  onChange={(e) => setWeightInput(e.target.value.replace(/[^0-9]/g, ""))}
                   onBlur={handleWeightSave}
                   onKeyDown={(e) => { if (e.key === "Enter") { handleWeightSave(); (e.target as HTMLInputElement).blur(); } if (e.key === "Escape") setEditingWeight(false); }}
                   className="w-10 text-[11px] font-bold text-slate-800 dark:text-slate-200 bg-primary/10 border border-primary/30 rounded px-0.5 text-center outline-none"
@@ -1464,10 +1464,10 @@ export default function Home() {
                 <input
                   ref={goalInputRef}
                   type="text"
-                  inputMode="decimal"
-                  pattern="[0-9]*\.?[0-9]*"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={goalInput}
-                  onChange={(e) => setGoalInput(e.target.value)}
+                  onChange={(e) => setGoalInput(e.target.value.replace(/[^0-9]/g, ""))}
                   onBlur={handleGoalSave}
                   onKeyDown={(e) => { if (e.key === "Enter") { handleGoalSave(); (e.target as HTMLInputElement).blur(); } if (e.key === "Escape") setEditingGoal(false); }}
                   className="w-10 text-[11px] font-bold text-primary bg-primary/10 border border-primary/30 rounded px-0.5 text-center outline-none"

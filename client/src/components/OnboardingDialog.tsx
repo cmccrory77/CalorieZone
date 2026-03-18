@@ -216,7 +216,8 @@ export default function OnboardingDialog({
                   id="onboarding-name"
                   placeholder="Enter your first name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => setName(e.target.value.slice(0, 7))}
+                  maxLength={7}
                   onKeyDown={(e) => e.key === "Enter" && handleNext()}
                   className="text-lg h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-medium"
                   data-testid="input-onboarding-name"
@@ -231,12 +232,12 @@ export default function OnboardingDialog({
                     <Input
                       id="onboard-starting"
                       type="text"
-                      inputMode="decimal"
-                      pattern="[0-9]*\.?[0-9]*"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder=""
                       value={startingWeight ?? ""}
                       onChange={(e) => {
-                        const v = e.target.value;
+                        const v = e.target.value.replace(/[^0-9]/g, "");
                         setStartingWeight(v === "" ? null : Number(v));
                       }}
                       className="h-10 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-semibold"
@@ -248,12 +249,12 @@ export default function OnboardingDialog({
                     <Input
                       id="onboard-current"
                       type="text"
-                      inputMode="decimal"
-                      pattern="[0-9]*\.?[0-9]*"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder=""
                       value={currentWeight ?? ""}
                       onChange={(e) => {
-                        const v = e.target.value;
+                        const v = e.target.value.replace(/[^0-9]/g, "");
                         setCurrentWeight(v === "" ? null : Number(v));
                       }}
                       className="h-10 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-semibold"
@@ -265,12 +266,12 @@ export default function OnboardingDialog({
                     <Input
                       id="onboard-target"
                       type="text"
-                      inputMode="decimal"
-                      pattern="[0-9]*\.?[0-9]*"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder=""
                       value={targetWeight ?? ""}
                       onChange={(e) => {
-                        const v = e.target.value;
+                        const v = e.target.value.replace(/[^0-9]/g, "");
                         setTargetWeight(v === "" ? null : Number(v));
                       }}
                       className="h-10 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-semibold"
