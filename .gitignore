@@ -2,5 +2,6 @@ node_modules
 dist/index.cjs
 .DS_Store
 server/public
+.env
 vite.config.ts.*
 *.tar.gz
